@@ -1,0 +1,272 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/lib/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { 
+  Users, 
+  BookOpen, 
+  Plus,
+  Search,
+  CheckCircle,
+  Clock,
+  XCircle
+} from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+
+interface Enrollment {
+  id: string;
+  status: string;
+  grade: string | null;
+  student: {
+    id: string;
+    studentId: string;
+    firstName: string;
+    lastName: string;
+  };
+  academicClass: {
+    id: string;
+    name: string;
+    level: number;
+  };
+}
+
+interface Student {
+  id: string;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+}
+
+interface AcademicClass {
+  id: string;
+  name: string;
+  level: number;
+}
+
+export default function EnrollmentsPage() {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<AcademicClass[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newEnrollment, setNewEnrollment] = useState({
+    studentId: '',
+    classId: '',
+  });
+
+  useEffect(() => {
+    fetchEnrollments();
+    fetchStudents();
+    fetchClasses();
+  }, []);
+
+  async function fetchEnrollments() {
+    try {
+      const res = await fetch('/api/lms/enrollments');
+      if (res.ok) {
+        const data = await res.json();
+        setEnrollments(data.enrollments || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch enrollments:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchStudents() {
+    try {
+      const res = await fetch('/api/sms/students');
+      if (res.ok) {
+        const data = await res.json();
+        setStudents(data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch students:', err);
+    }
+  }
+
+  async function fetchClasses() {
+    try {
+      const res = await fetch('/api/sms/academic-classes');
+      if (res.ok) {
+        const data = await res.json();
+        setClasses(data.classes || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch classes:', err);
+    }
+  }
+
+  async function createEnrollment() {
+    if (!newEnrollment.studentId || !newEnrollment.classId) {
+      toast({ variant: 'destructive', description: 'Please select student and class' });
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/lms/enrollments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEnrollment),
+      });
+
+      if (res.ok) {
+        toast({ variant: 'default', description: 'Enrollment created successfully' });
+        setShowAddDialog(false);
+        setNewEnrollment({ studentId: '', classId: '' });
+        fetchEnrollments();
+      } else {
+        toast({ variant: 'destructive', description: 'Failed to create enrollment' });
+      }
+    } catch (err) {
+      toast({ variant: 'destructive', description: 'Failed to create enrollment' });
+    }
+  }
+
+  const statusColors: Record<string, string> = {
+    ACTIVE: 'bg-green-100 text-green-800',
+    COMPLETED: 'bg-blue-100 text-blue-800',
+    DROPPED: 'bg-red-100 text-red-800',
+    WITHDRAWN: 'bg-gray-100 text-gray-800',
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Course Enrollments</h1>
+          <p className="text-gray-500">Manage student enrollments in courses and classes</p>
+        </div>
+        <Link href="/lms/enrollments/new">
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            New Enrollment
+          </Button>
+        </Link>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{enrollments.length}</p>
+                <p className="text-sm text-gray-500">Total Enrollments</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{enrollments.filter(e => e.status === 'ACTIVE').length}</p>
+                <p className="text-sm text-gray-500">Active</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{enrollments.filter(e => e.status === 'COMPLETED').length}</p>
+                <p className="text-sm text-gray-500">Completed</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-100 rounded-lg">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{enrollments.filter(e => e.status === 'DROPPED').length}</p>
+                <p className="text-sm text-gray-500">Dropped</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Enrollments Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Enrollments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student ID</TableHead>
+                <TableHead>Student Name</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead>Level</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Grade</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {enrollments.map((enrollment) => (
+                <TableRow key={enrollment.id}>
+                  <TableCell className="font-medium">{enrollment.student?.studentId || '-'}</TableCell>
+                  <TableCell>{enrollment.student?.firstName} {enrollment.student?.lastName}</TableCell>
+                  <TableCell>{enrollment.academicClass?.name || '-'}</TableCell>
+                  <TableCell>{enrollment.academicClass?.level || '-'}</TableCell>
+                  <TableCell>
+                    <Badge className={statusColors[enrollment.status] || 'bg-gray-100'}>
+                      {enrollment.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{enrollment.grade || '-'}</TableCell>
+                </TableRow>
+              ))}
+              {enrollments.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    No enrollments yet
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
