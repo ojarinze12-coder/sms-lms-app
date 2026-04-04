@@ -1,12 +1,20 @@
 async function callOpenRouter(prompt: string, systemPrompt?: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.1-8b-instruct';
+  const model = process.env.OPENROUTER_MODEL || 'openrouter/free:latest';
   
   console.log('=== AI DEBUG ===');
   console.log('API Key prefix:', apiKey ? apiKey.substring(0, 15) : 'MISSING');
+  console.log('API Key full:', apiKey ? 'exists' : 'MISSING');
   console.log('Model:', model);
 
+  if (!apiKey) {
+    throw new Error('OPENROUTER_API_KEY is not set in environment variables');
+  }
+
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -29,23 +37,33 @@ async function callOpenRouter(prompt: string, systemPrompt?: string): Promise<st
         ],
         temperature: 0.7,
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const responseText = await response.text();
     console.log('Response status:', response.status);
     
     if (!response.ok) {
-      console.error('Error response:', responseText.substring(0, 500));
-      throw new Error(`API Error (${response.status}): ${responseText.substring(0, 200)}`);
+      console.error('Error response:', responseText.substring(0, 1000));
+      const errorData = JSON.parse(responseText);
+      throw new Error(errorData.error?.message || `API Error (${response.status}): ${responseText.substring(0, 200)}`);
     }
 
     const data = JSON.parse(responseText);
     const content = data.choices?.[0]?.message?.content;
     console.log('Response content length:', content?.length || 0);
     return content || '';
-  } catch (error) {
+  } catch (error: any) {
     console.error('callOpenRouter error:', error);
-    throw error;
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out - please try again');
+    }
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to call OpenRouter API');
   }
 }
 
@@ -178,6 +196,9 @@ Output format (JSON only, no markdown):
     throw new Error('Invalid response format');
   } catch (error) {
     console.error('Question generation error:', error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to generate questions: ${error.message}`);
+    }
     throw new Error('Failed to generate questions');
   }
 }

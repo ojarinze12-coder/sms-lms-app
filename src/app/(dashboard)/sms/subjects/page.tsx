@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getSubjectsByCurriculum } from '@/lib/nigeria';
+import { CURRICULUM_INFO } from '@/types';
 
 interface AcademicYear {
   id: string;
@@ -12,6 +14,9 @@ interface AcademicClass {
   id: string;
   name: string;
   level: number;
+  section?: string | null;
+  department?: { id: string; name: string; code: string } | null;
+  curriculum?: string;
 }
 
 interface Teacher {
@@ -25,6 +30,7 @@ interface Subject {
   id: string;
   name: string;
   code: string;
+  curriculum: string;
   academicClassId: string;
   teacherId: string | null;
   academic_classes: AcademicClass;
@@ -37,6 +43,8 @@ export default function SubjectsPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [selectedYearId, setSelectedYearId] = useState<string>('');
   const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [currentCurriculum, setCurrentCurriculum] = useState<string>('NERDC');
+  const [predefinedSubjects, setPredefinedSubjects] = useState<{ name: string; code: string }[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -53,6 +61,7 @@ export default function SubjectsPage() {
   useEffect(() => {
     loadYears();
     loadTeachers();
+    loadCurriculum();
   }, []);
 
   useEffect(() => {
@@ -64,12 +73,20 @@ export default function SubjectsPage() {
   useEffect(() => {
     if (selectedClassId) {
       loadSubjects(selectedClassId);
+      const selectedClass = classes.find(c => c.id === selectedClassId);
+      if (selectedClass) {
+        updatePredefinedSubjects(selectedClass.level);
+      }
     }
-  }, [selectedClassId]);
+  }, [selectedClassId, classes]);
 
   const loadYears = async () => {
     try {
       const res = await fetch('/api/sms/academic-years');
+      if (!res.ok) {
+        console.error('Failed to load years:', res.status);
+        return;
+      }
       const data = await res.json();
       setYears(data);
       if (data.length > 0) {
@@ -83,9 +100,27 @@ export default function SubjectsPage() {
     }
   };
 
+  const loadCurriculum = async () => {
+    try {
+      const res = await fetch('/api/tenant/curriculum');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.data?.settings?.curriculumType) {
+          setCurrentCurriculum(data.data.settings.curriculumType);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load curriculum:', err);
+    }
+  };
+
   const loadClasses = async (yearId: string) => {
     try {
       const res = await fetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      if (!res.ok) {
+        console.error('Failed to load classes:', res.status);
+        return;
+      }
       const data = await res.json();
       setClasses(data.data || []);
     } catch (err) {
@@ -96,6 +131,10 @@ export default function SubjectsPage() {
   const loadTeachers = async () => {
     try {
       const res = await fetch('/api/sms/teachers');
+      if (!res.ok) {
+        console.error('Failed to load teachers:', res.status);
+        return;
+      }
       const data = await res.json();
       setTeachers(data);
     } catch (err) {
@@ -106,11 +145,20 @@ export default function SubjectsPage() {
   const loadSubjects = async (classId: string) => {
     try {
       const res = await fetch(`/api/sms/subjects?academicYearId=${classId}`);
+      if (!res.ok) {
+        console.error('Failed to load subjects:', res.status);
+        return;
+      }
       const data = await res.json();
       setSubjects(data.data || []);
     } catch (err) {
       console.error('Failed to load subjects:', err);
     }
+  };
+
+  const updatePredefinedSubjects = (level: number) => {
+    const subs = getSubjectsByCurriculum(level, currentCurriculum);
+    setPredefinedSubjects(subs);
   };
 
   const handleEdit = (subject: Subject) => {
@@ -143,9 +191,12 @@ export default function SubjectsPage() {
         setEditingSubject(null);
         setFormData({ name: '', code: '', teacherId: '' });
         loadSubjects(selectedClassId);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to update subject');
       }
-    } catch (err) {
-      console.error('Error:', err);
+    } catch {
+      setError('An error occurred');
     } finally {
       setSubmitting(false);
     }
@@ -195,21 +246,21 @@ export default function SubjectsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Subjects</h1>
-          <p className="text-gray-600">Manage subjects for each class</p>
+          <h1 className="text-2xl font-bold dark:text-white">Subjects</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage subjects for each class</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           disabled={!selectedClassId}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600"
         >
           Add Subject
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl border p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Academic Year
           </label>
           <select
@@ -218,7 +269,7 @@ export default function SubjectsPage() {
               setSelectedYearId(e.target.value);
               setSelectedClassId('');
             }}
-            className="w-full px-3 py-2 border rounded-lg"
+            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
             <option value="">Select a year...</option>
             {years.map((year) => (
@@ -229,59 +280,66 @@ export default function SubjectsPage() {
           </select>
         </div>
 
-        <div className="bg-white rounded-xl border p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Class
           </label>
           <select
             value={selectedClassId}
             onChange={(e) => setSelectedClassId(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg"
+            className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
             disabled={!selectedYearId}
           >
             <option value="">Select a class...</option>
-            {classes.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name} (Grade {cls.level})
-              </option>
-            ))}
+            {classes.map((cls) => {
+              const fullClassName = cls.department 
+                ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
+                : cls.section 
+                  ? `${cls.name}-${cls.section}`
+                  : cls.name;
+              return (
+                <option key={cls.id} value={cls.id}>
+                  {fullClassName}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>
 
       {selectedClassId && (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Code</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Teacher</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Code</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Name</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Teacher</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y dark:divide-gray-700">
               {subjects.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     No subjects yet. Add your first subject for this class.
                   </td>
                 </tr>
               ) : (
                 subjects.map((subject) => (
-                  <tr key={subject.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium">{subject.code}</td>
-                    <td className="px-6 py-4 text-sm">{subject.name}</td>
-                    <td className="px-6 py-4 text-sm">
+                  <tr key={subject.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 text-sm font-medium dark:text-white">{subject.code}</td>
+                    <td className="px-6 py-4 text-sm dark:text-gray-300">{subject.name}</td>
+                    <td className="px-6 py-4 text-sm dark:text-gray-300">
                       {subject.teachers ? (
-                        <span>{subject.teachers.firstName} {subject.teachers.lastName}</span>
+                        <span className="dark:text-gray-300">{subject.teachers.firstName} {subject.teachers.lastName}</span>
                       ) : (
-                        <span className="text-gray-400">Unassigned</span>
+                        <span className="text-gray-400 dark:text-gray-500">Unassigned</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <button 
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
                         onClick={() => handleEdit(subject)}
                       >
                         Edit
@@ -296,19 +354,19 @@ export default function SubjectsPage() {
       )}
 
       {!selectedClassId && classes.length > 0 && (
-        <div className="bg-white rounded-xl border p-8 text-center text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
           Please select a class to view its subjects.
         </div>
       )}
 
       {!selectedYearId && years.length > 0 && (
-        <div className="bg-white rounded-xl border p-8 text-center text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
           Please select an academic year and class to view subjects.
         </div>
       )}
 
       {years.length === 0 && (
-        <div className="bg-white rounded-xl border p-8 text-center text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
           No academic years found. Please create an academic year first.
         </div>
       )}
@@ -316,17 +374,42 @@ export default function SubjectsPage() {
       {/* Create Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Subject</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Add Subject</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
+              {predefinedSubjects.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Select from Predefined Subjects ({CURRICULUM_INFO[currentCurriculum as keyof typeof CURRICULUM_INFO]?.name || currentCurriculum})
+                  </label>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const selected = predefinedSubjects.find(s => s.code === e.target.value);
+                      if (selected) {
+                        setFormData({ ...formData, name: selected.name, code: selected.code });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  >
+                    <option value="">-- Select predefined subject or enter custom --</option>
+                    {predefinedSubjects.map((sub) => (
+                      <option key={sub.code} value={sub.code}>
+                        {sub.name} ({sub.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Subject Code
                 </label>
                 <input
@@ -334,13 +417,13 @@ export default function SubjectsPage() {
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="e.g., MATH"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Subject Name
                 </label>
                 <input
@@ -348,19 +431,19 @@ export default function SubjectsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Mathematics"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Assign Teacher (Optional)
                 </label>
                 <select
                   value={formData.teacherId}
                   onChange={(e) => setFormData({ ...formData, teacherId: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 >
                   <option value="">Select a teacher...</option>
                   {teachers.map((teacher) => (
@@ -382,7 +465,7 @@ export default function SubjectsPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
@@ -395,11 +478,42 @@ export default function SubjectsPage() {
       {/* Edit Modal */}
       {showEditModal && editingSubject && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Edit Subject</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Edit Subject</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              {predefinedSubjects.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Select from Predefined Subjects ({CURRICULUM_INFO[currentCurriculum as keyof typeof CURRICULUM_INFO]?.name || currentCurriculum})
+                  </label>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const selected = predefinedSubjects.find(s => s.code === e.target.value);
+                      if (selected) {
+                        setFormData({ ...formData, name: selected.name, code: selected.code });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  >
+                    <option value="">-- Select predefined subject or enter custom --</option>
+                    {predefinedSubjects.map((sub) => (
+                      <option key={sub.code} value={sub.code}>
+                        {sub.name} ({sub.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Subject Code
                 </label>
                 <input
@@ -407,13 +521,13 @@ export default function SubjectsPage() {
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="e.g., MATH"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Subject Name
                 </label>
                 <input
@@ -421,19 +535,19 @@ export default function SubjectsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Mathematics"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Assign Teacher (Optional)
                 </label>
                 <select
                   value={formData.teacherId}
                   onChange={(e) => setFormData({ ...formData, teacherId: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 >
                   <option value="">Select a teacher...</option>
                   {teachers.map((teacher) => (
@@ -458,7 +572,7 @@ export default function SubjectsPage() {
                     setShowEditModal(false);
                     setEditingSubject(null);
                   }}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>

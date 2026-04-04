@@ -82,8 +82,8 @@ export default function AuditLogPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Audit Log</h1>
-          <p className="text-gray-500 mt-1">Platform-wide activity tracking</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Audit Log</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Platform-wide activity tracking</p>
         </div>
         <button
           onClick={() => fetchLogs()}
@@ -96,20 +96,20 @@ export default function AuditLogPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-        <div className="p-4 border-b border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
           <div className="flex flex-wrap gap-4">
             <input
               type="text"
               placeholder="Search logs..."
               value={filter.search}
               onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1 min-w-[200px]"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm flex-1 min-w-[200px]"
             />
             <select
               value={filter.category}
               onChange={(e) => setFilter({ ...filter, category: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"
             >
               <option value="">All Categories</option>
               <option value="TENANT">Tenant</option>
@@ -121,7 +121,7 @@ export default function AuditLogPage() {
             <select
               value={filter.action}
               onChange={(e) => setFilter({ ...filter, action: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"
             >
               <option value="">All Actions</option>
               <option value="CREATE">Create</option>
@@ -135,33 +135,33 @@ export default function AuditLogPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Timestamp</th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Actor</th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Action</th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Target</th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Category</th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase px-4 py-3">Details</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase px-4 py-3">Timestamp</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase px-4 py-3">Actor</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase px-4 py-3">Action</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase px-4 py-3">Target</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase px-4 py-3">Category</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase px-4 py-3">Details</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                     No audit logs found
                   </td>
                 </tr>
               ) : (
                 logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                  <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
                     <td className="px-4 py-3">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{log.actorEmail || 'System'}</p>
-                        <p className="text-xs text-gray-500">{log.actorType}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{log.actorEmail || 'System'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{log.actorType}</p>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -171,9 +171,9 @@ export default function AuditLogPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div>
-                        <p className="text-sm text-gray-900">{log.targetName || log.targetType || '-'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{log.targetName || log.targetType || '-'}</p>
                         {log.isImpersonation && (
-                          <span className="inline-flex items-center px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                          <span className="inline-flex items-center px-2 py-0.5 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 text-xs rounded-full">
                             Ghost Mode
                           </span>
                         )}
@@ -185,9 +185,9 @@ export default function AuditLogPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm text-gray-500 max-w-[200px] truncate">{log.description}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-[200px] truncate">{log.description}</p>
                       {log.ipAddress && (
-                        <p className="text-xs text-gray-400">IP: {log.ipAddress}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">IP: {log.ipAddress}</p>
                       )}
                     </td>
                   </tr>

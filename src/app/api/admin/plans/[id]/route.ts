@@ -31,19 +31,16 @@ export async function GET(
 
     const plan = await prisma.subscriptionPlan.findUnique({
       where: { id },
-      include: {
-        planFeatures: true,
-        _count: {
-          select: {
-            subscriptions: true,
-          },
-        },
-      },
     });
 
     if (!plan) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
+
+    const [planFeatures, subscriptionCount] = await Promise.all([
+      prisma.planFeature.findMany({ where: { planId: id } }),
+      prisma.subscription.count({ where: { planId: id } }),
+    ]);
 
     const activeSubscriptions = await prisma.subscription.count({
       where: {
@@ -55,6 +52,8 @@ export async function GET(
     return NextResponse.json({
       plan: {
         ...plan,
+        planFeatures,
+        _count: { subscriptions: subscriptionCount },
         activeSubscriptions,
       },
     });
@@ -128,18 +127,17 @@ export async function DELETE(
 
     const plan = await prisma.subscriptionPlan.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: { subscriptions: true },
-        },
-      },
     });
 
     if (!plan) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
-    if (plan._count.subscriptions > 0) {
+    const subscriptionCount = await prisma.subscription.count({
+      where: { planId: id },
+    });
+
+    if (subscriptionCount > 0) {
       await prisma.subscriptionPlan.update({
         where: { id },
         data: { isActive: false },

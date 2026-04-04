@@ -82,10 +82,10 @@ export default function AdminAnalyticsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500 mt-1">Detailed platform performance metrics and insights</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Detailed platform performance metrics and insights</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <Calendar className="h-4 w-4" />
           Last updated: {new Date().toLocaleString()}
         </div>
@@ -93,43 +93,43 @@ export default function AdminAnalyticsPage() {
 
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-blue-500 dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Schools</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Schools</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data?.overview.schools || 0}</div>
-            <p className="text-xs text-gray-500 mt-1">Registered on platform</p>
+            <div className="text-3xl font-bold dark:text-white">{data?.overview.schools || 0}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Registered on platform</p>
           </CardContent>
         </Card>
         
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="border-l-4 border-l-green-500 dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Students</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data?.overview.students || 0}</div>
-            <p className="text-xs text-gray-500 mt-1">Enrolled across schools</p>
+            <div className="text-3xl font-bold dark:text-white">{data?.overview.students || 0}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enrolled across schools</p>
           </CardContent>
         </Card>
         
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="border-l-4 border-l-purple-500 dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Teachers</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Teachers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data?.overview.teachers || 0}</div>
-            <p className="text-xs text-gray-500 mt-1">Active educators</p>
+            <div className="text-3xl font-bold dark:text-white">{data?.overview.teachers || 0}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Active educators</p>
           </CardContent>
         </Card>
         
-        <Card className="border-l-4 border-l-orange-500">
+        <Card className="border-l-4 border-l-orange-500 dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Active Exams</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Exams</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{data?.overview.exams || 0}</div>
-            <p className="text-xs text-gray-500 mt-1">Platform-wide</p>
+            <div className="text-3xl font-bold dark:text-white">{data?.overview.exams || 0}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Platform-wide</p>
           </CardContent>
         </Card>
       </div>
@@ -137,9 +137,9 @@ export default function AdminAnalyticsPage() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Subscription Distribution */}
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <BarChart3 className="h-5 w-5 text-blue-600" />
               Subscription Distribution
             </CardTitle>
@@ -155,10 +155,10 @@ export default function AdminAnalyticsPage() {
                       plan === 'STARTER' ? 'bg-yellow-500' :
                       'bg-gray-500'
                     }`}></div>
-                    <span className="text-sm font-medium text-gray-700">{plan}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{plan}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-1 mx-4">
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div 
                         className={`h-full rounded-full ${
                           plan === 'ENTERPRISE' ? 'bg-purple-500' :
@@ -170,7 +170,7 @@ export default function AdminAnalyticsPage() {
                       />
                     </div>
                   </div>
-                  <span className="text-sm text-gray-500 w-8 text-right">{count as number}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 w-8 text-right">{count as number}</span>
                 </div>
               ))}
             </div>
@@ -178,30 +178,30 @@ export default function AdminAnalyticsPage() {
         </Card>
 
         {/* Subscription Status */}
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <Activity className="h-5 w-5 text-green-600" />
               Subscription Status
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-green-50 p-4 rounded-xl text-center">
-                <div className="text-2xl font-bold text-green-700">{data?.subscriptions?.statuses?.ACTIVE || 0}</div>
-                <div className="text-sm text-green-600">Active</div>
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl text-center">
+                <div className="text-2xl font-bold text-green-700 dark:text-green-400">{data?.subscriptions?.statuses?.ACTIVE || 0}</div>
+                <div className="text-sm text-green-600 dark:text-green-400">Active</div>
               </div>
-              <div className="bg-red-50 p-4 rounded-xl text-center">
-                <div className="text-2xl font-bold text-red-700">{data?.subscriptions?.statuses?.CANCELLED || 0}</div>
-                <div className="text-sm text-red-600">Cancelled</div>
+              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl text-center">
+                <div className="text-2xl font-bold text-red-700 dark:text-red-400">{data?.subscriptions?.statuses?.CANCELLED || 0}</div>
+                <div className="text-sm text-red-600 dark:text-red-400">Cancelled</div>
               </div>
-              <div className="bg-yellow-50 p-4 rounded-xl text-center">
-                <div className="text-2xl font-bold text-yellow-700">{data?.subscriptions?.statuses?.PAST_DUE || 0}</div>
-                <div className="text-sm text-yellow-600">Past Due</div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl text-center">
+                <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">{data?.subscriptions?.statuses?.PAST_DUE || 0}</div>
+                <div className="text-sm text-yellow-600 dark:text-yellow-400">Past Due</div>
               </div>
-              <div className="bg-gray-50 p-4 rounded-xl text-center">
-                <div className="text-2xl font-bold text-gray-700">{data?.subscriptions?.statuses?.EXPIRED || 0}</div>
-                <div className="text-sm text-gray-600">Expired</div>
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl text-center">
+                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300">{data?.subscriptions?.statuses?.EXPIRED || 0}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Expired</div>
               </div>
             </div>
           </CardContent>
@@ -209,29 +209,29 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* Academic Performance */}
-      <Card>
+      <Card className="dark:bg-gray-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <GraduationCap className="h-5 w-5 text-blue-600" />
             Academic Performance Overview
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-blue-50 rounded-xl">
-              <div className="text-4xl font-bold text-blue-600">{data?.performance?.passRate || 0}%</div>
-              <div className="text-sm text-blue-600 mt-1">Pass Rate</div>
-              <div className="text-xs text-gray-500 mt-2">Average across all schools</div>
+            <div className="text-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+              <div className="text-4xl font-bold text-blue-600 dark:text-blue-400">{data?.performance?.passRate || 0}%</div>
+              <div className="text-sm text-blue-600 dark:text-blue-400 mt-1">Pass Rate</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">Average across all schools</div>
             </div>
-            <div className="text-center p-6 bg-green-50 rounded-xl">
-              <div className="text-4xl font-bold text-green-600">{data?.performance?.averageScore || 0}</div>
-              <div className="text-sm text-green-600 mt-1">Average Score</div>
-              <div className="text-xs text-gray-500 mt-2">Mean score across exams</div>
+            <div className="text-center p-6 bg-green-50 dark:bg-green-900/20 rounded-xl">
+              <div className="text-4xl font-bold text-green-600 dark:text-green-400">{data?.performance?.averageScore || 0}</div>
+              <div className="text-sm text-green-600 dark:text-green-400 mt-1">Average Score</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">Mean score across exams</div>
             </div>
-            <div className="text-center p-6 bg-purple-50 rounded-xl">
-              <div className="text-4xl font-bold text-purple-600">{data?.performance?.totalGradedExams || 0}</div>
-              <div className="text-sm text-purple-600 mt-1">Graded Exams</div>
-              <div className="text-xs text-gray-500 mt-2">Total graded this period</div>
+            <div className="text-center p-6 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+              <div className="text-4xl font-bold text-purple-600 dark:text-purple-400">{data?.performance?.totalGradedExams || 0}</div>
+              <div className="text-sm text-purple-600 dark:text-purple-400 mt-1">Graded Exams</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">Total graded this period</div>
             </div>
           </div>
         </CardContent>
@@ -240,15 +240,15 @@ export default function AdminAnalyticsPage() {
       {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link href="/admin/tenants" className="block">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-blue-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-blue-500 dark:bg-gray-800 dark:border-gray-700">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <Building2 className="h-6 w-6 text-blue-600" />
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                  <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <div className="font-semibold">Manage Schools</div>
-                  <div className="text-sm text-gray-500">View and manage all schools</div>
+                  <div className="font-semibold dark:text-white">Manage Schools</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">View and manage all schools</div>
                 </div>
               </div>
             </CardContent>
@@ -256,15 +256,15 @@ export default function AdminAnalyticsPage() {
         </Link>
         
         <Link href="/admin/subscriptions" className="block">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-green-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-green-500 dark:bg-gray-800 dark:border-gray-700">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-xl">
-                  <CreditCard className="h-6 w-6 text-green-600" />
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                  <CreditCard className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <div className="font-semibold">Subscriptions</div>
-                  <div className="text-sm text-gray-500">Manage billing and plans</div>
+                  <div className="font-semibold dark:text-white">Subscriptions</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Manage billing and plans</div>
                 </div>
               </div>
             </CardContent>
@@ -272,15 +272,15 @@ export default function AdminAnalyticsPage() {
         </Link>
         
         <Link href="/admin/settings" className="block">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-purple-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-purple-500 dark:bg-gray-800 dark:border-gray-700">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <Settings className="h-6 w-6 text-purple-600" />
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                  <Settings className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <div className="font-semibold">Settings</div>
-                  <div className="text-sm text-gray-500">Platform configuration</div>
+                  <div className="font-semibold dark:text-white">Settings</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Platform configuration</div>
                 </div>
               </div>
             </CardContent>

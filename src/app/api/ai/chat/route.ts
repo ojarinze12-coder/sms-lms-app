@@ -20,7 +20,7 @@ and understanding school policies. Be friendly and helpful.`,
 
 async function callOpenRouter(prompt: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.1-8b-instruct';
+  const model = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free';
   
   console.log('=== CHAT AI DEBUG ===');
   console.log('API Key prefix:', apiKey ? apiKey.substring(0, 15) : 'MISSING');
@@ -76,8 +76,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (!process.env.OPENROUTER_API_KEY) {
-    return NextResponse.json({ error: 'AI service not configured' }, { status: 500 });
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  console.log('=== AI Chat Debug ===');
+  console.log('API Key exists:', !!apiKey);
+  console.log('API Key prefix:', apiKey ? apiKey.substring(0, 15) : 'N/A');
+  console.log('Model:', process.env.OPENROUTER_MODEL);
+  
+  if (!apiKey) {
+    return NextResponse.json({ error: 'AI service not configured: Missing API key' }, { status: 500 });
   }
 
   try {
@@ -105,8 +111,9 @@ Provide a helpful response:
     return NextResponse.json({ response });
   } catch (error: any) {
     console.error('Chat error:', error);
+    const errorMessage = error.message || 'Failed to generate response';
     return NextResponse.json(
-      { error: error.message || 'Failed to generate response' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

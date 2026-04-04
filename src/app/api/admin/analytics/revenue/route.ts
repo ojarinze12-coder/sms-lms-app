@@ -83,13 +83,13 @@ async function getTotalRevenue(startDate: Date): Promise<number> {
       status: 'ACTIVE',
       currentPeriodStart: { gte: startDate },
     },
-    include: { plan: true },
+    include: { subscriptionPlan: true },
   });
 
   return subscriptions.reduce((total, sub) => {
     const price = sub.billingCycle === 'YEARLY' 
-      ? (sub.plan?.yearlyPrice || 0) 
-      : (sub.plan?.monthlyPrice || 0);
+      ? (sub.subscriptionPlan?.yearlyPrice || 0) 
+      : (sub.subscriptionPlan?.monthlyPrice || 0);
     return total + price;
   }, 0);
 }
@@ -97,15 +97,15 @@ async function getTotalRevenue(startDate: Date): Promise<number> {
 async function getRevenueByPlan(): Promise<Record<string, number>> {
   const subscriptions = await prisma.subscription.findMany({
     where: { status: 'ACTIVE' },
-    include: { plan: true },
+    include: { subscriptionPlan: true },
   });
 
   const revenue: Record<string, number> = {};
   for (const sub of subscriptions) {
-    const planName = sub.plan?.name || 'UNKNOWN';
+    const planName = sub.subscriptionPlan?.name || 'UNKNOWN';
     const price = sub.billingCycle === 'YEARLY'
-      ? (sub.plan?.yearlyPrice || 0)
-      : (sub.plan?.monthlyPrice || 0);
+      ? (sub.subscriptionPlan?.yearlyPrice || 0)
+      : (sub.subscriptionPlan?.monthlyPrice || 0);
     revenue[planName] = (revenue[planName] || 0) + price;
   }
 
@@ -127,13 +127,13 @@ async function getRevenueHistory(startDate: Date): Promise<Array<{ month: string
         status: 'ACTIVE',
         currentPeriodStart: { lte: monthEnd },
       },
-      include: { plan: true },
+      include: { subscriptionPlan: true },
     });
 
     const revenue = subscriptions.reduce((total, sub) => {
       const price = sub.billingCycle === 'YEARLY'
-        ? (sub.plan?.yearlyPrice || 0) / 12
-        : (sub.plan?.monthlyPrice || 0);
+        ? (sub.subscriptionPlan?.yearlyPrice || 0) / 12
+        : (sub.subscriptionPlan?.monthlyPrice || 0);
       return total + price;
     }, 0);
 

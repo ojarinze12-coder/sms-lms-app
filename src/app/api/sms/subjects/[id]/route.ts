@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authUser = await getAuthUser();
   
@@ -17,6 +17,7 @@ export async function PUT(
   }
 
   try {
+    const { id } = await params;
     const body = await request.json();
     const { name, code, teacherId, isActive } = body;
 
@@ -26,28 +27,25 @@ export async function PUT(
     if (teacherId !== undefined) updateData.teacherId = teacherId || null;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    const { data: subject, error } = await supabase
-      .from('subjects')
-      .update(updateData)
-      .eq('id', params.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating subject:', error);
-      return NextResponse.json({ error: 'Failed to update subject' }, { status: 500 });
-    }
+    const subject = await prisma.subject.update({
+      where: { id },
+      data: updateData,
+      include: {
+        academicClass: { select: { id: true, name: true, level: true } },
+        teacher: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
 
     return NextResponse.json(subject);
-  } catch (error) {
-    console.error('Error updating subject:', error);
-    return NextResponse.json({ error: 'Failed to update subject' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[SUBJECTS PUT] Error:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authUser = await getAuthUser();
   
@@ -60,19 +58,15 @@ export async function DELETE(
   }
 
   try {
-    const { error } = await supabase
-      .from('subjects')
-      .delete()
-      .eq('id', params.id);
+    const { id } = await params;
 
-    if (error) {
-      console.error('Error deleting subject:', error);
-      return NextResponse.json({ error: 'Failed to delete subject' }, { status: 500 });
-    }
+    await prisma.subject.delete({
+      where: { id },
+    });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting subject:', error);
-    return NextResponse.json({ error: 'Failed to delete subject' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[SUBJECTS DELETE] Error:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

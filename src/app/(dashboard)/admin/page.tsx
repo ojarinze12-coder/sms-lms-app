@@ -45,19 +45,39 @@ export default function AdminDashboard() {
   const [recentSchools, setRecentSchools] = useState<RecentSchool[]>([]);
   const [revenue, setRevenue] = useState<RevenueData['overview'] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/admin/analytics').then(r => r.json()),
-      fetch('/api/admin/analytics/revenue').then(r => r.json()),
+      fetch('/api/admin/analytics').then(async (r) => {
+        if (!r.ok) {
+          const err = await r.json();
+          throw new Error(err.error || 'Analytics failed');
+        }
+        return r.json();
+      }),
+      fetch('/api/admin/analytics/revenue').then(async (r) => {
+        if (!r.ok) {
+          const err = await r.json();
+          throw new Error(err.error || 'Revenue failed');
+        }
+        return r.json();
+      }),
     ])
       .then(([analyticsData, revenueData]) => {
+        if (analyticsData.error) {
+          setError(analyticsData.error);
+          return;
+        }
         setStats(analyticsData.overview);
         setSubscriptions(analyticsData.subscriptions);
         setRecentSchools(analyticsData.recentSchools || []);
         setRevenue(revenueData.overview);
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error('Dashboard error:', err);
+        setError(err.message);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -84,6 +104,17 @@ export default function AdminDashboard() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center p-6 bg-red-50 dark:bg-red-900/20 rounded-lg">
+          <p className="text-red-600 dark:text-red-400 font-medium">Error: {error}</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">Please ensure you are logged in as Super Admin</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome Header - Dashboard Style */}
@@ -103,9 +134,9 @@ export default function AdminDashboard() {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/admin/tenants">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-blue-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-blue-500 bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Schools</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Schools</CardTitle>
               <Building2 className="h-5 w-5 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -118,9 +149,9 @@ export default function AdminDashboard() {
         </Link>
         
         <Link href="/admin/tenants">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-green-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-green-500 bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Students</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Students</CardTitle>
               <GraduationCap className="h-5 w-5 text-green-500" />
             </CardHeader>
             <CardContent>
@@ -133,9 +164,9 @@ export default function AdminDashboard() {
         </Link>
         
         <Link href="/admin/tenants">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-purple-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-purple-500 bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Teachers</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Teachers</CardTitle>
               <Users className="h-5 w-5 text-purple-500" />
             </CardHeader>
             <CardContent>
@@ -148,9 +179,9 @@ export default function AdminDashboard() {
         </Link>
         
         <Link href="/admin/subscriptions">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-orange-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-orange-500 bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-gray-500">Monthly Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Revenue</CardTitle>
               <FileText className="h-5 w-5 text-orange-500" />
             </CardHeader>
             <CardContent>
@@ -166,29 +197,29 @@ export default function AdminDashboard() {
       {/* Quick Actions & Subscription Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <Settings className="h-5 w-5 text-blue-600" />
               Quick Actions
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link href="/admin/tenants" className="flex items-center justify-between p-3 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors">
+            <Link href="/admin/tenants" className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
               <div className="flex items-center gap-3">
                 <Building2 className="h-5 w-5" />
                 <span className="font-medium">Manage Schools</span>
               </div>
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/admin/subscriptions" className="flex items-center justify-between p-3 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors">
+            <Link href="/admin/subscriptions" className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors">
               <div className="flex items-center gap-3">
                 <CreditCard className="h-5 w-5" />
                 <span className="font-medium">Subscriptions & Billing</span>
               </div>
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/admin/analytics" className="flex items-center justify-between p-3 bg-purple-50 text-purple-700 rounded-xl hover:bg-purple-100 transition-colors">
+            <Link href="/admin/analytics" className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors">
               <div className="flex items-center gap-3">
                 <TrendingUp className="h-5 w-5" />
                 <span className="font-medium">View Detailed Analytics</span>
@@ -199,36 +230,36 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Subscription Summary */}
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <CreditCard className="h-5 w-5 text-blue-600" />
               Subscription Plans
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <div className="text-2xl font-bold text-gray-900">{subscriptions?.plans?.FREE || 0}</div>
-                <div className="text-sm text-gray-500">Free Plan</div>
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{subscriptions?.plans?.FREE || 0}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">Free Plan</div>
               </div>
-              <div className="bg-yellow-50 p-4 rounded-xl">
-                <div className="text-2xl font-bold text-yellow-700">{subscriptions?.plans?.STARTER || 0}</div>
-                <div className="text-sm text-yellow-600">Starter Plan</div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl">
+                <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{subscriptions?.plans?.STARTER || 0}</div>
+                <div className="text-sm text-yellow-600 dark:text-yellow-400">Starter Plan</div>
               </div>
-              <div className="bg-blue-50 p-4 rounded-xl">
-                <div className="text-2xl font-bold text-blue-700">{subscriptions?.plans?.PROFESSIONAL || 0}</div>
-                <div className="text-sm text-blue-600">Professional Plan</div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl">
+                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{subscriptions?.plans?.PROFESSIONAL || 0}</div>
+                <div className="text-sm text-blue-600 dark:text-blue-400">Professional Plan</div>
               </div>
-              <div className="bg-purple-50 p-4 rounded-xl">
-                <div className="text-2xl font-bold text-purple-700">{subscriptions?.plans?.ENTERPRISE || 0}</div>
-                <div className="text-sm text-purple-600">Enterprise Plan</div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl">
+                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">{subscriptions?.plans?.ENTERPRISE || 0}</div>
+                <div className="text-sm text-purple-600 dark:text-purple-400">Enterprise Plan</div>
               </div>
             </div>
             <div className="pt-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Active Subscriptions</span>
-                <span className="font-semibold text-green-600">{subscriptions?.statuses?.ACTIVE || 0}</span>
+                <span className="text-gray-500 dark:text-gray-400">Active Subscriptions</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">{subscriptions?.statuses?.ACTIVE || 0}</span>
               </div>
             </div>
           </CardContent>
@@ -236,37 +267,37 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Schools */}
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <Building2 className="h-5 w-5 text-blue-600" />
             Recent Schools
           </CardTitle>
-          <Link href="/admin/tenants" className="text-sm text-blue-600 hover:underline">
+          <Link href="/admin/tenants" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
             View All
           </Link>
         </CardHeader>
         <CardContent>
           {!recentSchools || recentSchools.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No schools yet</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">No schools yet</p>
           ) : (
             <div className="space-y-3">
               {recentSchools.slice(0, 5).map((school) => (
-                <div key={school.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <div key={school.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
                   <div>
-                    <div className="font-medium text-gray-900">{school.name}</div>
-                    <div className="text-sm text-gray-500">{school.domain || school.slug}</div>
+                    <div className="font-medium text-gray-900 dark:text-white">{school.name}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{school.domain || school.slug}</div>
                   </div>
                   <div className="text-right">
                     <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                      school.plan === 'ENTERPRISE' ? 'bg-purple-100 text-purple-700' :
-                      school.plan === 'PROFESSIONAL' ? 'bg-blue-100 text-blue-700' :
-                      school.plan === 'STARTER' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-gray-100 text-gray-700'
+                      school.plan === 'ENTERPRISE' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' :
+                      school.plan === 'PROFESSIONAL' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                      school.plan === 'STARTER' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                      'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
                     }`}>
                       {school.plan}
                     </span>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {new Date(school.createdAt).toLocaleDateString()}
                     </div>
                   </div>

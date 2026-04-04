@@ -59,52 +59,52 @@ export default function ForumsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Discussion Forums</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Discussion Forums</h1>
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : 'Create Forum'}
         </Button>
       </div>
 
       {showForm && (
-        <Card>
-          <CardHeader><CardTitle>Create New Forum</CardTitle></CardHeader>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader><CardTitle className="dark:text-white">Create New Forum</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Input placeholder="Forum Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
-                <select className="border rounded px-3 py-2" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                <Input className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Forum Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
+                <select className="border rounded px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                   {categories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <textarea className="border rounded w-full p-2" placeholder="Description" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+              <textarea className="border rounded w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Description" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
               <Button type="submit">Create Forum</Button>
             </form>
           </CardContent>
         </Card>
       )}
 
-      <Card>
-        <CardHeader><CardTitle>Forums</CardTitle></CardHeader>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <CardHeader><CardTitle className="dark:text-white">Forums</CardTitle></CardHeader>
         <CardContent>
           {loading ? (
-            <p>Loading...</p>
+            <p className="dark:text-gray-300">Loading...</p>
           ) : forums.length === 0 ? (
-            <p className="text-gray-500">No forums created yet.</p>
+            <p className="text-gray-500 dark:text-gray-400">No forums created yet.</p>
           ) : (
             <div className="space-y-3">
               {forums.map((forum) => (
-                <div key={forum.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                <div key={forum.id} className="border rounded-lg p-4 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-bold text-lg">{forum.title}</h3>
-                      <p className="text-sm text-gray-600">{forum.description}</p>
+                      <h3 className="font-bold text-lg dark:text-white">{forum.title}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{forum.description}</p>
                       <div className="flex gap-2 mt-2">
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">{forum.category}</span>
-                        <span className="text-xs text-gray-500">{forum.postCount} posts</span>
+                        <span className="text-xs bg-gray-100 dark:bg-gray-600 dark:text-gray-300 px-2 py-1 rounded">{forum.category}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{forum.postCount} posts</span>
                       </div>
                     </div>
                     {forum.isLocked && (
-                      <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">Locked</span>
+                      <span className="text-xs bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300 px-2 py-1 rounded">Locked</span>
                     )}
                   </div>
                 </div>

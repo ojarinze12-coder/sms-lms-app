@@ -110,6 +110,108 @@ async function main() {
 
   console.log('Created super admin:', superAdmin.email);
 
+  // Create Default Subscription Plans
+  const plans = [
+    {
+      name: 'FREE',
+      displayName: 'Free',
+      description: 'Perfect for small schools getting started',
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      maxStudents: 50,
+      maxTeachers: 5,
+      maxStorageGB: 1,
+      maxAICalls: 0,
+      features: JSON.stringify({
+        basicSMS: true,
+        attendance: true,
+        feeCollection: false,
+        lms: false,
+        analytics: false,
+        prioritySupport: false,
+      }),
+      sortOrder: 1,
+    },
+    {
+      name: 'STARTER',
+      displayName: 'Starter',
+      description: 'For growing schools needing more features',
+      monthlyPrice: 15000,
+      yearlyPrice: 150000,
+      maxStudents: 200,
+      maxTeachers: 20,
+      maxStorageGB: 5,
+      maxAICalls: 50,
+      features: JSON.stringify({
+        basicSMS: true,
+        attendance: true,
+        feeCollection: true,
+        lms: true,
+        analytics: true,
+        prioritySupport: false,
+      }),
+      sortOrder: 2,
+    },
+    {
+      name: 'PROFESSIONAL',
+      displayName: 'Professional',
+      description: 'Complete solution for medium-sized schools',
+      monthlyPrice: 35000,
+      yearlyPrice: 350000,
+      maxStudents: 500,
+      maxTeachers: 50,
+      maxStorageGB: 20,
+      maxAICalls: 200,
+      features: JSON.stringify({
+        basicSMS: true,
+        attendance: true,
+        feeCollection: true,
+        lms: true,
+        analytics: true,
+        prioritySupport: true,
+        customBranding: true,
+        transport: true,
+        hostel: true,
+      }),
+      sortOrder: 3,
+    },
+    {
+      name: 'ENTERPRISE',
+      displayName: 'Enterprise',
+      description: 'Full-featured solution for large institutions',
+      monthlyPrice: 75000,
+      yearlyPrice: 750000,
+      maxStudents: 999999,
+      maxTeachers: 999999,
+      maxStorageGB: 100,
+      maxAICalls: 999999,
+      features: JSON.stringify({
+        basicSMS: true,
+        attendance: true,
+        feeCollection: true,
+        lms: true,
+        analytics: true,
+        prioritySupport: true,
+        customBranding: true,
+        transport: true,
+        hostel: true,
+        apiAccess: true,
+        whiteLabel: true,
+        dedicatedSupport: true,
+      }),
+      sortOrder: 4,
+    },
+  ];
+
+  for (const plan of plans) {
+    await prisma.subscriptionPlan.upsert({
+      where: { name: plan.name },
+      update: plan,
+      create: plan,
+    });
+  }
+  console.log('Created subscription plans:', plans.map(p => p.name).join(', '));
+
   // Create Demo School (Tenant)
   const demoSchoolPassword = await bcrypt.hash('admin123', 10);
   
@@ -483,22 +585,134 @@ async function main() {
   }
   console.log('Created students:', studentData.length);
 
-  // Create Subscription for demo school (use relation via tenant)
-  const existingSub = await prisma.subscription.findUnique({
+  // Create Subscription for demo school with plan
+  const professionalPlan = await prisma.subscriptionPlan.findUnique({
+    where: { name: 'PROFESSIONAL' }
+  });
+  
+  const existingSub = await prisma.subscription.findFirst({
     where: { tenantId: demoSchool.id }
   });
   
-  if (!existingSub) {
+  if (!existingSub && professionalPlan) {
     await prisma.subscription.create({
       data: {
         tenantId: demoSchool.id,
+        planId: professionalPlan.id,
         status: 'ACTIVE',
         billingCycle: 'YEARLY',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
       },
     });
   }
 
   console.log('Created subscription');
+
+  // Create additional sample schools for testing
+  const sampleSchools = [
+    {
+      name: 'Greenfield International School',
+      slug: 'greenfield-school',
+      plan: 'ENTERPRISE',
+      brandColor: '#059669',
+      email: 'admin@greenfield.com',
+      state: 'Lagos',
+      lga: ' Ikeja',
+    },
+    {
+      name: 'Royal Academy Nigeria',
+      slug: 'royal-academy',
+      plan: 'PROFESSIONAL',
+      brandColor: '#7c3aed',
+      email: 'admin@royalacademy.com',
+      state: 'Abuja',
+      lga: 'Gwagwalada',
+    },
+    {
+      name: 'Excel College',
+      slug: 'excel-college',
+      plan: 'STARTER',
+      brandColor: '#ea580c',
+      email: 'admin@excelcollege.com',
+      state: 'Oyo',
+      lga: 'Ibadan North',
+    },
+    {
+      name: 'Bright Stars School',
+      slug: 'bright-stars',
+      plan: 'FREE',
+      brandColor: '#1a56db',
+      email: 'admin@brightstars.com',
+      state: 'Rivers',
+      lga: 'Port Harcourt',
+    },
+  ];
+
+  for (const school of sampleSchools) {
+    const schoolPassword = await bcrypt.hash('school123', 10);
+    
+    const newTenant = await prisma.tenant.upsert({
+      where: { slug: school.slug },
+      update: {},
+      create: {
+        name: school.name,
+        slug: school.slug,
+        plan: school.plan as any,
+        brandColor: school.brandColor,
+      },
+    });
+
+    // Create tenant settings
+    await prisma.tenantSettings.upsert({
+      where: { tenantId: newTenant.id },
+      update: {},
+      create: {
+        tenantId: newTenant.id,
+        curriculumType: 'NERDC' as Curriculum,
+        usePerTierCurriculum: false,
+        tiersSetupComplete: false,
+      },
+    });
+
+    // Create admin user
+    await prisma.user.upsert({
+      where: { email: school.email },
+      update: {},
+      create: {
+        email: school.email,
+        password: schoolPassword,
+        firstName: 'School',
+        lastName: 'Admin',
+        role: 'ADMIN',
+        tenantId: newTenant.id,
+      },
+    });
+
+    // Create subscription with plan (check first if exists)
+    const plan = await prisma.subscriptionPlan.findUnique({
+      where: { name: school.plan }
+    });
+    
+    const existingSub = await prisma.subscription.findFirst({
+      where: { tenantId: newTenant.id }
+    });
+    
+    if (!existingSub && plan) {
+      await prisma.subscription.create({
+        data: {
+          tenantId: newTenant.id,
+          planId: plan.id,
+          status: 'ACTIVE',
+          billingCycle: 'YEARLY',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+        },
+      });
+    }
+
+    console.log(`Created sample school: ${school.name} (${school.plan})`);
+  }
 
   console.log('\n✅ Seed completed successfully!');
   console.log('\n📚 Demo School Structure:');

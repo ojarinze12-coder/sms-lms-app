@@ -2,11 +2,17 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth-server';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 60;
+
 export async function GET() {
   try {
     const user = await requireAdmin();
-    if (!user || !user.tenantId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: No user session found' }, { status: 401 });
+    }
+    if (!user.tenantId) {
+      return NextResponse.json({ error: 'Unauthorized: No tenant associated with user' }, { status: 401 });
     }
 
     const tenantId = user.tenantId;
@@ -32,12 +38,14 @@ export async function GET() {
       }),
     ]);
 
+    console.log('[Dashboard API] Counts:', { studentCount, teacherCount, classCount });
+
     const stats = {
       students: studentCount,
       teachers: teacherCount,
       classes: classCount,
-      revenue: feePayments._sum.amount?.toNumber() || 0,
-      feesCollected: feePayments._sum.amount?.toNumber() || 0,
+      revenue: feePayments._sum.amount || 0,
+      feesCollected: feePayments._sum.amount || 0,
       attendance: 94, // Placeholder
     };
 
@@ -54,6 +62,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    return NextResponse.json({ error: 'Failed to fetch dashboard data' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch dashboard data', details: String(error) }, { status: 500 });
   }
 }

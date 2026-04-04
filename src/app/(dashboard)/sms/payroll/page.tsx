@@ -173,8 +173,8 @@ export default function PayrollPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Payroll Management</h1>
-          <p className="text-gray-500">Manage staff salaries and payments</p>
+          <h1 className="text-2xl font-bold dark:text-white">Payroll Management</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage staff salaries and payments</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showForm} onOpenChange={setShowForm}>

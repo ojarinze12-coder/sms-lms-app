@@ -24,12 +24,6 @@ export async function GET(request: NextRequest) {
       },
       include: {
         tier: true,
-        _count: {
-          select: {
-            subjects: true,
-            classes: true,
-          },
-        },
       },
       orderBy: { name: 'asc' },
     });

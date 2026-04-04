@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const overview = {
       totalStudents: studentCount,
       totalTeachers: teacherCount,
-      totalRevenue: feePayments._sum.amount?.toNumber() || 0,
+      totalRevenue: feePayments._sum.amount || 0,
       averageAttendance: 94,
     };
 

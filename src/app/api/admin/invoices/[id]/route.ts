@@ -24,19 +24,31 @@ export async function GET(
 
     const invoice = await prisma.subscriptionInvoice.findUnique({
       where: { id },
-      include: {
-        tenant: { select: { id: true, name: true, slug: true, domain: true, plan: true } },
-        plan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
-        subscription: { select: { id: true, status: true, billingCycle: true } },
-        payments: { orderBy: { createdAt: 'desc' } },
-      },
     });
 
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ invoice });
+    const [tenant, plan, subscription, payments] = await Promise.all([
+      prisma.tenant.findUnique({ where: { id: invoice.tenantId } }),
+      prisma.subscriptionPlan.findUnique({ where: { id: invoice.planId } }),
+      invoice.subscriptionId ? prisma.subscription.findUnique({ where: { id: invoice.subscriptionId } }) : null,
+      prisma.subscriptionPayment.findMany({
+        where: { invoiceId: invoice.id },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return NextResponse.json({
+      invoice: {
+        ...invoice,
+        tenant: tenant ? { id: tenant.id, name: tenant.name, slug: tenant.slug, domain: tenant.domain, plan: tenant.plan } : null,
+        plan: plan ? { id: plan.id, name: plan.name, displayName: plan.displayName, monthlyPrice: plan.monthlyPrice, yearlyPrice: plan.yearlyPrice } : null,
+        subscription: subscription ? { id: subscription.id, status: subscription.status, billingCycle: subscription.billingCycle } : null,
+        payments,
+      },
+    });
   } catch (error) {
     console.error('Admin Invoice GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch invoice' }, { status: 500 });
@@ -59,25 +71,25 @@ export async function PUT(
 
     const invoice = await prisma.subscriptionInvoice.findUnique({
       where: { id },
-      include: { tenant: true },
     });
 
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    const updatedInvoice = await prisma.subscriptionInvoice.update({
-      where: { id },
-      data: {
-        status: validatedData.status,
-        notes: validatedData.notes,
-        paidAt: validatedData.status === 'PAID' ? new Date() : undefined,
-      },
-      include: {
-        tenant: { select: { id: true, name: true, slug: true } },
-        plan: { select: { id: true, name: true, displayName: true } },
-      },
-    });
+    const [updatedInvoice, tenant] = await Promise.all([
+      prisma.subscriptionInvoice.update({
+        where: { id },
+        data: {
+          status: validatedData.status,
+          notes: validatedData.notes,
+          paidAt: validatedData.status === 'PAID' ? new Date() : undefined,
+        },
+      }),
+      prisma.tenant.findUnique({ where: { id: invoice.tenantId } }),
+    ]);
+
+    const plan = await prisma.subscriptionPlan.findUnique({ where: { id: invoice.planId } });
 
     if (validatedData.status === 'PAID' && invoice.status !== 'PAID') {
       await prisma.platformAuditLog.create({
@@ -96,7 +108,13 @@ export async function PUT(
       });
     }
 
-    return NextResponse.json({ invoice: updatedInvoice });
+    return NextResponse.json({
+      invoice: {
+        ...updatedInvoice,
+        tenant: tenant ? { id: tenant.id, name: tenant.name, slug: tenant.slug } : null,
+        plan: plan ? { id: plan.id, name: plan.name, displayName: plan.displayName } : null,
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 });

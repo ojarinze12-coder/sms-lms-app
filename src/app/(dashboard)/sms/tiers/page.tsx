@@ -183,8 +183,8 @@ export default function TiersPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">School Tiers</h1>
-          <p className="text-gray-600">Manage your school levels (Nursery, Primary, Secondary, etc.)</p>
+          <h1 className="text-2xl font-bold dark:text-white">School Tiers</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage your school levels (Nursery, Primary, Secondary, etc.)</p>
         </div>
         <div className="flex gap-3">
           <a
@@ -212,14 +212,14 @@ export default function TiersPage() {
       </div>
 
       {tiers.length === 0 ? (
-        <div className="bg-white rounded-xl border p-8 text-center">
-          <div className="text-gray-500 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center">
+          <div className="text-gray-500 dark:text-gray-400 mb-4">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No tiers configured</h3>
-          <p className="text-gray-500 mb-4">Apply a template to quickly set up your school tiers.</p>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No tiers configured</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">Apply a template to quickly set up your school tiers.</p>
           <button
             onClick={() => setShowTemplateModal(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -232,46 +232,46 @@ export default function TiersPage() {
           {tiers.map((tier) => (
             <div
               key={tier.id}
-              className={`bg-white rounded-xl border p-6 ${!tier.isActive ? 'opacity-60' : ''}`}
+              className={`bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6 ${!tier.isActive ? 'opacity-60' : ''}`}
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold">{tier.alias || tier.name}</h3>
+                    <h3 className="text-lg font-bold dark:text-white">{tier.alias || tier.name}</h3>
                     {!tier.isActive && (
-                      <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                      <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
                         Inactive
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500">{tier.code}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{tier.code}</p>
                 </div>
-                <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
                   Order {tier.order}
                 </span>
               </div>
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Classes:</span>
-                  <span className="font-medium">{tier._count?.classes || 0}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Classes:</span>
+                  <span className="font-medium dark:text-white">{tier._count?.classes || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Departments:</span>
-                  <span className="font-medium">{tier._count?.departments || 0}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Departments:</span>
+                  <span className="font-medium dark:text-white">{tier._count?.departments || 0}</span>
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t flex gap-2">
+              <div className="mt-4 pt-4 border-t dark:border-gray-700 flex gap-2">
                 <button
                   onClick={() => handleEdit(tier)}
-                  className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  className="flex-1 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(tier)}
-                  className="px-3 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
+                  className="px-3 py-2 text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50"
                   disabled={(tier._count?.classes || 0) > 0}
                   title={tier._count?.classes ? 'Cannot delete tier with classes' : ''}
                 >
@@ -286,13 +286,13 @@ export default function TiersPage() {
       {/* Template Modal */}
       {showTemplateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] flex flex-col">
-            <h2 className="text-xl font-bold mb-4">Apply Tier Template</h2>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] flex flex-col">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Apply Tier Template</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Select a template to quickly set up your school tiers. This will create the selected tiers for you.
             </p>
             {error && (
-              <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm mb-4">
+              <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
                 {error}
               </div>
             )}
@@ -303,15 +303,15 @@ export default function TiersPage() {
                   onClick={() => setSelectedTemplate(option.value)}
                   className={`w-full text-left p-4 rounded-lg border transition-colors ${
                     selectedTemplate === option.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
-                  <div className="font-medium">{option.label}</div>
+                  <div className="font-medium dark:text-white">{option.label}</div>
                 </button>
               ))}
             </div>
-            <div className="flex gap-4 pt-6 mt-4 border-t">
+            <div className="flex gap-4 pt-6 mt-4 border-t dark:border-gray-700">
               <button
                 onClick={handleApplyTemplate}
                 disabled={!selectedTemplate || submitting}
@@ -325,7 +325,7 @@ export default function TiersPage() {
                   setSelectedTemplate('');
                   setError('');
                 }}
-                className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                className="px-6 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Cancel
               </button>
@@ -337,16 +337,16 @@ export default function TiersPage() {
       {/* Add Tier Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add New Tier</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Add New Tier</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tier Name
                 </label>
                 <input
@@ -354,12 +354,12 @@ export default function TiersPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Primary"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Code (3-4 letters)
                 </label>
                 <input
@@ -367,12 +367,12 @@ export default function TiersPage() {
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase().slice(0, 4) })}
                   placeholder="e.g., PRI"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Display Order
                 </label>
                 <input
@@ -380,12 +380,12 @@ export default function TiersPage() {
                   value={formData.order}
                   onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
                   min="0"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Alias (Optional)
                 </label>
                 <input
@@ -393,7 +393,7 @@ export default function TiersPage() {
                   value={formData.alias}
                   onChange={(e) => setFormData({ ...formData, alias: e.target.value })}
                   placeholder="e.g., Lower School"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-4 pt-4">
@@ -407,7 +407,7 @@ export default function TiersPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
@@ -420,40 +420,40 @@ export default function TiersPage() {
       {/* Edit Tier Modal */}
       {showEditModal && editingTier && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Edit Tier</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Edit Tier</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tier Name
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Code
                 </label>
                 <input
                   type="text"
                   value={formData.code}
                   disabled
-                  className="w-full px-3 py-2 border rounded-lg bg-gray-100"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-gray-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">Code cannot be changed</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Code cannot be changed</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Alias (Optional)
                 </label>
                 <input
@@ -461,7 +461,7 @@ export default function TiersPage() {
                   value={formData.alias}
                   onChange={(e) => setFormData({ ...formData, alias: e.target.value })}
                   placeholder="e.g., Lower School"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                 />
               </div>
               <div className="flex gap-4 pt-4">
@@ -478,7 +478,7 @@ export default function TiersPage() {
                     setShowEditModal(false);
                     setEditingTier(null);
                   }}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>

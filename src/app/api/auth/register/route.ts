@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       tierTemplate,
       curriculum = 'NERDC',
       usePerTierCurriculum = false,
+      themeMode = 'SYSTEM',
     } = body;
 
     console.log('Registration attempt:', { schoolName, slug, email, firstName, lastName, brandColor, tierTemplate, curriculum });
@@ -103,6 +104,7 @@ export async function POST(request: NextRequest) {
         curriculumType: curriculum as Curriculum,
         usePerTierCurriculum,
         tiersSetupComplete: true,
+        themeMode,
       },
     });
 
@@ -173,10 +175,12 @@ export async function POST(request: NextRequest) {
     console.log('User created successfully:', user.id);
 
     const token = createToken({
+      id: user.id,
       userId: user.id,
       email: user.email,
       tenantId: user.tenantId || undefined,
       role: user.role,
+      tokenVersion: user.tokenVersion,
     });
 
     const response = NextResponse.json({
@@ -190,7 +194,31 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    response.cookies.set('auth-token', token, {
+    response.cookies.set('pcc-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+
+    response.cookies.set('scc-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+
+    response.cookies.set('auth-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+
+    response.cookies.set('scc-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

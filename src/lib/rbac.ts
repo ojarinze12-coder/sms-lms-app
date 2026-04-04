@@ -95,11 +95,15 @@ export async function checkPermission(
 }
 
 export async function requireAuth(request: NextRequest): Promise<JWTPayload | null> {
-  const token = request.cookies.get('auth-token')?.value;
+  const pccToken = request.cookies.get('pcc-token')?.value;
+  const sccToken = request.cookies.get('scc-token')?.value;
+  const legacyToken = request.cookies.get('auth-token')?.value;
   
-  if (!token) return null;
+  if (pccToken) return verifyToken(pccToken);
+  if (sccToken) return verifyToken(sccToken);
+  if (legacyToken) return verifyToken(legacyToken);
   
-  return verifyToken(token);
+  return null;
 }
 
 export async function requireRole(

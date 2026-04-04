@@ -151,8 +151,8 @@ export default function StaffPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Non-Teaching Staff</h1>
-          <p className="text-gray-500">Manage administrative and support staff</p>
+          <h1 className="text-2xl font-bold dark:text-white">Non-Teaching Staff</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage administrative and support staff</p>
         </div>
         <Dialog open={showAddDialog} onOpenChange={(open) => {
           if (!open) handleCancel();
@@ -163,9 +163,9 @@ export default function StaffPage() {
               Add Staff
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl dark:bg-gray-800">
             <DialogHeader>
-              <DialogTitle>{editingStaff ? 'Edit Staff' : 'Add New Staff'}</DialogTitle>
+              <DialogTitle className="dark:text-white">{editingStaff ? 'Edit Staff' : 'Add New Staff'}</DialogTitle>
             </DialogHeader>
             <StaffForm
               formData={formData}

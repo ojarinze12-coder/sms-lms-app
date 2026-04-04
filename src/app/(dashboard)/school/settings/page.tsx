@@ -11,7 +11,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2, Sun, Moon, Monitor } from 'lucide-react';
+import { useBrand } from '@/components/brand-theme-provider';
+import { useTheme } from 'next-themes';
 
 interface SchoolSettings {
   schoolName: string;
@@ -24,9 +26,12 @@ interface SchoolSettings {
   currency: string;
   logo?: string;
   brandColor?: string;
+  themeMode?: string;
 }
 
 export default function SettingsPage() {
+  const { branding, updateBranding } = useBrand();
+  const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<SchoolSettings>({
     schoolName: '',
     email: '',
@@ -38,15 +43,23 @@ export default function SettingsPage() {
     currency: 'NGN',
     logo: '',
     brandColor: '#1a56db',
+    themeMode: 'SYSTEM',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  useEffect(() => {
+    if (branding.brandColor) {
+      setSettings(prev => ({ ...prev, brandColor: branding.brandColor }));
+    }
+  }, [branding]);
 
   const fetchSettings = async () => {
     try {
@@ -64,6 +77,7 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
+    setError(null);
     try {
       const res = await fetch('/api/school/settings', {
         method: 'PUT',
@@ -71,12 +85,27 @@ export default function SettingsPage() {
         body: JSON.stringify(settings),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
+        updateBranding({
+          name: settings.schoolName,
+          logo: settings.logo || null,
+          brandColor: settings.brandColor,
+        });
+        if (settings.themeMode) {
+          setTheme(settings.themeMode.toLowerCase());
+        }
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
+      } else if (res.status === 401) {
+        setError('Session expired. Please log in again.');
+      } else {
+        setError(data.error || 'Failed to save settings');
       }
     } catch (err) {
       console.error('Failed to save settings:', err);
+      setError('Failed to save settings. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -99,12 +128,15 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">School Settings</h1>
-          <p className="text-gray-500 mt-1">Configure your school preferences</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">School Settings</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Configure your school preferences</p>
         </div>
         <div className="flex items-center gap-3">
           {saved && (
-            <span className="text-green-600 text-sm font-medium">Changes saved!</span>
+            <span className="text-green-600 dark:text-green-400 text-sm font-medium">Changes saved!</span>
+          )}
+          {error && (
+            <span className="text-red-500 dark:text-red-400 text-sm font-medium">{error}</span>
           )}
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
@@ -248,6 +280,45 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
+              <label className="block text-sm font-medium mb-2">School Logo</label>
+              <div className="flex items-center gap-4">
+                {settings.logo ? (
+                  <div className="relative">
+                    <img 
+                      src={settings.logo} 
+                      alt="School logo" 
+                      className="w-20 h-20 object-contain rounded-lg border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSettings({ ...settings, logo: '' })}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div 
+                    className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center"
+                  >
+                    <Upload className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+                <div>
+                  <input
+                    type="text"
+                    value={settings.logo || ''}
+                    onChange={(e) => setSettings({ ...settings, logo: e.target.value })}
+                    placeholder="Enter logo URL or paste image address"
+                    className="w-64"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Paste a URL for your school logo
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-2">Brand Color</label>
               <div className="flex flex-wrap gap-2">
                 {colorPresets.map((color) => (
@@ -271,13 +342,65 @@ export default function SettingsPage() {
             </div>
             <div className="pt-4">
               <p className="text-sm text-gray-500">Brand Preview</p>
-              <div 
-                className="mt-2 w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-xl"
-                style={{ backgroundColor: settings.brandColor || '#1a56db' }}
-              >
-                {settings.schoolName?.charAt(0) || 'S'}
+              <div className="flex items-center gap-4 mt-2">
+                {settings.logo ? (
+                  <img 
+                    src={settings.logo} 
+                    alt="Logo preview" 
+                    className="w-16 h-16 object-contain rounded-lg border"
+                  />
+                ) : (
+                  <div 
+                    className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-xl"
+                    style={{ backgroundColor: settings.brandColor || '#1a56db' }}
+                  >
+                    {settings.schoolName?.charAt(0) || 'S'}
+                  </div>
+                )}
+                <p className="font-medium">{settings.schoolName || 'School Name'}</p>
               </div>
-              <p className="mt-2 font-medium">{settings.schoolName || 'School Name'}</p>
+            </div>
+            <div className="pt-4 border-t">
+              <label className="block text-sm font-medium mb-2">Theme Mode</label>
+              <p className="text-sm text-gray-500 mb-3">Choose how the app appearance adapts</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSettings({ ...settings, themeMode: 'LIGHT' })}
+                  className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                    settings.themeMode === 'LIGHT' 
+                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20' 
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Sun className="h-5 w-5" />
+                  <span className="text-sm font-medium">Light</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettings({ ...settings, themeMode: 'DARK' })}
+                  className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                    settings.themeMode === 'DARK' 
+                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20' 
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Moon className="h-5 w-5" />
+                  <span className="text-sm font-medium">Dark</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettings({ ...settings, themeMode: 'SYSTEM' })}
+                  className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                    settings.themeMode === 'SYSTEM' 
+                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20' 
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Monitor className="h-5 w-5" />
+                  <span className="text-sm font-medium">System</span>
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>

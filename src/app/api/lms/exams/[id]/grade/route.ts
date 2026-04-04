@@ -32,6 +32,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
     }
 
+    // Check tenant access
+    if (authUser.role !== 'SUPER_ADMIN') {
+      const hasAccess = exam.tenantId === authUser.tenantId || 
+        (exam.subjectId ? await checkExamTenantAccess(exam.subjectId, authUser.tenantId) : false);
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+      }
+    }
+
     const results = await prisma.result.findMany({
       where: {
         examId,
@@ -118,4 +127,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     console.error('Exam grade error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+async function checkExamTenantAccess(subjectId: string, tenantId: string): Promise<boolean> {
+  const subject = await prisma.subject.findUnique({
+    where: { id: subjectId },
+    include: { academicClass: { include: { academicYear: true } } }
+  });
+  return subject?.academicClass?.academicYear?.tenantId === tenantId;
 }

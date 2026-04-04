@@ -36,9 +36,17 @@ export default function AcademicYearsPage() {
     try {
       const res = await fetch('/api/sms/academic-years');
       const data = await res.json();
-      setYears(data);
+      if (Array.isArray(data)) {
+        setYears(data);
+      } else if (data.error) {
+        console.error('API error:', data.error);
+        setYears([]);
+      } else {
+        setYears([]);
+      }
     } catch (err) {
       console.error('Failed to load years:', err);
+      setYears([]);
     } finally {
       setLoading(false);
     }
@@ -137,8 +145,8 @@ export default function AcademicYearsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Academic Years</h1>
-          <p className="text-gray-600">Manage academic years and terms</p>
+          <h1 className="text-2xl font-bold dark:text-white">Academic Years</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage academic years and terms</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -148,37 +156,37 @@ export default function AcademicYearsPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Start Date</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">End Date</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Status</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Name</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Start Date</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">End Date</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y dark:divide-gray-700">
             {!years || years.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                   No academic years yet. Add your first academic year to get started.
                 </td>
               </tr>
             ) : (
               years.map((year) => (
-                <tr key={year.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-medium">{year.name}</td>
-                  <td className="px-6 py-4 text-sm">{formatDate(year.startDate)}</td>
-                  <td className="px-6 py-4 text-sm">{formatDate(year.endDate)}</td>
+                <tr key={year.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4 text-sm font-medium dark:text-white">{year.name}</td>
+                  <td className="px-6 py-4 text-sm dark:text-gray-300">{formatDate(year.startDate)}</td>
+                  <td className="px-6 py-4 text-sm dark:text-gray-300">{formatDate(year.endDate)}</td>
                   <td className="px-6 py-4 text-sm">
                     {year.isActive ? (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                      <span className="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 rounded-full text-xs">
                         Active
                       </span>
                     ) : (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-full text-xs">
                         Inactive
                       </span>
                     )}
@@ -186,13 +194,13 @@ export default function AcademicYearsPage() {
                   <td className="px-6 py-4 text-sm">
                     <Link
                       href={`/sms/academic-years/${year.id}`}
-                      className="text-blue-600 hover:underline mr-4"
+                      className="text-blue-600 hover:underline mr-4 dark:text-blue-400"
                     >
                       View Terms
                     </Link>
                     <button
                       onClick={() => handleEdit(year)}
-                      className="text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-blue-600 hover:text-blue-800 font-medium dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       Edit
                     </button>
@@ -207,17 +215,17 @@ export default function AcademicYearsPage() {
       {/* Create Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Academic Year</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Add Academic Year</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Academic Year Name
                 </label>
                 <input
@@ -225,33 +233,33 @@ export default function AcademicYearsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., 2024-2025"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Start Date
                   </label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     End Date
                   </label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
@@ -265,7 +273,7 @@ export default function AcademicYearsPage() {
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <label htmlFor="isActive" className="text-sm text-gray-700">
+                <label htmlFor="isActive" className="text-sm text-gray-700 dark:text-gray-300">
                   Set as active academic year
                 </label>
               </div>
@@ -281,7 +289,7 @@ export default function AcademicYearsPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
@@ -294,50 +302,50 @@ export default function AcademicYearsPage() {
       {/* Edit Modal */}
       {showEditModal && editingYear && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Edit Academic Year</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Edit Academic Year</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Academic Year Name
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Start Date
                   </label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     End Date
                   </label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
@@ -351,7 +359,7 @@ export default function AcademicYearsPage() {
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <label htmlFor="editIsActive" className="text-sm text-gray-700">
+                <label htmlFor="editIsActive" className="text-sm text-gray-700 dark:text-gray-300">
                   Set as active academic year
                 </label>
               </div>
@@ -371,7 +379,7 @@ export default function AcademicYearsPage() {
                     setEditingYear(null);
                     setError('');
                   }}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>

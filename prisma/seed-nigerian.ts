@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Gender, FeeType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -234,7 +234,7 @@ async function main() {
           firstName: s.first,
           lastName: s.last,
           dateOfBirth: new Date(s.dob),
-          gender: s.gender,
+          gender: s.gender as Gender,
           phone: '+2348012345678',
           address: 'Lagos, Nigeria',
           tenantId: demoSchool.id,
@@ -380,7 +380,7 @@ async function main() {
 
   for (const f of fees) {
     await prisma.feeStructure.create({
-      data: { name: f.name, description: f.name, amount: f.amount, type: f.type, category: 'MANDATORY', academicYearId: academicYear2025.id, termId: f.type === 'TUITION' ? term1.id : null, tenantId: demoSchool.id },
+      data: { name: f.name, description: f.name, amount: f.amount, type: f.type as FeeType, category: 'MANDATORY', academicYearId: academicYear2025.id, termId: f.type === 'TUITION' ? term1.id : null, tenantId: demoSchool.id },
     }).catch(() => {});
   }
   console.log('✅ Fee structures created');

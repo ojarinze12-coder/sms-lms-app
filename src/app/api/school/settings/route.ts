@@ -13,10 +13,14 @@ export async function GET() {
 
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { name: true },
+      select: { name: true, brandColor: true, logo: true },
     });
 
     const config = await prisma.tenantConfig.findUnique({
+      where: { tenantId },
+    });
+
+    const settings = await prisma.tenantSettings.findUnique({
       where: { tenantId },
     });
 
@@ -30,6 +34,9 @@ export async function GET() {
         dateFormat: config?.dateFormat || 'DD/MM/YYYY',
         gradingScale: 'nigerian',
         currency: config?.currency || 'NGN',
+        brandColor: tenant?.brandColor || '#1a56db',
+        logo: tenant?.logo || '',
+        themeMode: settings?.themeMode || 'SYSTEM',
       },
     });
   } catch (error) {
@@ -41,17 +48,27 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   try {
     const authUser = await getAuthUser();
-    if (!authUser?.tenantId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.log('[School Settings PUT] authUser:', authUser);
+    
+    if (!authUser) {
+      console.log('[School Settings PUT] No auth user found');
+      return NextResponse.json({ error: 'Unauthorized - No session found' }, { status: 401 });
+    }
+    
+    if (!authUser.tenantId) {
+      console.log('[School Settings PUT] No tenantId for user:', authUser.userId);
+      return NextResponse.json({ error: 'Unauthorized - No school associated with account' }, { status: 401 });
     }
 
     const tenantId = authUser.tenantId;
+    console.log('[School Settings PUT] Saving for tenant:', tenantId);
+    
     const body = await req.json();
-    const { schoolName, email, phone, address, timezone, dateFormat, gradingScale, currency } = body;
+    const { schoolName, email, phone, address, timezone, dateFormat, gradingScale, currency, brandColor, logo, themeMode } = body;
 
     await prisma.tenant.update({
       where: { id: tenantId },
-      data: { name: schoolName },
+      data: { name: schoolName, brandColor, logo },
     });
 
     await prisma.tenantConfig.upsert({
@@ -68,6 +85,17 @@ export async function PUT(req: NextRequest) {
         timezone,
         dateFormat,
         currency,
+      },
+    });
+
+    await prisma.tenantSettings.upsert({
+      where: { tenantId },
+      update: {
+        themeMode,
+      },
+      create: {
+        tenantId,
+        themeMode,
       },
     });
 

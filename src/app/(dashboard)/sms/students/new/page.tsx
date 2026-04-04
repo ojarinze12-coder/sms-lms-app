@@ -15,11 +15,14 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { NIGERIAN_STATES, NIGERIAN_LGAS } from '@/lib/nigeria';
+import { Loader2 } from 'lucide-react';
+import { PhotoCapture } from '@/components/photo-capture';
 
 export default function NewStudentPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     studentId: '',
     firstName: '',
@@ -58,6 +61,7 @@ export default function NewStudentPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          photo: photoPreview,
           dateOfBirth: formData.dateOfBirth || null,
         }),
       });
@@ -92,6 +96,20 @@ export default function NewStudentPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Photo Capture */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Student Photo</CardTitle>
+            <CardDescription>Capture a photo using webcam or upload from device</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PhotoCapture
+              value={photoPreview || ''}
+              onChange={setPhotoPreview}
+            />
+          </CardContent>
+        </Card>
+
         {/* Basic Information */}
         <Card>
           <CardHeader>

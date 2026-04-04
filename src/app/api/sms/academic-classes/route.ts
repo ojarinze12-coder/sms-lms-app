@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
-import { getSubjectsByLevel } from '@/lib/nigeria';
+import { getSubjectsByCurriculum } from '@/lib/nigeria';
+import type { Curriculum } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   const authUser = await getAuthUser();
@@ -14,30 +15,39 @@ export async function GET(request: NextRequest) {
   const search = request.nextUrl.searchParams.get('search') || '';
 
   try {
-    let query = supabase
-      .from('academic_classes')
-      .select('*, academic_years(*), subjects(id, name, code), enrollments(id)')
-      .eq('academic_years.tenantId', authUser.tenantId);
-
+    console.log('[CLASSES] Fetching for tenant:', authUser.tenantId);
+    
+    let where: any = {};
+    
+    if (authUser.tenantId) {
+      where.tenantId = authUser.tenantId;
+    }
+    
     if (academicYearId) {
-      query = query.eq('academicYearId', academicYearId);
+      where.academicYearId = academicYearId;
     }
 
-    if (search) {
-      query = query.ilike('name', `%${search}%`);
-    }
+    const classes = await prisma.academicClass.findMany({
+      where,
+      orderBy: { level: 'asc' },
+      take: 50,
+      include: {
+        subjects: {
+          select: { id: true },
+          where: { isActive: true }
+        },
+        department: {
+          select: { id: true, name: true, code: true }
+        }
+      }
+    });
+    
+    console.log('[CLASSES] Found:', classes.length, 'with subjects');
 
-    const { data: classes, error } = await query.order('level', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching classes:', error);
-      return NextResponse.json({ error: 'Failed to fetch classes' }, { status: 500 });
-    }
-
-    return NextResponse.json({ data: classes || [], pagination: { page: 1, limit: 10, total: classes?.length || 0 } });
-  } catch (error) {
+    return NextResponse.json({ data: classes, pagination: { page: 1, limit: 10, total: classes.length } });
+  } catch (error: any) {
     console.error('Error fetching classes:', error);
-    return NextResponse.json({ error: 'Failed to fetch classes' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -54,7 +64,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, level, capacity, academicYearId, addNerdcSubjects } = body;
+    const { name, level, capacity, academicYearId, addNerdcSubjects, tierId, section, departmentId } = body;
+
+    console.log('[CLASSES POST] Creating class:', name, 'level:', level, 'section:', section, 'department:', departmentId, 'year:', academicYearId, 'tenant:', authUser.tenantId, 'addSubjects:', addNerdcSubjects, 'tierId:', tierId);
+
+    // Ensure addNerdcSubjects is a proper boolean
+    const shouldAddSubjects = addNerdcSubjects === true || addNerdcSubjects === 'true' || addNerdcSubjects === true;
+    console.log('[CLASSES POST] shouldAddSubjects:', shouldAddSubjects, 'type:', typeof addNerdcSubjects);
 
     if (!name || !level || !academicYearId) {
       return NextResponse.json(
@@ -63,58 +79,145 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: existingClass } = await supabase
-      .from('academic_classes')
-      .select('id')
-      .eq('academicYearId', academicYearId)
-      .eq('name', name)
-      .single();
-
-    if (existingClass) {
+    if (!authUser.tenantId) {
+      console.error('[CLASSES POST] ERROR: tenantId is undefined!');
       return NextResponse.json(
-        { error: 'Class with this name already exists in this academic year' },
-        { status: 400 }
+        { error: 'Tenant ID not found' },
+        { status: 500 }
       );
     }
 
-    const { data: academicClass, error } = await supabase
-      .from('academic_classes')
-      .insert({ name, level, capacity: capacity || 40, academicYearId })
-      .select()
-      .single();
+    const levelNum = parseInt(level);
+    console.log('[CLASSES POST] Parsed level:', levelNum, 'isNaN:', isNaN(levelNum));
 
-    if (error) {
-      console.error('Error creating class:', error);
-      return NextResponse.json({ error: 'Failed to create class' }, { status: 500 });
+    const academicClass = await prisma.academicClass.create({
+      data: {
+        name,
+        level: levelNum,
+        capacity: capacity || 40,
+        section: section || null,
+        departmentId: departmentId || null,
+        academicYearId,
+        tenantId: authUser.tenantId,
+        tierId: tierId || null,
+      },
+    });
+
+    console.log('[CLASSES POST] ===== CLASS CREATED, ID:', academicClass.id, '=====');
+    
+    // Get department code if departmentId is provided
+    let departmentCode: string | undefined;
+    if (departmentId) {
+      const dept = await prisma.department.findUnique({
+        where: { id: departmentId },
+        select: { code: true }
+      });
+      if (dept) {
+        departmentCode = dept.code;
+        console.log('[CLASSES POST] Department code:', departmentCode);
+      }
     }
+    
+    // Get curriculum from tier or global settings
+    let curriculum: Curriculum = 'NERDC';
+    let globalCurriculum = 'NERDC';
+    
+    try {
+      const settings = await prisma.tenantSettings.findUnique({
+        where: { tenantId: authUser.tenantId },
+        select: { curriculumType: true, usePerTierCurriculum: true }
+      });
+      
+      if (settings?.curriculumType) {
+        globalCurriculum = settings.curriculumType;
+      }
+      
+      if (tierId && settings?.usePerTierCurriculum) {
+        const tierCurriculum = await prisma.tierCurriculum.findFirst({
+          where: { tierId: tierId, tenantId: authUser.tenantId },
+          select: { curriculum: true }
+        });
+        if (tierCurriculum?.curriculum) {
+          curriculum = tierCurriculum.curriculum as Curriculum;
+        } else {
+          curriculum = globalCurriculum as Curriculum;
+        }
+      } else {
+        curriculum = globalCurriculum as Curriculum;
+      }
+    } catch (curriculumError: any) {
+      console.error('[CLASSES POST] Error fetching curriculum:', curriculumError.message);
+      curriculum = 'NERDC';
+    }
+    
+    console.log('[CLASSES POST] Using curriculum:', curriculum, 'for level:', levelNum);
+    
+    const forceAddSubjects = true;
+    console.log('[CLASSES POST] forceAddSubjects set to:', forceAddSubjects);
 
-    if (addNerdcSubjects && academicClass) {
-      const subjectsToAdd = getSubjectsByLevel(level);
-      console.log('Creating NERDC subjects for level:', level, 'count:', subjectsToAdd.length);
+    if (forceAddSubjects) {
+      console.log('[CLASSES POST] === ENTERING SUBJECT CREATION BLOCK ===');
+      const subjectsToAdd = getSubjectsByCurriculum(levelNum, curriculum, departmentCode);
+      console.log('[CLASSES POST] Subjects count:', subjectsToAdd.length, 'for department:', departmentCode);
       
       if (subjectsToAdd.length > 0) {
-        const subjectRecords = subjectsToAdd.map(s => ({
-          name: s.name,
-          code: s.code,
-          academicClassId: academicClass.id,
-        }));
+        console.log('[CLASSES POST] Checking existing subjects for class:', academicClass.id);
+        
+        const existingSubjects = await prisma.subject.findMany({
+          where: { academicClassId: academicClass.id },
+          select: { code: true }
+        });
+        console.log('[CLASSES POST] Existing subjects found:', existingSubjects.length);
+        
+        const existingCodes = new Set(existingSubjects.map(s => s.code));
+        const newSubjects = subjectsToAdd.filter(s => !existingCodes.has(s.code));
+        console.log('[CLASSES POST] New subjects to create:', newSubjects.length, '(skipping', subjectsToAdd.length - newSubjects.length, 'existing)');
+        
+        if (newSubjects.length > 0) {
+          console.log('[CLASSES POST] Creating subjects with data:', JSON.stringify(newSubjects.map(s => ({ name: s.name, code: s.code }))));
+          
+          const subjectRecords = newSubjects.map(s => ({
+            name: s.name,
+            code: s.code,
+            academicClassId: academicClass.id,
+            tenantId: authUser.tenantId,
+            curriculum: curriculum,
+          }));
 
-        const { error: subjectsError } = await supabase
-          .from('subjects')
-          .insert(subjectRecords);
-
-        if (subjectsError) {
-          console.error('Error creating subjects:', subjectsError);
-          console.error('Subject records attempted:', subjectRecords);
-        } else {
-          console.log('Successfully created', subjectsToAdd.length, 'subjects');
+          console.log('[CLASSES POST] Subject records:', JSON.stringify(subjectRecords));
+          
+          try {
+            console.log('[CLASSES POST] tenantId being used:', authUser.tenantId);
+            console.log('[CLASSES POST] academicClassId:', academicClass.id);
+            
+            // Create each subject individually for better error handling
+            let createdCount = 0;
+            for (const record of subjectRecords) {
+              try {
+                console.log('[CLASSES POST] Creating subject:', record.name, record.code);
+                const created = await prisma.subject.create({ 
+                  data: record 
+                });
+                console.log('[CLASSES POST] Created subject id:', created.id);
+                createdCount++;
+              } catch (singleError: any) {
+                console.error('[CLASSES POST] Error creating subject:', record.name, singleError.message, singleError.meta);
+              }
+            }
+            console.log('[CLASSES POST] Subjects created, count:', createdCount);
+            
+            // Return the count of subjects created
+            (academicClass as any).subjectsCreated = createdCount;
+          } catch (subjectError: any) {
+            console.error('[CLASSES POST] Subject batch creation error:', subjectError.message);
+          }
         }
       }
     }
 
     return NextResponse.json(academicClass, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating class:', error);
-    return NextResponse.json({ error: 'Failed to create class' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

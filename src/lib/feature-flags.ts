@@ -15,20 +15,20 @@ export async function getTenantFeatures(tenantId: string): Promise<Record<string
     where: { id: tenantId },
     include: {
       subscriptions: {
-        include: { plan: true },
+        include: { subscriptionPlan: true },
       },
     },
   });
 
   const subscription = tenant?.subscriptions?.[0];
   
-  if (!subscription?.plan) {
+  if (!subscription?.subscriptionPlan) {
     return getDefaultFeatures('FREE');
   }
 
-  const planFeatures = subscription.plan.features as Record<string, any>;
+  const planFeatures = subscription.subscriptionPlan.features as Record<string, any>;
   return {
-    ...getDefaultFeatures(subscription.plan.name),
+    ...getDefaultFeatures(subscription.subscriptionPlan.name),
     ...planFeatures,
   };
 }
@@ -122,22 +122,22 @@ export async function getTenantLimits(tenantId: string): Promise<{
     where: { id: tenantId },
     include: {
       subscriptions: {
-        include: { plan: true },
+        include: { subscriptionPlan: true },
       },
     },
   });
 
   const subscription = tenant?.subscriptions?.[0];
   
-  if (!subscription?.plan) {
+  if (!subscription?.subscriptionPlan) {
     return { maxStudents: 100, maxTeachers: 10, maxStorageGB: 1, maxAICalls: 0 };
   }
 
   return {
-    maxStudents: subscription.plan.maxStudents,
-    maxTeachers: subscription.plan.maxTeachers,
-    maxStorageGB: subscription.plan.maxStorageGB,
-    maxAICalls: subscription.plan.maxAICalls,
+    maxStudents: subscription.subscriptionPlan.maxStudents,
+    maxTeachers: subscription.subscriptionPlan.maxTeachers,
+    maxStorageGB: subscription.subscriptionPlan.maxStorageGB,
+    maxAICalls: subscription.subscriptionPlan.maxAICalls,
   };
 }
 

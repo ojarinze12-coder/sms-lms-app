@@ -107,9 +107,62 @@ export const WHATSAPP_TEMPLATES: Record<string, WhatsAppTemplate> = {
 export class NotificationService {
   private twilioClient: any;
   private whatsappBaseUrl = 'https://graph.facebook.com/v18.0';
+  private nodemailer: any;
 
   constructor() {
     this.twilioClient = null;
+    this.nodemailer = null;
+  }
+
+  private getNodemailer() {
+    if (!this.nodemailer) {
+      try {
+        const nodemailer = require('nodemailer');
+        this.nodemailer = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+      } catch (e) {
+        console.warn('Nodemailer not configured');
+      }
+    }
+    return this.nodemailer;
+  }
+
+  async sendEmail(to: string, subject: string, html: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const transporter = this.getNodemailer();
+    if (!transporter) {
+      console.warn('Email not configured, skipping email');
+      return { success: false, error: 'Email not configured' };
+    }
+
+    try {
+      const result = await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to,
+        subject,
+        html,
+      });
+      return { success: true, messageId: result.messageId };
+    } catch (error: any) {
+      console.error('Email error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendNotification(payload: NotificationPayload): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    if (payload.channel === 'email') {
+      return this.sendEmail(payload.to, payload.templateName || 'Notification', payload.message);
+    }
+    if (payload.channel === 'whatsapp') {
+      return this.sendWhatsApp(payload.to, payload.message);
+    }
+    return this.sendSMS(payload.to, payload.message);
   }
 
   private getTwilioClient() {

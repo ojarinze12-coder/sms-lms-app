@@ -60,6 +60,7 @@ export async function PUT(
         qualification: body.qualification,
         experience: body.experience,
         status: body.status,
+        cardStatus: body.cardStatus,
       },
     });
 

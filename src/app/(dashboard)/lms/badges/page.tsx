@@ -39,7 +39,7 @@ export default function BadgesPage() {
       const tiersData = await tiersRes.json();
       const studentsData = await studentsRes.json();
 
-      setBadges(badgesData || []);
+      setBadges(badgesData.badges || badgesData || []);
       setTiers(tiersData.data || []);
       setStudents(studentsData.students || studentsData.data?.students || []);
     } catch (err) {
@@ -99,18 +99,19 @@ export default function BadgesPage() {
     }
   }
 
-  const globalBadges = badges.filter(b => b.isGlobal);
-  const tierBadges = badges.filter(b => !b.isGlobal);
+  const badgesList = Array.isArray(badges) ? badges : [];
+  const globalBadges = badgesList.filter(b => b.isGlobal);
+  const tierBadges = badgesList.filter(b => !b.isGlobal);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Badges & Achievements</h1>
-          <p className="text-gray-600">Manage achievement badges across all tiers</p>
+          <h1 className="text-2xl font-bold dark:text-white">Badges & Achievements</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage achievement badges across all tiers</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowAwardModal(true)}>
+          <Button variant="outline" className="dark:border-gray-600 dark:text-gray-300" onClick={() => setShowAwardModal(true)}>
             Award Badge
           </Button>
           <Button onClick={() => setShowForm(!showForm)}>
@@ -122,10 +123,10 @@ export default function BadgesPage() {
       {/* Filters */}
       <div className="flex gap-4 items-center">
         <Select value={filterTier} onValueChange={setFilterTier}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-48 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
             <SelectValue placeholder="Filter by tier" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="dark:bg-gray-800 dark:border-gray-600">
             <SelectItem value="all">All Tiers</SelectItem>
             {tiers.map((tier) => (
               <SelectItem key={tier.id} value={tier.id}>
@@ -134,7 +135,7 @@ export default function BadgesPage() {
             ))}
           </SelectContent>
         </Select>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {badges.length} badge{badges.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -163,7 +164,7 @@ export default function BadgesPage() {
           {/* Global Badges */}
           {globalBadges.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 dark:text-white">
                 <span>🌐</span> Global Badges (All Tiers)
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -177,7 +178,7 @@ export default function BadgesPage() {
           {/* Tier-Specific Badges */}
           {tierBadges.length > 0 && (
             <div className="mt-6">
-              <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 dark:text-white">
                 <span>🎯</span> Tier-Specific Badges
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -189,8 +190,8 @@ export default function BadgesPage() {
           )}
 
           {badges.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center text-gray-500">
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
                 No badges created yet. Click &quot;Create Badge&quot; to add your first badge.
               </CardContent>
             </Card>

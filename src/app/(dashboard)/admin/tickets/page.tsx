@@ -108,8 +108,8 @@ export default function TicketsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Support Tickets</h1>
-          <p className="text-gray-500 mt-1">Manage support requests from tenants</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Support Tickets</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage support requests from tenants</p>
         </div>
         <div className="flex items-center gap-2">
           {['all', 'OPEN', 'IN_PROGRESS', 'PENDING_REPLY', 'RESOLVED'].map((status) => (
@@ -119,7 +119,7 @@ export default function TicketsPage() {
               className={`px-3 py-1.5 text-sm rounded-lg ${
                 filter === status
                   ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
               }`}
             >
               {status === 'all' ? 'All' : status.replace('_', ' ')}
@@ -129,27 +129,27 @@ export default function TicketsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">Tickets</h2>
+        <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+            <h2 className="font-semibold text-gray-900 dark:text-white">Tickets</h2>
           </div>
-          <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-[600px] overflow-y-auto">
             {tickets.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">No tickets found</div>
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">No tickets found</div>
             ) : (
               tickets.map((ticket) => (
                 <button
                   key={ticket.id}
                   onClick={() => setSelectedTicket(ticket)}
-                  className={`w-full p-4 text-left hover:bg-gray-50 ${
-                    selectedTicket?.id === ticket.id ? 'bg-blue-50' : ''
+                  className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                    selectedTicket?.id === ticket.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{ticket.subject}</p>
-                      <p className="text-sm text-gray-500 truncate">{ticket.requesterName}</p>
-                      <p className="text-xs text-gray-400 mt-1">{ticket.ticketNumber}</p>
+                      <p className="font-medium text-gray-900 dark:text-white truncate">{ticket.subject}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{ticket.requesterName}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{ticket.ticketNumber}</p>
                     </div>
                     <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${getPriorityColor(ticket.priority)}`}>
                       {ticket.priority}
@@ -159,7 +159,7 @@ export default function TicketsPage() {
                     <span className={`px-2 py-0.5 text-xs rounded-full ${getStatusColor(ticket.status)}`}>
                       {ticket.status.replace('_', ' ')}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
                       {new Date(ticket.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -169,14 +169,14 @@ export default function TicketsPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           {selectedTicket ? (
             <div className="h-full flex flex-col">
-              <div className="p-4 border-b border-gray-100">
+              <div className="p-4 border-b border-gray-100 dark:border-gray-700">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">{selectedTicket.subject}</h2>
-                    <p className="text-sm text-gray-500">{selectedTicket.ticketNumber}</p>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{selectedTicket.subject}</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{selectedTicket.ticketNumber}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(selectedTicket.status)}`}>
@@ -187,30 +187,30 @@ export default function TicketsPage() {
                     </span>
                   </div>
                 </div>
-                <div className="mt-3 text-sm text-gray-600">
-                  <p><span className="font-medium">From:</span> {selectedTicket.requesterName} ({selectedTicket.requesterEmail})</p>
-                  <p><span className="font-medium">Category:</span> {selectedTicket.category}</p>
-                  <p><span className="font-medium">Date:</span> {new Date(selectedTicket.createdAt).toLocaleString()}</p>
+                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                  <p><span className="font-medium dark:text-white">From:</span> {selectedTicket.requesterName} ({selectedTicket.requesterEmail})</p>
+                  <p><span className="font-medium dark:text-white">Category:</span> {selectedTicket.category}</p>
+                  <p><span className="font-medium dark:text-white">Date:</span> {new Date(selectedTicket.createdAt).toLocaleString()}</p>
                 </div>
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto max-h-[400px]">
-                <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-gray-700">{selectedTicket.description}</p>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{selectedTicket.description}</p>
                 </div>
               </div>
 
-              <div className="p-4 border-t border-gray-100">
+              <div className="p-4 border-t border-gray-100 dark:border-gray-700">
                 <textarea
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder="Write your reply..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
                 />
                 <div className="flex justify-between mt-3">
                   <select
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm"
                     onChange={(e) => handleAssign(selectedTicket.id, e.target.value)}
                     value={selectedTicket.assignedTo || ''}
                   >
@@ -229,7 +229,7 @@ export default function TicketsPage() {
               </div>
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-500 p-8">
+            <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-8">
               Select a ticket to view details
             </div>
           )}

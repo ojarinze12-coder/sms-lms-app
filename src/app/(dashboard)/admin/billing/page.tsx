@@ -258,8 +258,8 @@ export default function AdminBillingPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Platform Billing</h1>
-          <p className="text-gray-500">Manage tenant subscription invoices and payments</p>
+          <h1 className="text-2xl font-bold dark:text-white">Platform Billing</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage tenant subscription invoices and payments</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleGenerateRecurring} disabled={generating}>
@@ -274,52 +274,52 @@ export default function AdminBillingPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Invoices</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Invoices</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{invoices.length}</div>
+            <div className="text-2xl font-bold dark:text-white">{invoices.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{pendingInvoices.length}</div>
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pendingInvoices.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Paid</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Paid</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{paidInvoices.length}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{paidInvoices.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Revenue Collected</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue Collected</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalRevenue)}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalRevenue)}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Pending Amount</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Amount</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{formatCurrency(pendingAmount)}</div>
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{formatCurrency(pendingAmount)}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>All Invoices</CardTitle>
+            <CardTitle className="dark:text-white">All Invoices</CardTitle>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
@@ -327,7 +327,7 @@ export default function AdminBillingPage() {
                   placeholder="Search invoices..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 w-64"
+                  className="pl-8 w-64 dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -347,30 +347,30 @@ export default function AdminBillingPage() {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>School</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Billing Period</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="dark:bg-gray-700 dark:text-gray-400">
+                <TableHead className="dark:text-gray-400">Invoice #</TableHead>
+                <TableHead className="dark:text-gray-400">School</TableHead>
+                <TableHead className="dark:text-gray-400">Plan</TableHead>
+                <TableHead className="dark:text-gray-400">Amount</TableHead>
+                <TableHead className="dark:text-gray-400">Billing Period</TableHead>
+                <TableHead className="dark:text-gray-400">Due Date</TableHead>
+                <TableHead className="dark:text-gray-400">Status</TableHead>
+                <TableHead className="text-right dark:text-gray-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredInvoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500 dark:text-gray-400">
                     No invoices found
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                    <TableCell>{invoice.tenant.name}</TableCell>
-                    <TableCell>{invoice.plan.displayName}</TableCell>
+                  <TableRow key={invoice.id} className="dark:hover:bg-gray-700">
+                    <TableCell className="font-medium dark:text-white">{invoice.invoiceNumber}</TableCell>
+                    <TableCell className="dark:text-gray-300">{invoice.tenant.name}</TableCell>
+                    <TableCell className="dark:text-gray-300">{invoice.plan.displayName}</TableCell>
                     <TableCell>{formatCurrency(invoice.amount, invoice.currency)}</TableCell>
                     <TableCell>
                       {formatDate(invoice.billingPeriodStart)} - {formatDate(invoice.billingPeriodEnd)}
@@ -495,29 +495,29 @@ export default function AdminBillingPage() {
           </DialogHeader>
           {selectedInvoice && (
             <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                <div className="text-center border-b pb-3 mb-3">
-                  <h3 className="font-bold text-lg">PCC Educational Solutions</h3>
-                  <p className="text-sm text-gray-500">Lagos, Nigeria</p>
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg space-y-3">
+                <div className="text-center border-b pb-3 mb-3 dark:border-gray-600">
+                  <h3 className="font-bold text-lg dark:text-white">PCC Educational Solutions</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Lagos, Nigeria</p>
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Invoice #:</span>
-                  <span className="font-medium">{selectedInvoice.invoiceNumber}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Invoice #:</span>
+                  <span className="font-medium dark:text-white">{selectedInvoice.invoiceNumber}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">School:</span>
-                  <span className="font-medium">{selectedInvoice.tenant.name}</span>
+                  <span className="text-gray-500 dark:text-gray-400">School:</span>
+                  <span className="font-medium dark:text-white">{selectedInvoice.tenant.name}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Date:</span>
-                  <span className="font-medium">{formatDate(new Date().toISOString())}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Date:</span>
+                  <span className="font-medium dark:text-white">{formatDate(new Date().toISOString())}</span>
                 </div>
                 
-                <div className="border-t pt-3 mt-3">
+                <div className="border-t pt-3 mt-3 dark:border-gray-600">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Amount Paid:</span>
-                    <span className="font-bold text-green-600">
+                    <span className="text-gray-500 dark:text-gray-400">Amount Paid:</span>
+                    <span className="font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(selectedInvoice.amount, selectedInvoice.currency)}
                     </span>
                   </div>

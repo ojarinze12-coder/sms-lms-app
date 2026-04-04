@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
+import { requireSuperAdmin } from '@/lib/auth-server';
 
 export async function POST(request: NextRequest) {
   try {
+    const authUser = await requireSuperAdmin();
+    if (!authUser || authUser.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized - Super Admin only' }, { status: 401 });
+    }
+    
     const { email, newPassword } = await request.json();
 
     if (!email) {

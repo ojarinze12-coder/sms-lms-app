@@ -160,8 +160,8 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-gray-600">Manage platform users and their permissions</p>
+          <h1 className="text-2xl font-bold dark:text-white">User Management</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage platform users and their permissions</p>
         </div>
         <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2">
           <UserPlus className="w-4 h-4" />
@@ -169,10 +169,10 @@ export default function AdminUsersPage() {
         </Button>
       </div>
 
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>All Users ({filteredUsers.length})</CardTitle>
+            <CardTitle className="dark:text-white">All Users ({filteredUsers.length})</CardTitle>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
@@ -180,7 +180,7 @@ export default function AdminUsersPage() {
                   placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 w-64"
+                  className="pl-9 w-64 dark:bg-gray-700 dark:text-white dark:border-gray-600"
                 />
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -201,38 +201,38 @@ export default function AdminUsersPage() {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-700">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">User</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Role</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">School</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Created</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">Actions</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">User</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Role</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">School</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Created</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 dark:text-gray-400">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y dark:divide-gray-700">
 .length === 0                {filteredUsers ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                       No users found
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 font-medium text-sm">
+                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 dark:text-blue-300 font-medium text-sm">
                               {user.firstName?.[0] || user.email[0].toUpperCase()}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium dark:text-white">
                               {user.firstName} {user.lastName}
                             </p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                           </div>
                         </div>
                       </td>
@@ -277,43 +277,47 @@ export default function AdminUsersPage() {
       {/* Add User Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader>
-              <CardTitle>Add New User</CardTitle>
+              <CardTitle className="dark:text-white">Add New User</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreateUser} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Email *</label>
+                  <label className="block text-sm font-medium mb-2 dark:text-white">Email *</label>
                   <Input
                     type="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                     required
+                    className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Password *</label>
+                  <label className="block text-sm font-medium mb-2 dark:text-white">Password *</label>
                   <Input
                     type="password"
                     value={newUser.password}
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                     required
+                    className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">First Name</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">First Name</label>
                     <Input
                       value={newUser.firstName}
                       onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
+                      className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Last Name</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">Last Name</label>
                     <Input
                       value={newUser.lastName}
                       onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
+                      className="dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     />
                   </div>
                 </div>

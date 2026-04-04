@@ -206,39 +206,39 @@ export default function SecuritySettings() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Security Settings</h1>
-        <p className="text-gray-600">Manage your Super Admin security preferences</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Security Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400">Manage your Super Admin security preferences</p>
       </div>
 
       {message && (
-        <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-2">
+        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-lg flex items-center gap-2">
           <Check className="h-5 w-5" />
           {message}
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
           {error}
         </div>
       )}
 
       {security.isLocked && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg">
           Your account is currently locked due to too many failed login attempts.
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
               <Shield className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h2>
-              <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Two-Factor Authentication</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Add an extra layer of security to your account</p>
             </div>
           </div>
         </div>
@@ -246,11 +246,11 @@ export default function SecuritySettings() {
         <div className="p-6">
           {security.twoFactorEnabled ? (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-green-600">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                 <Check className="h-5 w-5" />
                 <span className="font-medium">2FA is enabled</span>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Your account is protected with two-factor authentication.
               </p>
               <button
@@ -259,26 +259,26 @@ export default function SecuritySettings() {
                   if (password) disable2FA(password);
                 }}
                 disabled={saving}
-                className="px-4 py-2 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                className="px-4 py-2 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
               >
                 Disable 2FA
               </button>
             </div>
           ) : showSetup ? (
             <div className="space-y-4">
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h3 className="font-medium text-yellow-800 mb-2">Save Your Backup Codes</h3>
-                <p className="text-sm text-yellow-700 mb-3">
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <h3 className="font-medium text-yellow-800 dark:text-yellow-300 mb-2">Save Your Backup Codes</h3>
+                <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-3">
                   Store these codes safely. You can use them to access your account if you lose your 2FA device.
                 </p>
-                <div className="bg-white p-3 rounded border border-yellow-200 font-mono text-sm">
+                <div className="bg-white dark:bg-gray-700 p-3 rounded border border-yellow-200 dark:border-yellow-800 font-mono text-sm dark:text-white">
                   {backupCodes.map((code, i) => (
                     <div key={i} className="inline-block mr-4">{code}</div>
                   ))}
                 </div>
                 <button
                   onClick={copyBackupCodes}
-                  className="mt-3 flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+                  className="mt-3 flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700"
                 >
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   {copied ? 'Copied!' : 'Copy to clipboard'}
@@ -288,7 +288,7 @@ export default function SecuritySettings() {
                 <input
                   type="text"
                   placeholder="Enter verification code"
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg"
                   id="verifyCode"
                 />
                 <button
@@ -305,7 +305,7 @@ export default function SecuritySettings() {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Enable two-factor authentication to add an extra layer of security.
                 You'll need to enter a code from your authenticator app when logging in.
               </p>
@@ -321,23 +321,23 @@ export default function SecuritySettings() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
               <MapPin className="h-6 w-6 text-purple-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">IP Address Restriction</h2>
-              <p className="text-sm text-gray-600">Restrict access to specific IP addresses</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">IP Address Restriction</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Restrict access to specific IP addresses</p>
             </div>
           </div>
         </div>
 
         <div className="p-6 space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Add IP addresses to restrict Super Admin access. If no IPs are added, access is allowed from anywhere.
-            Last login was from: <strong>{ipConfig.lastLoginIp || 'Unknown'}</strong>
+            Last login was from: <strong className="dark:text-white">{ipConfig.lastLoginIp || 'Unknown'}</strong>
           </p>
 
           <div className="flex gap-3">
@@ -346,7 +346,7 @@ export default function SecuritySettings() {
               value={newIp}
               onChange={(e) => setNewIp(e.target.value)}
               placeholder="e.g., 192.168.1.1 or 10.0.0.*"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg"
             />
             <button
               onClick={addIp}
@@ -359,14 +359,14 @@ export default function SecuritySettings() {
 
           {ipConfig.allowedIps.length > 0 ? (
             <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Allowed IPs:</h3>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Allowed IPs:</h3>
               <ul className="space-y-2">
                 {ipConfig.allowedIps.map((ip, i) => (
-                  <li key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="font-mono text-sm">{ip}</span>
+                  <li key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <span className="font-mono text-sm dark:text-white">{ip}</span>
                     <button
                       onClick={() => removeIp(ip)}
-                      className="text-red-600 hover:text-red-700 text-sm"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 text-sm"
                     >
                       Remove
                     </button>
@@ -375,20 +375,20 @@ export default function SecuritySettings() {
               </ul>
             </div>
           ) : (
-            <p className="text-sm text-gray-500 italic">No IP restrictions configured</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 italic">No IP restrictions configured</p>
           )}
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
+            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
               <Activity className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Login History</h2>
-              <p className="text-sm text-gray-600">View your recent login activity</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Login History</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">View your recent login activity</p>
             </div>
           </div>
         </div>
@@ -396,22 +396,22 @@ export default function SecuritySettings() {
         <div className="p-6">
           <dl className="grid grid-cols-2 gap-4">
             <div>
-              <dt className="text-sm text-gray-600">Last Login</dt>
-              <dd className="font-medium text-gray-900">
+              <dt className="text-sm text-gray-600 dark:text-gray-400">Last Login</dt>
+              <dd className="font-medium text-gray-900 dark:text-white">
                 {security.lastLoginAt ? new Date(security.lastLoginAt).toLocaleString() : 'Never'}
               </dd>
             </div>
             <div>
-              <dt className="text-sm text-gray-600">Last Login IP</dt>
-              <dd className="font-medium text-gray-900">{security.lastLoginIp || 'Unknown'}</dd>
+              <dt className="text-sm text-gray-600 dark:text-gray-400">Last Login IP</dt>
+              <dd className="font-medium text-gray-900 dark:text-white">{security.lastLoginIp || 'Unknown'}</dd>
             </div>
             <div>
-              <dt className="text-sm text-gray-600">Failed Attempts</dt>
-              <dd className="font-medium text-gray-900">{security.failedLoginAttempts}</dd>
+              <dt className="text-sm text-gray-600 dark:text-gray-400">Failed Attempts</dt>
+              <dd className="font-medium text-gray-900 dark:text-white">{security.failedLoginAttempts}</dd>
             </div>
             <div>
-              <dt className="text-sm text-gray-600">Account Status</dt>
-              <dd className={`font-medium ${security.isLocked ? 'text-red-600' : 'text-green-600'}`}>
+              <dt className="text-sm text-gray-600 dark:text-gray-400">Account Status</dt>
+              <dd className={`font-medium ${security.isLocked ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                 {security.isLocked ? 'Locked' : 'Active'}
               </dd>
             </div>

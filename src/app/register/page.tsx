@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
-import { Eye, EyeOff, Loader2, Upload, Check, School, User, Mail, Lock, BookOpen } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Upload, Check, School, User, Mail, Lock, BookOpen, Sun, Moon, Monitor } from 'lucide-react';
 import { TIER_TEMPLATE_OPTIONS } from '@/lib/constants/tiers';
 import { CURRICULUM_INFO } from '@/types';
 import type { Curriculum } from '@prisma/client';
@@ -32,6 +32,7 @@ export default function RegisterPage() {
     tierTemplate: '' as string,
     curriculum: 'NERDC' as Curriculum,
     usePerTierCurriculum: false,
+    themeMode: 'SYSTEM' as string,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +101,7 @@ export default function RegisterPage() {
           tierTemplate: formData.tierTemplate,
           curriculum: formData.curriculum,
           usePerTierCurriculum: formData.usePerTierCurriculum,
+          themeMode: formData.themeMode,
         }),
       });
 
@@ -393,6 +395,49 @@ export default function RegisterPage() {
                     ))}
                   </div>
                   <p className="text-xs text-gray-500">Choose a brand color for your school</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Theme Mode</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, themeMode: 'LIGHT' }))}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        formData.themeMode === 'LIGHT'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Sun className="h-6 w-6" />
+                      <span className="text-sm font-medium">Light</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, themeMode: 'DARK' }))}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        formData.themeMode === 'DARK'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Moon className="h-6 w-6" />
+                      <span className="text-sm font-medium">Dark</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, themeMode: 'SYSTEM' }))}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                        formData.themeMode === 'SYSTEM'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Monitor className="h-6 w-6" />
+                      <span className="text-sm font-medium">System</span>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">Choose your preferred theme</p>
                 </div>
               </div>
             )}

@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
       include: {
         _count: {
           select: {
-            classes: true,
             departments: true,
           },
         },

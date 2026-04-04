@@ -186,10 +186,10 @@ export default function FeesPage() {
   };
 
   const statusColors: Record<string, string> = {
-    COMPLETED: 'bg-green-100 text-green-800',
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    FAILED: 'bg-red-100 text-red-800',
-    REFUNDED: 'bg-gray-100 text-gray-800',
+    COMPLETED: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400',
+    PENDING: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400',
+    FAILED: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400',
+    REFUNDED: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
   };
 
   const formatCurrency = (amount: number) => {
@@ -203,8 +203,8 @@ export default function FeesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Fee Management</h1>
-          <p className="text-gray-500">Manage school fees, payments, and generate invoices</p>
+          <h1 className="text-2xl font-bold dark:text-white">Fee Management</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage school fees, payments, and generate invoices</p>
         </div>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
@@ -292,54 +292,54 @@ export default function FeesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="dark:border-gray-700">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{formatCurrency(totalExpected)}</p>
-                <p className="text-sm text-gray-500">Total Expected</p>
+                <p className="text-2xl font-bold dark:text-white">{formatCurrency(totalExpected)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Expected</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:border-gray-700">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{formatCurrency(totalCollected)}</p>
-                <p className="text-sm text-gray-500">Collected</p>
+                <p className="text-2xl font-bold dark:text-white">{formatCurrency(totalCollected)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Collected</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:border-gray-700">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Wallet className="w-6 h-6 text-yellow-600" />
+              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                <Wallet className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{formatCurrency(totalExpected - totalCollected)}</p>
-                <p className="text-sm text-gray-500">Outstanding</p>
+                <p className="text-2xl font-bold dark:text-white">{formatCurrency(totalExpected - totalCollected)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Outstanding</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:border-gray-700">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-red-100 rounded-lg">
-                <AlertCircle className="w-6 h-6 text-red-600" />
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{pendingPayments}</p>
-                <p className="text-sm text-gray-500">Pending Payments</p>
+                <p className="text-2xl font-bold dark:text-white">{pendingPayments}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Pending Payments</p>
               </div>
             </div>
           </CardContent>
@@ -347,33 +347,33 @@ export default function FeesPage() {
       </div>
 
       {/* Fee Structures */}
-      <Card>
+      <Card className="dark:border-gray-700">
         <CardHeader>
-          <CardTitle>Fee Structures</CardTitle>
-          <CardDescription>Active fee types for the academic year</CardDescription>
+          <CardTitle className="dark:text-white">Fee Structures</CardTitle>
+          <CardDescription className="dark:text-gray-400">Active fee types for the academic year</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Fee Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Academic Year</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow className="dark:border-gray-700">
+                <TableHead className="dark:text-gray-300">Fee Name</TableHead>
+                <TableHead className="dark:text-gray-300">Type</TableHead>
+                <TableHead className="dark:text-gray-300">Amount</TableHead>
+                <TableHead className="dark:text-gray-300">Due Date</TableHead>
+                <TableHead className="dark:text-gray-300">Academic Year</TableHead>
+                <TableHead className="dark:text-gray-300">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {feeStructures.map((fee) => (
-                <TableRow key={fee.id}>
-                  <TableCell className="font-medium">{fee.name}</TableCell>
+                <TableRow key={fee.id} className="dark:border-gray-700">
+                  <TableCell className="font-medium dark:text-white">{fee.name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{feeTypeLabels[fee.type] || fee.type}</Badge>
+                    <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">{feeTypeLabels[fee.type] || fee.type}</Badge>
                   </TableCell>
-                  <TableCell>{formatCurrency(fee.amount)}</TableCell>
-                  <TableCell>{fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : '-'}</TableCell>
-                  <TableCell>{fee.academicYear?.name}</TableCell>
+                  <TableCell className="dark:text-gray-300">{formatCurrency(fee.amount)}</TableCell>
+                  <TableCell className="dark:text-gray-300">{fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : '-'}</TableCell>
+                  <TableCell className="dark:text-gray-300">{fee.academicYear?.name}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm">
                       <Receipt className="w-4 h-4" />
@@ -383,7 +383,7 @@ export default function FeesPage() {
               ))}
               {feeStructures.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-4 text-gray-500 dark:text-gray-400">
                     No fee structures created yet
                   </TableCell>
                 </TableRow>
@@ -394,53 +394,53 @@ export default function FeesPage() {
       </Card>
 
       {/* Recent Payments */}
-      <Card>
+      <Card className="dark:border-gray-700">
         <CardHeader>
-          <CardTitle>Recent Payments</CardTitle>
-          <CardDescription>Latest payment transactions</CardDescription>
+          <CardTitle className="dark:text-white">Recent Payments</CardTitle>
+          <CardDescription className="dark:text-gray-400">Latest payment transactions</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Fee Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Reference</TableHead>
+              <TableRow className="dark:border-gray-700">
+                <TableHead className="dark:text-gray-300">Date</TableHead>
+                <TableHead className="dark:text-gray-300">Student</TableHead>
+                <TableHead className="dark:text-gray-300">Fee Type</TableHead>
+                <TableHead className="dark:text-gray-300">Amount</TableHead>
+                <TableHead className="dark:text-gray-300">Method</TableHead>
+                <TableHead className="dark:text-gray-300">Status</TableHead>
+                <TableHead className="dark:text-gray-300">Reference</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {payments.slice(0, 10).map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell>
+                <TableRow key={payment.id} className="dark:border-gray-700">
+                  <TableCell className="dark:text-gray-300">
                     {payment.paidAt 
                       ? new Date(payment.paidAt).toLocaleDateString() 
                       : '-'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="dark:text-gray-300">
                     {payment.student.firstName} {payment.student.lastName}
                     <br />
-                    <span className="text-xs text-gray-500">{payment.student.studentId}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{payment.student.studentId}</span>
                   </TableCell>
-                  <TableCell>{payment.feeStructure.name}</TableCell>
-                  <TableCell className="font-medium">{formatCurrency(payment.amount)}</TableCell>
+                  <TableCell className="dark:text-gray-300">{payment.feeStructure.name}</TableCell>
+                  <TableCell className="font-medium dark:text-white">{formatCurrency(payment.amount)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{payment.method}</Badge>
+                    <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">{payment.method}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge className={statusColors[payment.status]}>
                       {payment.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-xs font-mono">{payment.referenceNo || '-'}</TableCell>
+                  <TableCell className="text-xs font-mono dark:text-gray-400">{payment.referenceNo || '-'}</TableCell>
                 </TableRow>
               ))}
               {payments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-4 text-gray-500 dark:text-gray-400">
                     No payments recorded yet
                   </TableCell>
                 </TableRow>

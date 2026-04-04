@@ -20,7 +20,6 @@ export async function GET(
       include: {
         _count: {
           select: {
-            classes: true,
             departments: true,
           },
         },

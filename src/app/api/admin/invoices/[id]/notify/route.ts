@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
 async function sendInvoiceReminder(invoiceId: string) {
   const invoice = await prisma.subscriptionInvoice.findUnique({
     where: { id: invoiceId },
-    include: { tenant: true, plan: true },
   });
 
   if (!invoice) {
@@ -42,10 +41,14 @@ async function sendInvoiceReminder(invoiceId: string) {
     return NextResponse.json({ error: 'Invoice already paid' }, { status: 400 });
   }
 
-  const tenantAdmin = await prisma.user.findFirst({
-    where: { tenantId: invoice.tenantId, role: 'ADMIN' },
-    orderBy: { createdAt: 'asc' },
-  });
+  const [tenant, plan, tenantAdmin] = await Promise.all([
+    prisma.tenant.findUnique({ where: { id: invoice.tenantId } }),
+    prisma.subscriptionPlan.findUnique({ where: { id: invoice.planId } }),
+    prisma.user.findFirst({
+      where: { tenantId: invoice.tenantId, role: 'ADMIN' },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ]);
 
   if (!tenantAdmin?.email) {
     return NextResponse.json({ error: 'No admin email found' }, { status: 400 });
@@ -55,13 +58,13 @@ async function sendInvoiceReminder(invoiceId: string) {
 
   await sendInvoiceCreatedEmail(
     tenantAdmin.email,
-    invoice.tenant.name,
+    tenant?.name || 'School',
     invoice.invoiceNumber,
     invoice.amount,
     invoice.currency,
     new Date(invoice.dueDate).toLocaleDateString('en-NG'),
     billingPeriod,
-    invoice.plan.displayName
+    plan?.displayName || 'Plan'
   );
 
   return NextResponse.json({ success: true, message: 'Reminder sent' });
@@ -70,22 +73,28 @@ async function sendInvoiceReminder(invoiceId: string) {
 async function resendReceipt(invoiceId: string) {
   const invoice = await prisma.subscriptionInvoice.findUnique({
     where: { id: invoiceId },
-    include: { tenant: true, plan: true, payments: { where: { status: 'COMPLETED' } } },
   });
 
   if (!invoice) {
     return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
   }
 
-  const payment = invoice.payments[0];
+  const payment = await prisma.subscriptionPayment.findFirst({
+    where: { invoiceId, status: 'COMPLETED' },
+  });
+
   if (!payment) {
     return NextResponse.json({ error: 'No payment found for this invoice' }, { status: 400 });
   }
 
-  const tenantAdmin = await prisma.user.findFirst({
-    where: { tenantId: invoice.tenantId, role: 'ADMIN' },
-    orderBy: { createdAt: 'asc' },
-  });
+  const [tenant, plan, tenantAdmin] = await Promise.all([
+    prisma.tenant.findUnique({ where: { id: invoice.tenantId } }),
+    prisma.subscriptionPlan.findUnique({ where: { id: invoice.planId } }),
+    prisma.user.findFirst({
+      where: { tenantId: invoice.tenantId, role: 'ADMIN' },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ]);
 
   if (!tenantAdmin?.email) {
     return NextResponse.json({ error: 'No admin email found' }, { status: 400 });
@@ -95,14 +104,14 @@ async function resendReceipt(invoiceId: string) {
 
   await sendPaymentReceiptEmail(
     tenantAdmin.email,
-    invoice.tenant.name,
+    tenant?.name || 'School',
     invoice.invoiceNumber,
     payment.receiptNumber || 'N/A',
     payment.amount,
     payment.currency,
     payment.paidAt ? new Date(payment.paidAt).toLocaleDateString('en-NG') : 'N/A',
     billingPeriod,
-    invoice.plan.displayName,
+    plan?.displayName || 'Plan',
     payment.method,
     payment.paymentGateway
   );

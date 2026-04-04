@@ -15,7 +15,10 @@ import {
   Edit,
   BookOpen,
   GraduationCap,
-  CreditCard
+  CreditCard,
+  Heart,
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
 
 interface Student {
@@ -41,6 +44,8 @@ interface Student {
     id: string;
     academicClass: {
       name: string;
+      section?: string | null;
+      department?: { id: string; name: string; code: string } | null;
     };
     status: string;
   }>;
@@ -126,13 +131,36 @@ export default function StudentDetailPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to Students
         </Link>
-        <Link
-          href={`/sms/students/${student.id}/edit`}
-          className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
-        >
-          <Edit className="w-4 h-4" />
-          Edit Student
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/sms/students/${student.id}/medical`}
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
+            <Heart className="w-4 h-4" />
+            Medical
+          </Link>
+          <Link
+            href={`/sms/students/${student.id}/behavior`}
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Behavior
+          </Link>
+          <Link
+            href={`/sms/students/${student.id}/academic-history`}
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
+            <FileText className="w-4 h-4" />
+            Academic
+          </Link>
+          <Link
+            href={`/sms/students/${student.id}/edit`}
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
+            <Edit className="w-4 h-4" />
+            Edit
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -246,17 +274,25 @@ export default function StudentDetailPage() {
                     <p className="text-gray-500 text-center py-4">No class enrollments</p>
                   ) : (
                     <div className="space-y-2">
-                      {student.enrollments.map((enrollment) => (
-                        <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <BookOpen className="w-5 h-5 text-gray-400" />
-                            <span>{enrollment.academicClass.name}</span>
+                      {student.enrollments.map((enrollment) => {
+                        const cls = enrollment.academicClass;
+                        const fullClassName = cls?.department 
+                          ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
+                          : cls?.section 
+                            ? `${cls.name}-${cls.section}`
+                            : cls?.name || 'General';
+                        return (
+                          <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <BookOpen className="w-5 h-5 text-gray-400" />
+                              <span>{fullClassName}</span>
+                            </div>
+                            <Badge variant={enrollment.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                              {enrollment.status}
+                            </Badge>
                           </div>
-                          <Badge variant={enrollment.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                            {enrollment.status}
-                          </Badge>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

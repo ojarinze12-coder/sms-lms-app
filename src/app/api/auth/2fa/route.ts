@@ -5,7 +5,10 @@ import { logPlatformAudit } from '@/lib/platform-audit';
 
 export async function POST(request: NextRequest) {
   try {
-    const authToken = request.cookies.get('auth-token')?.value;
+    const pccToken = request.cookies.get('pcc-token')?.value;
+    const sccToken = request.cookies.get('scc-token')?.value;
+    const legacyToken = request.cookies.get('auth-token')?.value;
+    const authToken = pccToken || sccToken || legacyToken;
     
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
         where: { id: payload.userId },
         data: {
           twoFactorSecret: encryptedSecret,
-          twoFactorBackupCodes: backupCodes,
+          twoFactorBackupCodes: backupCodes.join(','),
         },
       });
 
@@ -108,7 +111,7 @@ export async function POST(request: NextRequest) {
         data: {
           twoFactorEnabled: false,
           twoFactorSecret: null,
-          twoFactorBackupCodes: [],
+          twoFactorBackupCodes: '',
         },
       });
 
@@ -131,7 +134,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const authToken = request.cookies.get('auth-token')?.value;
+    const pccToken = request.cookies.get('pcc-token')?.value;
+    const sccToken = request.cookies.get('scc-token')?.value;
+    const legacyToken = request.cookies.get('auth-token')?.value;
+    const authToken = pccToken || sccToken || legacyToken;
     
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

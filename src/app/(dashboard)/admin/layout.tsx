@@ -54,7 +54,7 @@ const navItems = [
   },
   {
     title: 'Support Tickets',
-    href: '/admin/tickets',
+    href: '/admin/support',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -104,8 +104,10 @@ export default function AdminLayout({
     fetch('/api/auth/me')
       .then(res => res.json())
       .then(data => {
-        if (!data.user || (data.user.role !== 'SUPER_ADMIN' && data.user.role !== 'ADMIN')) {
+        if (!data.user) {
           router.push('/login');
+        } else if (data.user.role !== 'SUPER_ADMIN') {
+          router.push('/');
         } else {
           setUser(data.user);
         }
@@ -115,7 +117,7 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   if (!user) {
@@ -127,9 +129,9 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex">
-        <aside className="w-64 bg-slate-900 text-white min-h-screen fixed">
+        <aside className="w-64 bg-slate-900 text-white min-h-screen fixed dark:bg-slate-900">
           <div className="p-6">
             <h1 className="text-2xl font-bold text-blue-400">EduNext</h1>
             <p className="text-xs text-gray-400 mt-1">Platform Control Center</p>

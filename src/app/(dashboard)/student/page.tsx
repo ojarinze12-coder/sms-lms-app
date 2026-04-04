@@ -24,6 +24,8 @@ interface Enrollment {
     id: string;
     name: string;
     level: number;
+    section?: string | null;
+    department?: { id: string; name: string; code: string } | null;
     subjects: Array<{
       id: string;
       name: string;
@@ -358,17 +360,24 @@ export default function StudentPortalPage() {
               <p className="text-gray-500 text-center py-8">No course enrollments found</p>
             ) : (
               <div className="space-y-6">
-                {data.enrollments.map((enrollment) => (
-                  <div key={enrollment.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{enrollment.academicClass?.name || 'General'}</h3>
-                        <p className="text-sm text-gray-500">Level {enrollment.academicClass?.level}</p>
+                {data.enrollments.map((enrollment) => {
+                  const cls = enrollment.academicClass;
+                  const fullClassName = cls?.department 
+                    ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
+                    : cls?.section 
+                      ? `${cls.name}-${cls.section}`
+                      : cls?.name || 'General';
+                  return (
+                    <div key={enrollment.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg">{fullClassName}</h3>
+                          <p className="text-sm text-gray-500">Level {enrollment.academicClass?.level}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs ${enrollment.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                          {enrollment.status}
+                        </span>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs ${enrollment.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                        {enrollment.status}
-                      </span>
-                    </div>
                     {enrollment.academicClass?.subjects && enrollment.academicClass.subjects.length > 0 && (
                       <div>
                         <p className="text-sm font-medium text-gray-500 mb-2">Subjects:</p>
@@ -386,8 +395,9 @@ export default function StudentPortalPage() {
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
+                );
+              })}
+            </div>
             )}
           </CardContent>
         </Card>

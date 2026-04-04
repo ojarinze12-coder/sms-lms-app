@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 
 export async function GET() {
@@ -10,21 +10,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: teachers, error } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('tenantId', authUser.tenantId)
-      .order('createdAt', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching teachers:', error);
-      return NextResponse.json({ error: 'Failed to fetch teachers' }, { status: 500 });
-    }
+    const teachers = await prisma.teacher.findMany({
+      where: { tenantId: authUser.tenantId },
+      orderBy: { createdAt: 'desc' },
+    });
 
     return NextResponse.json(teachers || []);
-  } catch (error) {
-    console.error('Error fetching teachers:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[TEACHERS GET] Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -46,13 +40,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate employee ID within tenant
-    const { data: existing } = await supabase
-      .from('teachers')
-      .select('id')
-      .eq('tenantId', authUser.tenantId)
-      .eq('employeeId', employeeId)
-      .single();
+    const existing = await prisma.teacher.findFirst({
+      where: {
+        tenantId: authUser.tenantId,
+        employeeId: employeeId,
+      },
+    });
 
     if (existing) {
       return NextResponse.json(
@@ -61,9 +54,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: teacher, error } = await supabase
-      .from('teachers')
-      .insert({
+    const teacher = await prisma.teacher.create({
+      data: {
         employeeId,
         firstName,
         lastName,
@@ -71,18 +63,12 @@ export async function POST(request: NextRequest) {
         specialty,
         phone,
         tenantId: authUser.tenantId,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating teacher:', error);
-      return NextResponse.json({ error: 'Failed to create teacher' }, { status: 500 });
-    }
+      },
+    });
 
     return NextResponse.json(teacher, { status: 201 });
-  } catch (error) {
-    console.error('Error creating teacher:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[TEACHERS POST] Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

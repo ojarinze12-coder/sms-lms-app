@@ -80,6 +80,10 @@ export default function SchoolAITimetablePage() {
   const loadYears = async () => {
     try {
       const res = await fetch('/api/sms/academic-years');
+      if (!res.ok) {
+        console.error('Failed to load years:', res.status);
+        return;
+      }
       const data = await res.json();
       setYears(data);
       if (data.length > 0) {
@@ -96,6 +100,10 @@ export default function SchoolAITimetablePage() {
   const loadClasses = async (yearId: string) => {
     try {
       const res = await fetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      if (!res.ok) {
+        console.error('Failed to load classes:', res.status);
+        return;
+      }
       const data = await res.json();
       setClasses(data.data || []);
     } catch (err) {
@@ -106,6 +114,10 @@ export default function SchoolAITimetablePage() {
   const loadSubjects = async (classId: string) => {
     try {
       const res = await fetch(`/api/sms/subjects?academicYearId=${classId}`);
+      if (!res.ok) {
+        console.error('Failed to load subjects:', res.status);
+        return;
+      }
       const data = await res.json();
       setSubjects(data.data || []);
     } catch (err) {
@@ -228,25 +240,25 @@ export default function SchoolAITimetablePage() {
           <Sparkles className="h-6 w-6 text-purple-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">AI Timetable Generator</h1>
-          <p className="text-gray-600">Generate class schedules using AI</p>
+          <h1 className="text-2xl font-bold dark:text-white">AI Timetable Generator</h1>
+          <p className="text-gray-600 dark:text-gray-400">Generate class schedules using AI</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
             <h3 className="font-semibold mb-4">Configuration</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Academic Year
                 </label>
                 <select
                   value={selectedYearId}
                   onChange={(e) => setSelectedYearId(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 >
                   <option value="">Select year...</option>
                   {years.map((year) => (
@@ -256,13 +268,13 @@ export default function SchoolAITimetablePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Class
                 </label>
                 <select
                   value={selectedClassId}
                   onChange={(e) => setSelectedClassId(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   disabled={!selectedYearId}
                 >
                   <option value="">Select class...</option>
@@ -273,12 +285,12 @@ export default function SchoolAITimetablePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Select Subjects ({selectedSubjects.length})
                 </label>
-                <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-2">
+                <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-2 dark:border-gray-600 dark:bg-gray-700">
                   {subjects.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No subjects found.</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">No subjects found.</p>
                   ) : (
                     subjects.map((subject) => (
                       <label key={subject.id} className="flex items-center gap-2 cursor-pointer">
@@ -288,7 +300,7 @@ export default function SchoolAITimetablePage() {
                           onChange={() => toggleSubject(subject.id)}
                           className="w-4 h-4"
                         />
-                        <span className="text-sm">{subject.name} ({subject.code})</span>
+                        <span className="text-sm dark:text-gray-300">{subject.name} ({subject.code})</span>
                       </label>
                     ))
                   )}
@@ -296,35 +308,35 @@ export default function SchoolAITimetablePage() {
               </div>
 
               {/* Timetable Settings */}
-              <div className="border-t pt-4 mt-4">
+              <div className="border-t pt-4 mt-4 dark:border-gray-700">
                 <details className="group">
                   <summary className="flex items-center justify-between cursor-pointer list-none">
-                    <span className="font-medium text-gray-700">Timetable Settings</span>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Timetable Settings</span>
                     <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
                   </summary>
                   <div className="mt-3 space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                           Days/Week
                         </label>
                         <select
                           value={daysPerWeek}
                           onChange={(e) => setDaysPerWeek(parseInt(e.target.value))}
-                          className="w-full px-2 py-1.5 border rounded text-sm"
+                          className="w-full px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         >
                           <option value={5}>5 Days</option>
                           <option value={6}>6 Days</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                           Period (min)
                         </label>
                         <select
                           value={periodDuration}
                           onChange={(e) => setPeriodDuration(parseInt(e.target.value))}
-                          className="w-full px-2 py-1.5 border rounded text-sm"
+                          className="w-full px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         >
                           <option value={30}>30</option>
                           <option value={35}>35</option>
@@ -334,51 +346,51 @@ export default function SchoolAITimetablePage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                           Start Time
                         </label>
                         <input
                           type="time"
                           value={schoolStartTime}
                           onChange={(e) => setSchoolStartTime(e.target.value)}
-                          className="w-full px-2 py-1.5 border rounded text-sm"
+                          className="w-full px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                           End Time
                         </label>
                         <input
                           type="time"
                           value={schoolEndTime}
                           onChange={(e) => setSchoolEndTime(e.target.value)}
-                          className="w-full px-2 py-1.5 border rounded text-sm"
+                          className="w-full px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                           Break Start
                         </label>
                         <input
                           type="time"
                           value={breakStartTime}
                           onChange={(e) => setBreakStartTime(e.target.value)}
-                          className="w-full px-2 py-1.5 border rounded text-sm"
+                          className="w-full px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                           Break End
                         </label>
                         <input
                           type="time"
                           value={breakEndTime}
                           onChange={(e) => setBreakEndTime(e.target.value)}
-                          className="w-full px-2 py-1.5 border rounded text-sm"
+                          className="w-full px-2 py-1.5 border rounded text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       Calculated: {calculatePeriodsPerDay()} periods/day
                     </p>
                   </div>
@@ -405,9 +417,9 @@ export default function SchoolAITimetablePage() {
               </button>
 
               {generatedTimetable && (
-                <div className="border-t pt-4 mt-4 space-y-3">
+                <div className="border-t pt-4 mt-4 space-y-3 dark:border-gray-700">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Timetable Name
                     </label>
                     <input
@@ -415,7 +427,7 @@ export default function SchoolAITimetablePage() {
                       value={timetableName}
                       onChange={(e) => setTimetableName(e.target.value)}
                       placeholder="e.g., JSS1 Term 1 Timetable"
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                   </div>
 
@@ -426,7 +438,7 @@ export default function SchoolAITimetablePage() {
                       onChange={(e) => setIsPublished(e.target.checked)}
                       className="w-4 h-4"
                     />
-                    <span className="text-sm text-gray-700">Publish immediately</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Publish immediately</span>
                   </label>
 
                   <button
@@ -458,11 +470,11 @@ export default function SchoolAITimetablePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-4">
-          <h3 className="font-semibold mb-4">Generated Timetable</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
+            <h3 className="font-semibold mb-4 dark:text-white">Generated Timetable</h3>
           
           {!generatedTimetable ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Select subjects and click generate to create a timetable</p>
             </div>
@@ -470,17 +482,17 @@ export default function SchoolAITimetablePage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b">
-                    <th className="px-2 py-2 text-left">Period</th>
+                  <tr className="border-b dark:border-gray-700">
+                    <th className="px-2 py-2 text-left dark:text-gray-300">Period</th>
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
-                      <th key={day} className="px-2 py-2 text-left">{day}</th>
+                      <th key={day} className="px-2 py-2 text-left dark:text-gray-300">{day}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {[1, 2, 3, 4, 5, 6].map(period => (
-                    <tr key={period} className="border-b">
-                      <td className="px-2 py-2 font-medium">P{period}</td>
+                    <tr key={period} className="border-b dark:border-gray-700">
+                      <td className="px-2 py-2 font-medium dark:text-gray-300">P{period}</td>
                       {[0, 1, 2, 3, 4].map(day => {
                         const slot = generatedTimetable.slots?.find(
                           (s: any) => s.dayOfWeek === day && s.period === period
@@ -489,8 +501,8 @@ export default function SchoolAITimetablePage() {
                           <td key={day} className="px-2 py-2">
                             {slot ? (
                               <div className="text-xs">
-                                <div className="font-medium">{slot.subject}</div>
-                                <div className="text-gray-500">{slot.teacher}</div>
+                                <div className="font-medium dark:text-white">{slot.subject}</div>
+                                <div className="text-gray-500 dark:text-gray-400">{slot.teacher}</div>
                               </div>
                             ) : (
                               <span className="text-gray-300">-</span>

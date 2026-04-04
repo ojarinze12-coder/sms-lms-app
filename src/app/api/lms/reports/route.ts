@@ -23,8 +23,7 @@ export async function GET(request: Request) {
       totalExams,
       completedExams,
       results,
-      courses,
-      students
+      courses
     ] = await Promise.all([
       prisma.course.count({ where: { tenantId: authUser.tenantId } }),
       prisma.course.count({ where: { tenantId: authUser.tenantId, isPublished: true } }),
@@ -47,16 +46,9 @@ export async function GET(request: Request) {
       prisma.course.findMany({
         where: { tenantId: authUser.tenantId },
         include: {
-          enrollments: true
-        }
+          _count: { select: { lessons: true } }
+        },
       }),
-      prisma.enrollment.findMany({
-        where: { tenantId: authUser.tenantId },
-        include: {
-          student: true,
-          course: true
-        }
-      })
     ]);
 
     const averageScore = results.length > 0
@@ -75,40 +67,10 @@ export async function GET(request: Request) {
       .map(c => ({
         id: c.id,
         name: c.name,
-        enrollments: c.enrollments.length,
+        lessons: c._count.lessons,
         completionRate: 0
       }))
-      .sort((a, b) => b.enrollments - a.enrollments)
-      .slice(0, 5);
-
-    const studentScores: Record<string, { name: string; email: string; totalScore: number; count: number; courses: Set<string> }> = {};
-    
-    for (const enrollment of students) {
-      if (!studentScores[enrollment.studentId]) {
-        studentScores[enrollment.studentId] = {
-          name: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
-          email: enrollment.student.email || '',
-          totalScore: 0,
-          count: 0,
-          courses: new Set()
-        };
-      }
-      if (enrollment.finalGrade !== null) {
-        studentScores[enrollment.studentId].totalScore += enrollment.finalGrade;
-        studentScores[enrollment.studentId].count += 1;
-      }
-      studentScores[enrollment.studentId].courses.add(enrollment.courseId);
-    }
-
-    const topStudents = Object.entries(studentScores)
-      .map(([id, data]) => ({
-        id,
-        name: data.name,
-        email: data.email,
-        avgScore: data.count > 0 ? Math.round(data.totalScore / data.count) : 0,
-        coursesCompleted: data.courses.size
-      }))
-      .sort((a, b) => b.avgScore - a.avgScore)
+      .sort((a, b) => b.lessons - a.lessons)
       .slice(0, 5);
 
     return NextResponse.json({
@@ -122,8 +84,7 @@ export async function GET(request: Request) {
         averageScore,
         completionRate
       },
-      topCourses,
-      topStudents
+      topCourses
     });
   } catch (error) {
     console.error('Failed to fetch LMS reports:', error);

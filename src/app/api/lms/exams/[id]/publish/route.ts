@@ -19,11 +19,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const exam = await prisma.exam.findFirst({
-      where: {
-        id,
-        tenantId: authUser.tenantId
-      },
+    const exam = await prisma.exam.findUnique({
+      where: { id },
       include: {
         questions: true
       }
@@ -31,6 +28,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (!exam) {
       return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+    }
+
+    // Check tenant access
+    if (authUser.role !== 'SUPER_ADMIN') {
+      const hasAccess = exam.tenantId === authUser.tenantId || 
+        (exam.subjectId ? await checkExamTenantAccess(exam.subjectId, authUser.tenantId) : false);
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+      }
     }
 
     if (exam.status !== 'DRAFT') {
@@ -67,4 +73,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     console.error('Exam publish error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+async function checkExamTenantAccess(subjectId: string, tenantId: string): Promise<boolean> {
+  const subject = await prisma.subject.findUnique({
+    where: { id: subjectId },
+    include: { academicClass: { include: { academicYear: true } } }
+  });
+  return subject?.academicClass?.academicYear?.tenantId === tenantId;
 }

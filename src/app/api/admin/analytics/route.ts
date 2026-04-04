@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const subscriptions = await prisma.subscription.findMany({
-      include: { plan: true },
+      include: { subscriptionPlan: true },
     });
 
     const planCounts = {
@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
     };
 
     subscriptions.forEach(sub => {
-      if (sub.plan?.name && sub.plan.name in planCounts) {
-        planCounts[sub.plan.name as keyof typeof planCounts] += 1;
+      if (sub.subscriptionPlan?.name && sub.subscriptionPlan.name in planCounts) {
+        planCounts[sub.subscriptionPlan.name as keyof typeof planCounts] += 1;
       }
       if (sub.status && sub.status in statusCounts) {
         statusCounts[sub.status as keyof typeof statusCounts] += 1;

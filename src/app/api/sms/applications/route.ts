@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 import { z } from 'zod';
+import { notifyApplicationStatusChange } from '@/lib/application-notifications';
 
 const createApplicationSchema = z.object({
   firstName: z.string().min(1),
@@ -31,6 +32,8 @@ const createApplicationSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const authUser = await getAuthUser();
+    console.log('[GET APPLICATIONS] Auth user:', authUser?.userId, 'tenant:', authUser?.tenantId);
+    
     if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -39,7 +42,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const search = searchParams.get('search');
 
-    const where: any = {};
+    const where: any = { tenantId: authUser.tenantId };
     if (status) where.status = status;
     if (search) {
       where.OR = [
@@ -55,6 +58,8 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    console.log('[GET APPLICATIONS] Found:', applications.length, 'Status filter:', status);
+
     return NextResponse.json(applications || []);
   } catch (error) {
     console.error('Applications GET error:', error);
@@ -64,10 +69,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const data = createApplicationSchema.parse(body);
 
-    const tenantId = body.tenantId;
+    const tenantId = authUser.tenantId;
+
+    console.log('[APPLICATIONS POST] Creating for tenant:', tenantId);
 
     const count = await prisma.application.count({
       where: { tenantId }
@@ -81,9 +93,11 @@ export async function POST(request: NextRequest) {
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
         applicationNo,
         status: 'PENDING',
-        tenantId: tenantId || 'default-tenant-id',
+        tenantId: tenantId,
       },
     });
+
+    console.log('[APPLICATIONS POST] Created:', application.id);
 
     return NextResponse.json(application, { status: 201 });
   } catch (error) {
@@ -107,7 +121,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { applicationId, action, notes, entranceExamScore, interviewScore } = body;
+    const { applicationId, action, notes, entranceExamScore, interviewScore, entranceExamDate, entranceExamLocation, interviewDate, interviewLocation } = body;
+
+    console.log('[PATCH] Request:', { applicationId, action, entranceExamDate, entranceExamLocation, interviewDate, interviewLocation });
 
     if (!applicationId || !action) {
       return NextResponse.json({ error: 'Application ID and action required' }, { status: 400 });
@@ -118,15 +134,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Application not found' }, { status: 404 });
     }
 
+    console.log('[PATCH] Application:', application.id, 'Current status:', application.status, 'Action:', action);
+
     let status = application.status;
     switch (action) {
       case 'review':
         status = 'REVIEWING';
         break;
       case 'exam':
+      case 'schedule_exam':
         status = 'ENTRANCE_EXAM';
         break;
       case 'interview':
+      case 'schedule_interview':
         status = 'INTERVIEW';
         break;
       case 'approve':
@@ -150,12 +170,31 @@ export async function PATCH(request: NextRequest) {
         notes,
         entranceExamScore: entranceExamScore !== undefined ? entranceExamScore : undefined,
         interviewScore: interviewScore !== undefined ? interviewScore : undefined,
+        entranceExamDate: entranceExamDate ? new Date(entranceExamDate) : undefined,
+        entranceExamLocation: entranceExamLocation || undefined,
+        interviewDate: interviewDate ? new Date(interviewDate) : undefined,
+        interviewLocation: interviewLocation || undefined,
       },
     });
 
+    console.log('[PATCH] SUCCESS - Updated application:', updated.id, 'New status:', updated.status);
+
+    // Send notification to applicant (non-blocking)
+    try {
+      await notifyApplicationStatusChange(applicationId, status, {
+        entranceExamDate,
+        entranceExamLocation,
+        interviewDate,
+        interviewLocation,
+        notes,
+      });
+    } catch (notifyError) {
+      console.error('Failed to send notification (non-fatal):', notifyError);
+    }
+
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Application PATCH error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

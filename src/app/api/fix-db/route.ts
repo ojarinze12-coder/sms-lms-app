@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { requireSuperAdmin } from '@/lib/auth-server';
 
 export async function GET() {
+  const user = await requireSuperAdmin();
+  if (!user || user.role !== 'SUPER_ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized - Super Admin only' }, { status: 401 });
+  }
+
   const connectionString = process.env.DATABASE_URL;
   
   if (!connectionString) {

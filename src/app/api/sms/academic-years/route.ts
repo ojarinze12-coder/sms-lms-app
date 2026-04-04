@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/rbac';
+import { getAuthUser } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
+    const user = await getAuthUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    console.log('Fetching academic years for tenant:', user.tenantId);
 
     const { searchParams } = new URL(request.url);
     const tenantId = searchParams.get('tenantId') || user.tenantId;
 
     const academicYears = await prisma.academicYear.findMany({
       where: { tenantId },
-      include: {
-        terms: true,
-        classes: true,
-      },
       orderBy: { startDate: 'desc' },
     });
+
+    console.log('Found academic years:', academicYears.length);
 
     return NextResponse.json(academicYears);
   } catch (error: any) {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
+    const user = await getAuthUser();
     if (!user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
     }
@@ -43,6 +43,17 @@ export async function POST(request: NextRequest) {
         { error: 'Name, startDate, and endDate are required' },
         { status: 400 }
       );
+    }
+
+    console.log('Creating academic year:', name, 'for tenant:', user.tenantId);
+
+    const existingYear = await prisma.academicYear.findFirst({
+      where: { tenantId: user.tenantId, name },
+    });
+
+    if (existingYear) {
+      console.log('Year already exists:', existingYear.id);
+      return NextResponse.json({ error: 'An academic year with this name already exists' }, { status: 409 });
     }
 
     if (isActive) {
@@ -65,6 +76,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(academicYear, { status: 201 });
   } catch (error: any) {
     console.error('Error creating academic year:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create academic year' }, { status: 500 });
   }
 }

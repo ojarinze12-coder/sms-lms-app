@@ -71,6 +71,7 @@ export async function PUT(
         gender: body.gender,
         dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
         status: body.status,
+        cardStatus: body.cardStatus,
       },
     });
 

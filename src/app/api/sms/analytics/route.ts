@@ -41,13 +41,13 @@ async function getSuperAdminAnalytics() {
   ]);
 
   const subscriptions = await prisma.subscription.findMany({
-    include: { plan: true },
+    include: { subscriptionPlan: true },
   });
 
   const planCounts = { FREE: 0, STARTER: 0, PROFESSIONAL: 0, ENTERPRISE: 0 };
   subscriptions.forEach(s => {
-    if (s.plan?.name && s.plan.name in planCounts) {
-      planCounts[s.plan.name as keyof typeof planCounts]++;
+    if (s.subscriptionPlan?.name && s.subscriptionPlan.name in planCounts) {
+      planCounts[s.subscriptionPlan.name as keyof typeof planCounts]++;
     }
   });
 

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
-import { getSubjectsByLevel } from '@/lib/nigeria';
+import { getSubjectsByCurriculum } from '@/lib/nigeria';
+import type { Curriculum } from '@prisma/client';
 
 export async function PUT(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, level, capacity, addNerdcSubjects } = body;
+    const { name, level, capacity, addNerdcSubjects, section, departmentId } = body;
 
     if (!name || level === undefined || !capacity) {
       return NextResponse.json(
@@ -29,67 +30,132 @@ export async function PUT(
       );
     }
 
-    const { data: existingClass, error: fetchError } = await supabase
-      .from('academic_classes')
-      .select('id, academicYearId')
-      .eq('id', id)
-      .single();
+    const existingClass = await prisma.academicClass.findUnique({
+      where: { id },
+    });
 
-    if (fetchError || !existingClass) {
+    if (!existingClass) {
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
     }
 
-    const { data: academicClass, error } = await supabase
-      .from('academic_classes')
-      .update({ name, level, capacity })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating class:', error);
-      return NextResponse.json({ error: 'Failed to update class' }, { status: 500 });
+    // Check for duplicate - considering section
+    const duplicateClass = await prisma.academicClass.findFirst({
+      where: {
+        academicYearId: existingClass.academicYearId,
+        name: name,
+        section: section || null,
+        id: { not: id },
+      },
+    });
+    if (duplicateClass) {
+      return NextResponse.json(
+        { error: 'A class with this name and section already exists in the selected academic year' },
+        { status: 400 }
+      );
     }
 
+    const levelNum = typeof level === 'string' ? parseInt(level) : level;
+    
+    // Update class with tier if provided
+    const updateData: any = {
+      name,
+      level: levelNum,
+      capacity: parseInt(capacity),
+      section: section || null,
+      departmentId: departmentId || null,
+    };
+    
+    if (body.tierId !== undefined) {
+      updateData.tierId = body.tierId || null;
+    }
+    
+    const academicClass = await prisma.academicClass.update({
+      where: { id },
+      data: updateData,
+    });
+
+    // Get department code if departmentId is provided
+    let departmentCode: string | undefined;
+    if (departmentId) {
+      const dept = await prisma.department.findUnique({
+        where: { id: departmentId },
+        select: { code: true }
+      });
+      if (dept) {
+        departmentCode = dept.code;
+      }
+    }
+    
+    // Get curriculum for this class
+    let curriculum: Curriculum = 'NERDC';
+    try {
+      const settings = await prisma.tenantSettings.findUnique({
+        where: { tenantId: authUser.tenantId },
+        select: { curriculumType: true, usePerTierCurriculum: true }
+      });
+      
+      let globalCurriculum = (settings?.curriculumType) ? String(settings.curriculumType) : 'NERDC';
+      
+      if (academicClass.tierId && settings?.usePerTierCurriculum) {
+        const tierCurriculum = await prisma.tierCurriculum.findFirst({
+          where: { tierId: academicClass.tierId, tenantId: authUser.tenantId },
+          select: { curriculum: true }
+        });
+        curriculum = (tierCurriculum?.curriculum || globalCurriculum) as Curriculum;
+      } else {
+        curriculum = globalCurriculum as Curriculum;
+      }
+    } catch (curriculumError: any) {
+      console.error('[CLASSES PUT] Error fetching curriculum:', curriculumError.message);
+      curriculum = 'NERDC';
+    }
+    
     if (addNerdcSubjects && academicClass) {
-      const subjectsToAdd = getSubjectsByLevel(level);
-      console.log('Adding NERDC subjects for level:', level, 'count:', subjectsToAdd.length);
+      const subjectsToAdd = getSubjectsByCurriculum(levelNum, curriculum, departmentCode);
+      console.log('[CLASSES PUT] Adding subjects for level:', levelNum, 'curriculum:', curriculum, 'department:', departmentCode, 'count:', subjectsToAdd.length);
       
       if (subjectsToAdd.length > 0) {
-        const { data: existingSubjects } = await supabase
-          .from('subjects')
-          .select('code')
-          .eq('academicClassId', id);
+        const existingSubjects = await prisma.subject.findMany({
+          where: { academicClassId: id },
+          select: { code: true }
+        });
         
-        const existingCodes = new Set(existingSubjects?.map(s => s.code) || []);
+        const existingCodes = new Set(existingSubjects.map(s => s.code));
         const newSubjects = subjectsToAdd.filter(s => !existingCodes.has(s.code));
         
-        console.log('Existing subjects:', existingSubjects?.length, 'New to add:', newSubjects.length);
+        console.log('[CLASSES PUT] Existing subjects:', existingSubjects.length, 'New to add:', newSubjects.length);
         
         if (newSubjects.length > 0) {
           const subjectRecords = newSubjects.map(s => ({
             name: s.name,
             code: s.code,
             academicClassId: id,
+            tenantId: authUser.tenantId,
+            curriculum: curriculum,
           }));
 
-          const { error: subjectsError } = await supabase
-            .from('subjects')
-            .insert(subjectRecords);
-
-          if (subjectsError) {
-            console.error('Error creating subjects:', subjectsError);
-          } else {
-            console.log('Successfully added', newSubjects.length, 'new subjects');
+          try {
+            let createdCount = 0;
+            for (const record of subjectRecords) {
+              try {
+                const created = await prisma.subject.create({ data: record });
+                createdCount++;
+              } catch (singleError: any) {
+                console.error('[CLASSES PUT] Error creating subject:', record.name, singleError.message);
+              }
+            }
+            console.log('[CLASSES PUT] Subjects created, count:', createdCount);
+          } catch (subjectError: any) {
+            console.error('[CLASSES PUT] Subject creation error:', subjectError);
           }
         }
       }
     }
 
     return NextResponse.json(academicClass);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating class:', error);
-    return NextResponse.json({ error: 'Failed to update class' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -110,19 +176,21 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const { error } = await supabase
-      .from('academic_classes')
-      .delete()
-      .eq('id', id);
+    const existingClass = await prisma.academicClass.findUnique({
+      where: { id },
+    });
 
-    if (error) {
-      console.error('Error deleting class:', error);
-      return NextResponse.json({ error: 'Failed to delete class' }, { status: 500 });
+    if (!existingClass) {
+      return NextResponse.json({ error: 'Class not found' }, { status: 404 });
     }
 
+    await prisma.academicClass.delete({
+      where: { id },
+    });
+
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting class:', error);
-    return NextResponse.json({ error: 'Failed to delete class' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

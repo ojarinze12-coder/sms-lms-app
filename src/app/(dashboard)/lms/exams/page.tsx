@@ -92,10 +92,10 @@ export default function ExamsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold dark:text-white">
             {isStudent ? 'Available Exams' : isTeacher ? 'My Exams' : 'Exams'}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             {isStudent ? 'View and take available exams' : isTeacher ? 'Manage your exams' : 'Manage all exams'}
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function ExamsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
@@ -124,15 +124,15 @@ export default function ExamsPage() {
           placeholder="Search exams..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border rounded-lg"
+          className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
         />
       </div>
 
       {/* Exams Grid */}
       {filteredExams.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-xl border">
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl border dark:border-gray-700">
           <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
             {isStudent ? 'No exams available at the moment.' : 'No exams created yet.'}
           </p>
           {(isAdmin || isTeacher) && (
@@ -147,26 +147,26 @@ export default function ExamsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredExams.map((exam) => (
-            <Card key={exam.id} className="hover:shadow-md transition">
+            <Card key={exam.id} className="hover:shadow-md transition dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{exam.title}</CardTitle>
+                  <CardTitle className="text-lg dark:text-white">{exam.title}</CardTitle>
                   <span className={`px-2 py-1 rounded-full text-xs ${statusColors[exam.status || 'DRAFT']}`}>
                     {exam.status || 'DRAFT'}
                   </span>
                 </div>
-                <CardDescription>
+                <CardDescription className="dark:text-gray-400">
                   {exam.examType ? examTypeLabels[exam.examType] : 'Quiz'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <Clock className="h-4 w-4" />
                     <span>{exam.duration || 60} minutes</span>
                   </div>
                   {exam.subject && (
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                       <BookOpen className="h-4 w-4" />
                       <span>{typeof exam.subject === 'object' ? exam.subject.name : 'N/A'}</span>
                     </div>
@@ -176,14 +176,14 @@ export default function ExamsPage() {
                   {isStudent ? (
                     <Link
                       href={`/lms/exams/${exam.id}/take`}
-                      className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                      className="flex-1 text-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-sm"
                     >
                       Take Exam
                     </Link>
                   ) : (
                     <Link
                       href={`/lms/exams/${exam.id}`}
-                      className="flex-1 text-center px-3 py-2 border rounded-lg hover:bg-gray-50 text-sm"
+                      className="flex-1 text-center px-3 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 text-sm"
                     >
                       View
                     </Link>

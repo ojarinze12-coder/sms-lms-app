@@ -10,6 +10,7 @@ import type { TenantSettings } from '@/types';
 import Step1Tiers from '@/components/setup/Step1Tiers';
 import Step2Curriculum from '@/components/setup/Step2Curriculum';
 import Step3Departments from '@/components/setup/Step3Departments';
+import Step3Subjects from '@/components/setup/Step3Subjects';
 import Step4Badges from '@/components/setup/Step4Badges';
 import Step5Complete from '@/components/setup/Step5Complete';
 
@@ -20,24 +21,20 @@ export default function SchoolSetupPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Existing data
   const [existingTiers, setExistingTiers] = useState<TierWithCount[]>([]);
   const [existingDepartments, setExistingDepartments] = useState<DepartmentWithCount[]>([]);
   const [settings, setSettings] = useState<TenantSettings | null>(null);
 
-  // Form state
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [curriculum, setCurriculum] = useState<Curriculum>('NERDC');
   const [usePerTierCurriculum, setUsePerTierCurriculum] = useState(false);
   const [tierCurriculum, setTierCurriculum] = useState<Record<string, Curriculum>>({});
   const [selectedDepts, setSelectedDepts] = useState<string[]>(['SCI', 'COM', 'ART']);
 
-  // Badge settings state
   const [badgesEnabled, setBadgesEnabled] = useState(true);
   const [badgesAutoAward, setBadgesAutoAward] = useState(false);
   const [badgesShowOnReport, setBadgesShowOnReport] = useState(true);
 
-  // Timetable settings state
   const [daysPerWeek, setDaysPerWeek] = useState(5);
   const [periodDuration, setPeriodDuration] = useState(40);
   const [schoolStartTime, setSchoolStartTime] = useState("08:00");
@@ -45,7 +42,11 @@ export default function SchoolSetupPage() {
   const [breakStartTime, setBreakStartTime] = useState("12:00");
   const [breakEndTime, setBreakEndTime] = useState("12:30");
 
-  const TOTAL_STEPS = 5;
+  // Subjects creation result
+  const [subjectsCreated, setSubjectsCreated] = useState<number>(0);
+  const [classesCreated, setClassesCreated] = useState<number>(0);
+
+  const TOTAL_STEPS = 6;
 
   useEffect(() => {
     loadExistingData();
@@ -57,14 +58,14 @@ export default function SchoolSetupPage() {
         fetch('/api/sms/tiers'),
         fetch('/api/sms/departments'),
         fetch('/api/tenant/curriculum'),
-        fetch('/api/tenant/badge-settings').catch(() => ({ json: () => ({}) }))
+        fetch('/api/tenant/badge-settings').catch(() => ({ ok: false, json: () => ({}) }))
       ]);
 
       const [tiersData, deptsData, settingsData, badgeData] = await Promise.all([
-        tiersRes.json(),
-        deptsRes.json(),
-        settingsRes.json(),
-        badgeRes.json()
+        tiersRes.ok ? tiersRes.json() : { data: [] },
+        deptsRes.ok ? deptsRes.json() : { data: [] },
+        settingsRes.ok ? settingsRes.json() : { data: {} },
+        badgeRes.ok ? badgeRes.json() : {}
       ]);
 
       setExistingTiers(tiersData.data || []);
@@ -181,6 +182,11 @@ export default function SchoolSetupPage() {
       return;
     }
 
+    if (existingDepartments.length > 0) {
+      setStep(4);
+      return;
+    }
+
     setSubmitting(true);
     setError('');
 
@@ -211,6 +217,46 @@ export default function SchoolSetupPage() {
     }
   };
 
+  const handleAddSubjects = async (tierLevels: { tierId: string; level: number }[]) => {
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/sms/subjects/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tierLevels }),
+      });
+
+      const data = await res.json();
+      console.log('[SETUP] Subjects bulk result:', JSON.stringify(data, null, 2));
+
+      if (!res.ok) {
+        setError(data.error || 'Failed to create subjects');
+        alert('Error: ' + JSON.stringify(data));
+        return;
+      }
+
+      // Show detailed result in alert for debugging
+      alert(`Debug Info:\n` +
+        `Total Subjects Created: ${data.totalCreated}\n` +
+        `Tier Levels Processed: ${data.totalProcessed}\n` +
+        `Debug: ${JSON.stringify(data.debug, null, 2)}`
+      );
+
+      // Store the results - totalCreated is actual subjects, calculate classes from results
+      setSubjectsCreated(data.totalCreated || 0);
+      setClassesCreated(data.results?.reduce((sum: number, r: any) => sum + (r.created > 0 ? 1 : 0), 0) || 0);
+
+      setStep(5);
+    } catch (err) {
+      setError('An error occurred: ' + err);
+      alert('Exception: ' + err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSaveBadgeSettings = async () => {
     setSubmitting(true);
     setError('');
@@ -232,7 +278,7 @@ export default function SchoolSetupPage() {
         return;
       }
 
-      setStep(5);
+      setStep(6);
     } catch (err) {
       setError('An error occurred');
     } finally {
@@ -249,54 +295,50 @@ export default function SchoolSetupPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <Link href="/sms/tiers" className="text-blue-600 hover:underline flex items-center gap-2 mb-4">
+    <div className="max-w-4xl mx-auto pb-20">
+      <div className="mb-4">
+        <Link href="/sms/tiers" className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2 mb-2 text-sm">
           <ArrowLeft className="h-4 w-4" />
           Back to Tiers
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">School Setup Wizard</h1>
-        <p className="text-gray-600 mt-2">
-          Configure your school tiers, curriculum, and departments
-        </p>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">School Setup Wizard</h1>
       </div>
 
-      {/* Progress Steps */}
-      <div className="flex items-center justify-center gap-2 mb-8">
-        {[
-          { num: 1, label: 'Tiers' },
-          { num: 2, label: 'Curriculum' },
-          { num: 3, label: 'Departments' },
-          { num: 4, label: 'Badges' },
-          { num: 5, label: 'Complete' },
-        ].map((s) => (
-          <div key={s.num} className="flex items-center">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
-                step >= s.num ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              {step > s.num ? <Check className="h-5 w-5" /> : s.num}
+      <div className="sticky top-0 bg-white dark:bg-gray-900 z-10 py-3 border-b dark:border-gray-700 mb-4">
+        <div className="flex items-center justify-center gap-1 flex-wrap">
+          {[
+            { num: 1, label: 'Tiers' },
+            { num: 2, label: 'Curriculum' },
+            { num: 3, label: 'Departments' },
+            { num: 4, label: 'Subjects' },
+            { num: 5, label: 'Badges' },
+            { num: 6, label: 'Complete' },
+          ].map((s) => (
+            <div key={s.num} className="flex items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                  step >= s.num ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {step > s.num ? <Check className="h-4 w-4" /> : s.num}
+              </div>
+              <span className={`ml-1 text-xs hidden sm:inline ${step >= s.num ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                {s.label}
+              </span>
+              {s.num < TOTAL_STEPS && (
+                <div className={`w-6 h-0.5 mx-1 rounded ${step > s.num ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`} />
+              )}
             </div>
-            <span className={`ml-2 text-sm ${step >= s.num ? 'text-gray-900' : 'text-gray-500'}`}>
-              {s.label}
-            </span>
-            {s.num < TOTAL_STEPS && (
-              <div className={`w-12 h-1 mx-3 rounded ${step > s.num ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg">
           {error}
         </div>
       )}
 
-      {/* Step 1: Tier Selection */}
       {step === 1 && (
         <Step1Tiers
           existingTiers={existingTiers}
@@ -308,7 +350,6 @@ export default function SchoolSetupPage() {
         />
       )}
 
-      {/* Step 2: Curriculum Settings */}
       {step === 2 && (
         <Step2Curriculum
           existingTiers={existingTiers}
@@ -336,7 +377,6 @@ export default function SchoolSetupPage() {
         />
       )}
 
-      {/* Step 3: SSS Departments */}
       {step === 3 && (
         <Step3Departments
           existingDepartments={existingDepartments}
@@ -348,8 +388,19 @@ export default function SchoolSetupPage() {
         />
       )}
 
-      {/* Step 4: Badge Settings */}
       {step === 4 && (
+        <Step3Subjects
+          tiers={existingTiers.map(t => ({ id: t.id, name: t.name, code: t.code }))}
+          curriculum={curriculum}
+          usePerTierCurriculum={usePerTierCurriculum}
+          tierCurriculum={tierCurriculum}
+          submitting={submitting}
+          onAddSubjects={handleAddSubjects}
+          onBack={() => setStep(3)}
+        />
+      )}
+
+      {step === 5 && (
         <Step4Badges
           badgesEnabled={badgesEnabled}
           badgesAutoAward={badgesAutoAward}
@@ -359,12 +410,11 @@ export default function SchoolSetupPage() {
           onBadgesAutoAwardChange={setBadgesAutoAward}
           onBadgesShowOnReportChange={setBadgesShowOnReport}
           onSave={handleSaveBadgeSettings}
-          onBack={() => setStep(3)}
+          onBack={() => setStep(4)}
         />
       )}
 
-      {/* Step 5: Complete */}
-      {step === 5 && (
+      {step === 6 && (
         <Step5Complete
           existingTiers={existingTiers}
           existingDepartments={existingDepartments}
@@ -377,6 +427,8 @@ export default function SchoolSetupPage() {
           schoolEndTime={schoolEndTime}
           breakStartTime={breakStartTime}
           breakEndTime={breakEndTime}
+          subjectsCreated={subjectsCreated}
+          classesCreated={classesCreated}
         />
       )}
     </div>

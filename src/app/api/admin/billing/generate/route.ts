@@ -35,17 +35,23 @@ export async function POST(request: NextRequest) {
         ...(tenantId ? { tenantId } : {}),
       },
       include: {
-        tenant: true,
-        plan: true,
+        subscriptionPlan: true,
       },
     });
+
+    const tenantIds = subscriptions.map(s => s.tenantId).filter(Boolean) as string[];
+    const tenants = await prisma.tenant.findMany({
+      where: { id: { in: tenantIds } },
+    });
+    const tenantMap = new Map(tenants.map(t => [t.id, t]));
 
     const results = [];
     const now = new Date();
 
     for (const subscription of subscriptions) {
-      if (!subscription.planId || !subscription.plan) continue;
+      if (!subscription.planId || !subscription.subscriptionPlan) continue;
 
+      const tenant = subscription.tenantId ? tenantMap.get(subscription.tenantId) : null;
       const billingCycle = subscription.billingCycle;
       const periodStart = subscription.currentPeriodStart || now;
       const periodEnd = subscription.currentPeriodEnd || new Date(
@@ -78,7 +84,7 @@ export async function POST(request: NextRequest) {
       if (existingInvoice) {
         results.push({
           tenantId: subscription.tenantId,
-          tenantName: subscription.tenant?.name,
+          tenantName: tenant?.name,
           status: 'SKIPPED',
           reason: 'Invoice already exists for this period',
         });
@@ -86,13 +92,13 @@ export async function POST(request: NextRequest) {
       }
 
       const amount = billingCycle === 'YEARLY'
-        ? subscription.plan.yearlyPrice
-        : subscription.plan.monthlyPrice;
+        ? subscription.subscriptionPlan.yearlyPrice
+        : subscription.subscriptionPlan.monthlyPrice;
 
       if (amount <= 0) {
         results.push({
           tenantId: subscription.tenantId,
-          tenantName: subscription.tenant?.name,
+          tenantName: tenant?.name,
           status: 'SKIPPED',
           reason: 'Plan has no billing amount',
         });
@@ -102,7 +108,7 @@ export async function POST(request: NextRequest) {
       if (dryRun) {
         results.push({
           tenantId: subscription.tenantId,
-          tenantName: subscription.tenant?.name,
+          tenantName: tenant?.name,
           status: 'WOULD_CREATE',
           amount,
           billingCycle,
@@ -127,7 +133,7 @@ export async function POST(request: NextRequest) {
           billingPeriodStart: periodStart,
           billingPeriodEnd: periodEnd,
           dueDate,
-          description: `${subscription.plan.displayName} - ${billingCycle} subscription`,
+          description: `${subscription.subscriptionPlan.displayName} - ${billingCycle} subscription`,
         },
       });
 
@@ -150,14 +156,14 @@ export async function POST(request: NextRequest) {
           targetType: 'invoice',
           targetId: invoice.id,
           targetName: invoiceNumber,
-          description: `Auto-generated invoice ${invoiceNumber} for ${subscription.tenant?.name}`,
+          description: `Auto-generated invoice ${invoiceNumber} for ${tenant?.name}`,
           metadata: { tenantId: subscription.tenantId, amount, billingCycle },
         },
       });
 
       results.push({
         tenantId: subscription.tenantId,
-        tenantName: subscription.tenant?.name,
+        tenantName: tenant?.name,
         status: 'CREATED',
         invoiceNumber,
         amount,

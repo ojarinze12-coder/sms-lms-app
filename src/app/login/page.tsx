@@ -21,8 +21,9 @@ export default function LoginPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/auth/me', {
+      const res = await fetch(`/api/auth/me?_=${Date.now()}`, {
         credentials: 'include',
+        cache: 'no-store',
       });
       if (res.ok) {
         const data = await res.json();

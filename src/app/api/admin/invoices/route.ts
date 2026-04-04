@@ -47,23 +47,52 @@ export async function GET(request: NextRequest) {
     if (tenantId) where.tenantId = tenantId;
     if (status) where.status = status;
 
-    const [invoices, total] = await Promise.all([
-      prisma.subscriptionInvoice.findMany({
-        where,
-        include: {
-          tenant: { select: { id: true, name: true, slug: true } },
-          plan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
-          payments: { orderBy: { createdAt: 'desc' } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
+    const invoices = await prisma.subscriptionInvoice.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const total = await prisma.subscriptionInvoice.count({ where });
+
+    const invoiceIds = invoices.map(inv => inv.id);
+    const tenantIds = Array.from(new Set(invoices.map(inv => inv.tenantId)));
+    const planIds = Array.from(new Set(invoices.map(inv => inv.planId)));
+
+    const [tenants, plans, paymentsMap] = await Promise.all([
+      prisma.tenant.findMany({
+        where: { id: { in: tenantIds } },
+        select: { id: true, name: true, slug: true },
       }),
-      prisma.subscriptionInvoice.count({ where }),
+      prisma.subscriptionPlan.findMany({
+        where: { id: { in: planIds } },
+        select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true },
+      }),
+      prisma.subscriptionPayment.findMany({
+        where: { invoiceId: { in: invoiceIds } },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
 
+    const tenantMap = new Map(tenants.map(t => [t.id, t]));
+    const planMap = new Map(plans.map(p => [p.id, p]));
+    const paymentsByInvoice = new Map<string, typeof paymentsMap>();
+    for (const payment of paymentsMap) {
+      const existing = paymentsByInvoice.get(payment.invoiceId) || [];
+      existing.push(payment);
+      paymentsByInvoice.set(payment.invoiceId, existing);
+    }
+
+    const enrichedInvoices = invoices.map(inv => ({
+      ...inv,
+      tenant: tenantMap.get(inv.tenantId),
+      plan: planMap.get(inv.planId),
+      payments: paymentsByInvoice.get(inv.id) || [],
+    }));
+
     return NextResponse.json({
-      invoices,
+      invoices: enrichedInvoices,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
@@ -84,14 +113,16 @@ export async function POST(request: NextRequest) {
 
     const tenant = await prisma.tenant.findUnique({
       where: { id: validatedData.tenantId },
-      include: { subscriptions: { where: { status: 'ACTIVE' } } },
     });
 
     if (!tenant) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
     }
 
-    const activeSubscription = tenant.subscriptions[0];
+    const activeSubscription = await prisma.subscription.findFirst({
+      where: { tenantId: validatedData.tenantId, status: 'ACTIVE' },
+    });
+
     if (!activeSubscription || !activeSubscription.planId) {
       return NextResponse.json({ error: 'Tenant has no active subscription' }, { status: 400 });
     }
@@ -142,10 +173,6 @@ export async function POST(request: NextRequest) {
         dueDate: new Date(validatedData.dueDate),
         description: validatedData.description || `${plan.displayName} - ${validatedData.billingCycle} subscription`,
       },
-      include: {
-        tenant: { select: { id: true, name: true, slug: true } },
-        plan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
-      },
     });
 
     await prisma.platformAuditLog.create({
@@ -164,7 +191,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ invoice }, { status: 201 });
+    return NextResponse.json({
+      invoice: {
+        ...invoice,
+        tenant: { id: tenant.id, name: tenant.name, slug: tenant.slug },
+        plan: { id: plan.id, name: plan.name, displayName: plan.displayName, monthlyPrice: plan.monthlyPrice, yearlyPrice: plan.yearlyPrice },
+      },
+    }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 });

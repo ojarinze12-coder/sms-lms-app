@@ -85,11 +85,20 @@ async function handleSubscriptionPayment(data: any, metadata: any) {
 
   const invoice = await prisma.subscriptionInvoice.findUnique({
     where: { id: invoiceId },
-    include: { tenant: true, plan: true },
+    include: { subscriptionPlan: true, subscription: true },
   });
 
   if (!invoice) {
     console.error('Subscription invoice not found:', invoiceId);
+    return;
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: invoice.tenantId },
+  });
+
+  if (!tenant) {
+    console.error('Tenant not found for invoice:', invoiceId);
     return;
   }
 
@@ -168,14 +177,14 @@ async function handleSubscriptionPayment(data: any, metadata: any) {
     
     await sendPaymentReceiptEmail(
       tenantAdmin.email,
-      invoice.tenant.name,
+      tenant.name,
       invoice.invoiceNumber,
       receiptNumber,
       amount,
       invoice.currency,
       new Date().toLocaleDateString('en-NG'),
       billingPeriod,
-      invoice.plan.displayName,
+      invoice.subscriptionPlan.displayName,
       'Online',
       'Paystack'
     );

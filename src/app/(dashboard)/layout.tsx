@@ -8,6 +8,10 @@ import { Logo, LogoIcon } from '@/components/logo';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import AIChatWidget from '@/components/AIChatWidget';
+import { useTenantTheme } from '@/components/use-tenant-theme';
+import { useTheme } from 'next-themes';
+import { Sun, Moon, Monitor } from 'lucide-react';
+import { useBrand } from '@/components/brand-theme-provider';
 
 const superAdminNavItems = [
   { label: 'Dashboard', href: '/admin' },
@@ -15,7 +19,9 @@ const superAdminNavItems = [
   { label: 'Subscriptions', href: '/admin/subscriptions' },
   { label: 'Invoices', href: '/admin/invoices' },
   { label: 'Billing', href: '/admin/billing', icon: '💳' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '📈' },
   { label: 'Settings', href: '/admin/settings' },
+  { label: 'Data Management', href: '/admin/data', icon: '🗑️' },
 ];
 
 const adminNavItems = [
@@ -36,6 +42,8 @@ const schoolPortalNavItems = [
   { label: 'Exams', href: '/school/exams', icon: '📝' },
   { label: 'Reports', href: '/school/reports', icon: '📈' },
   { label: 'Settings', href: '/school/settings', icon: '⚙️' },
+  { label: 'Bulk Import', href: '/sms/import', icon: '📤' },
+  { label: 'Data Management', href: '/sms/data', icon: '🗑️' },
 ];
 
 const smsNavItems = [
@@ -52,12 +60,20 @@ const smsNavItems = [
   { label: 'Fees', href: '/sms/fees', icon: '💰' },
   { label: 'Announcements', href: '/sms/announcements', icon: '📢' },
   { label: 'Report Cards', href: '/sms/report-cards', icon: '📊' },
+  { label: 'Academic Records', href: '/sms/academic-records', icon: '📋' },
   { label: 'Admissions', href: '/sms/applications', icon: '📝' },
+  { label: 'Admission Settings', href: '/sms/applications/settings', icon: '⚙️' },
+  { label: 'Hostel', href: '/sms/hostel', icon: '🏨' },
+  { label: 'Documents', href: '/sms/documents', icon: '📄' },
+  { label: 'Audit Log', href: '/sms/audit', icon: '📋' },
   { label: 'HR & Payroll', href: '/sms/payroll', icon: '💼' },
   { label: 'Leave Mgmt', href: '/sms/leaves', icon: '🏖️' },
   { label: 'Library', href: '/sms/library', icon: '📕' },
   { label: 'Transport', href: '/sms/transport', icon: '🚌' },
+  { label: 'ID Cards', href: '/sms/id-cards', icon: '🪪' },
   { label: 'Analytics', href: '/analytics', icon: '📈' },
+  { label: 'Bulk Import', href: '/sms/import', icon: '📤' },
+  { label: 'Data Management', href: '/sms/data', icon: '🗑️' },
 ];
 
 const lmsNavItems = [
@@ -101,8 +117,9 @@ function DropdownMenu({
   isActive: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
-  brandColor: string;
+  brandColor?: string;
 }) {
+  const { primaryColor } = useBrand();
   const [isOpen, setIsOpen] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -135,9 +152,9 @@ function DropdownMenu({
           "px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
           isActive
             ? "text-white"
-            : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
         )}
-        style={isActive ? { backgroundColor: brandColor } : {}}
+        style={isActive ? { backgroundColor: `hsl(var(--brand-primary))` } : {}}
       >
         {label}
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,13 +163,13 @@ function DropdownMenu({
       </button>
       
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-md shadow-lg border py-1 z-50">
+        <div className="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border dark:border-gray-700 py-1 z-50 max-h-96 overflow-y-auto">
           {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={handleLinkClick}
-              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               {item.icon && <span>{item.icon}</span>}
               {item.label}
@@ -172,7 +189,10 @@ export default function DashboardLayout({
   const { user, role, loading } = useAuth();
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [tenantInfo, setTenantInfo] = useState<{ name: string; brandColor: string } | null>(null);
+  const [tenantInfo, setTenantInfo] = useState<{ name: string; brandColor: string; logo?: string | null } | null>(null);
+  const { loading: themeLoading } = useTenantTheme();
+  const { theme, setTheme } = useTheme();
+  const { branding, primaryColor } = useBrand();
 
   const isSuperAdmin = role === 'SUPER_ADMIN';
   const isAdmin = role === 'ADMIN';
@@ -203,16 +223,17 @@ export default function DashboardLayout({
   else if (isStudent) navItems = studentNavItems;
   else if (isParent) navItems = parentNavItems;
 
-  const brandColor = tenantInfo?.brandColor || '#1a56db';
-  const schoolName = tenantInfo?.name || 'School';
+  const brandColor = primaryColor || tenantInfo?.brandColor || '#1a56db';
+  const schoolName = tenantInfo?.name || branding?.name || 'School';
+  const schoolLogo = tenantInfo?.logo || branding?.logo;
 
   const isSchoolPortalActive = pathname.startsWith('/school');
   const isSmsActive = pathname.startsWith('/sms');
   const isLmsActive = pathname.startsWith('/lms');
 
-  if (loading) {
+  if (loading || themeLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
@@ -232,8 +253,8 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b sticky top-0 z-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
@@ -244,15 +265,23 @@ export default function DashboardLayout({
                 </>
               ) : (
                 <>
-                  <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                    style={{ backgroundColor: brandColor }}
-                  >
-                    {schoolName.charAt(0)}
-                  </div>
+                  {schoolLogo ? (
+                    <img 
+                      src={schoolLogo} 
+                      alt={schoolName}
+                      className="w-10 h-10 rounded-lg object-cover bg-white border"
+                    />
+                  ) : (
+                    <div 
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: brandColor }}
+                    >
+                      {schoolName.charAt(0)}
+                    </div>
+                  )}
                   <div className="flex flex-col">
-                    <span className="text-lg font-bold text-gray-800">{schoolName}</span>
-                    <span className="text-xs text-gray-500">School Dashboard</span>
+                    <span className="text-lg font-bold text-gray-800 dark:text-white">{schoolName}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">School Dashboard</span>
                   </div>
                 </>
               )}
@@ -297,14 +326,14 @@ export default function DashboardLayout({
                 {/* Admin Tools */}
                 {isAdmin && (
                   <Link
-                    href="/admin/analytics"
+                    href="/analytics"
                     className={cn(
                       "px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                      pathname.startsWith('/admin')
+                      pathname.startsWith('/analytics')
                         ? "text-white"
                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                     )}
-                    style={pathname.startsWith('/admin') ? { backgroundColor: brandColor } : {}}
+                    style={pathname.startsWith('/analytics') ? { backgroundColor: `hsl(var(--brand-primary))` } : {}}
                   >
                     Analytics
                   </Link>
@@ -321,7 +350,7 @@ export default function DashboardLayout({
                         ? "text-white"
                         : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                     )}
-                    style={pathname === item.href || pathname.startsWith(item.href + '/') ? { backgroundColor: brandColor } : {}}
+                    style={pathname === item.href || pathname.startsWith(item.href + '/') ? { backgroundColor: `hsl(var(--brand-primary))` } : {}}
                   >
                     {item.label}
                   </Link>
@@ -330,15 +359,28 @@ export default function DashboardLayout({
             </div>
 
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title={`Current: ${theme || 'system'}. Click to toggle.`}
+              >
+                {theme === 'dark' ? (
+                  <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                ) : theme === 'light' ? (
+                  <Sun className="h-5 w-5 text-gray-600" />
+                ) : (
+                  <Monitor className="h-5 w-5 text-gray-600" />
+                )}
+              </button>
               {!isSuperAdmin && (
                 <Logo size="sm" variant="dark" className="opacity-50" />
               )}
-              <span className="text-sm text-gray-600 hidden md:block">
+              <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:block">
                 {user.email}
               </span>
               <Link
                 href="/api/auth/logout"
-                className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1 border rounded hover:bg-gray-50"
+                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-1 border rounded hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Sign out
               </Link>

@@ -112,6 +112,28 @@ export default function ExamDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this exam? This action cannot be undone.')) return;
+    
+    setSubmitting(true);
+    try {
+      await examApi.delete(examId);
+      toast({
+        title: 'Success',
+        description: 'Exam deleted successfully',
+      });
+      router.push('/lms/exams');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleDeleteQuestion = async (questionId: string) => {
     if (!confirm('Are you sure you want to delete this question?')) return;
     
@@ -168,6 +190,10 @@ export default function ExamDetailPage() {
               <Button onClick={handlePublish} disabled={submitting || (exam.questions?.length || 0) === 0}>
                 <Upload className="mr-2 h-4 w-4" />
                 Publish
+              </Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
               </Button>
             </>
           )}

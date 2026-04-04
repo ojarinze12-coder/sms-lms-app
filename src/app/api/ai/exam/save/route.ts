@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 import { z } from 'zod';
+import { ExamType } from '@prisma/client';
 
 const questionSchema = z.object({
   content: z.string().min(1),
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
       data: {
         title: validatedData.title,
         description: validatedData.description,
-        examType: validatedData.examType,
+        examType: validatedData.examType as ExamType,
         duration: validatedData.duration,
         termId: validatedData.termId,
         subjectId: validatedData.subjectId,

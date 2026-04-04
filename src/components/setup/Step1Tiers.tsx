@@ -23,14 +23,14 @@ export default function Step1Tiers({
   onContinue,
 }: Step1TiersProps) {
   return (
-    <div className="bg-white rounded-xl border p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-          <Building2 className="h-6 w-6 text-blue-600" />
+        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+          <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">School Tiers</h2>
-          <p className="text-gray-600 text-sm">
+          <h2 className="text-xl font-bold dark:text-white">School Tiers</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
             {existingTiers.length > 0
               ? `You have ${existingTiers.length} tiers configured`
               : 'Select a template to set up your school tiers'}
@@ -40,25 +40,25 @@ export default function Step1Tiers({
 
       {existingTiers.length > 0 ? (
         <div className="mb-6">
-          <h3 className="font-medium mb-3">Current Tiers:</h3>
+          <h3 className="font-medium mb-3 dark:text-white">Current Tiers:</h3>
           <div className="flex flex-wrap gap-2">
             {existingTiers.map((tier) => (
               <span
                 key={tier.id}
-                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm flex items-center gap-2"
+                className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-2"
               >
                 {tier.name}
                 <span className="text-blue-400">({tier._count?.classes || 0} classes)</span>
               </span>
             ))}
           </div>
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
             Tiers already configured. You can add more tiers manually or continue.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             Select a template that matches your school structure:
           </p>
           {TIER_TEMPLATE_OPTIONS.map((option) => (
@@ -67,17 +67,17 @@ export default function Step1Tiers({
               onClick={() => onTemplateChange(option.value)}
               className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                 selectedTemplate === option.value
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
-              <div className="font-medium">{option.label}</div>
+              <div className="font-medium dark:text-white">{option.label}</div>
             </button>
           ))}
         </div>
       )}
 
-      <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
+      <div className="flex justify-end gap-3 mt-6 pt-6 border-t dark:border-gray-700">
         {existingTiers.length === 0 && (
           <button
             onClick={onApplyTemplate}

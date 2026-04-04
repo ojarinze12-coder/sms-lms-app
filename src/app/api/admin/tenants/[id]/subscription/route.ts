@@ -20,12 +20,16 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const subscription = await prisma.subscription.findUnique({
+    const subscription = await prisma.subscription.findFirst({
       where: { tenantId: id },
-      include: {
-        plan: true,
-      },
     });
+
+    let subscriptionPlan = null;
+    if (subscription?.planId) {
+      subscriptionPlan = await prisma.subscriptionPlan.findUnique({
+        where: { id: subscription.planId },
+      });
+    }
 
     if (!subscription) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 });
@@ -36,7 +40,7 @@ export async function GET(
     });
 
     return NextResponse.json({
-      subscription,
+      subscription: subscription ? { ...subscription, plan: subscriptionPlan } : null,
       resources,
     });
   } catch (error) {
@@ -72,25 +76,34 @@ export async function PUT(
     const billingCycle = validatedData.billingCycle || 'MONTHLY';
     const periodDays = billingCycle === 'YEARLY' ? 365 : 30;
 
-    const subscription = await prisma.subscription.upsert({
+    const existingSubscription = await prisma.subscription.findFirst({
       where: { tenantId: id },
-      update: {
-        planId: validatedData.planId,
-        billingCycle,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
-        status: 'ACTIVE',
-      },
-      create: {
-        tenantId: id,
-        planId: validatedData.planId,
-        billingCycle,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
-        status: 'ACTIVE',
-      },
-      include: { plan: true },
     });
+
+    let subscription;
+    if (existingSubscription) {
+      subscription = await prisma.subscription.update({
+        where: { id: existingSubscription.id },
+        data: {
+          planId: validatedData.planId,
+          billingCycle,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+          status: 'ACTIVE',
+        },
+      });
+    } else {
+      subscription = await prisma.subscription.create({
+        data: {
+          tenantId: id,
+          planId: validatedData.planId,
+          billingCycle,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000),
+          status: 'ACTIVE',
+        },
+      });
+    }
 
     await prisma.tenant.update({
       where: { id },

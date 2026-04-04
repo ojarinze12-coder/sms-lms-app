@@ -19,7 +19,16 @@ export async function GET(request: NextRequest) {
 
     if (classId) where.classId = classId;
     if (studentId) where.studentId = studentId;
-    if (date) where.date = new Date(date);
+    if (date) {
+      const searchDate = new Date(date);
+      searchDate.setHours(0, 0, 0, 0);
+      const nextDate = new Date(searchDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      where.date = {
+        gte: searchDate,
+        lt: nextDate
+      };
+    }
 
     const attendance = await prisma.attendance.findMany({
       where,

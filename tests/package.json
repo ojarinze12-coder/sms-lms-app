@@ -1,0 +1,16 @@
+{
+  "name": "sms-lms-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/core-features.test.js",
+    "test:auth": "node tests/auth.test.js",
+    "test:students": "node tests/students.test.js",
+    "test:teachers": "node tests/teachers.test.js",
+    "test:attendance": "node tests/attendance.test.js",
+    "test:fees": "node tests/fees.test.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}

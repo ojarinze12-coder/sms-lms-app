@@ -57,13 +57,13 @@ export default function AnalyticsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics & Reports</h1>
-          <p className="text-gray-500 mt-1">Insights into your school&apos;s performance</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics & Reports</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Insights into your school&apos;s performance</p>
         </div>
         <select
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value)}
-          className="px-4 py-2 border rounded-lg"
+          className="px-4 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
         >
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
@@ -74,22 +74,22 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statCards.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-6">
+          <div key={stat.label} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
               </div>
               <span className="text-2xl">{stat.icon}</span>
             </div>
-            <p className="text-sm text-green-600 mt-2">{stat.change} from last period</p>
+            <p className="text-sm text-green-600 dark:text-green-400 mt-2">{stat.change} from last period</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold mb-4">Enrollment Trend</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold mb-4 dark:text-white">Enrollment Trend</h2>
           <div className="h-64 flex items-end gap-2">
             {(data?.enrollmentTrend || []).map((item, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center">
@@ -97,14 +97,14 @@ export default function AnalyticsPage() {
                   className="w-full bg-blue-500 rounded-t"
                   style={{ height: `${(item.count / 50) * 100}%` }}
                 ></div>
-                <span className="text-xs text-gray-500 mt-2">{item.month}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">{item.month}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold mb-4">Revenue by Month</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold mb-4 dark:text-white">Revenue by Month</h2>
           <div className="h-64 flex items-end gap-2">
             {(data?.revenueByMonth || []).map((item, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center">
@@ -112,7 +112,7 @@ export default function AnalyticsPage() {
                   className="w-full bg-green-500 rounded-t"
                   style={{ height: `${(item.amount / 5000000) * 100}%` }}
                 ></div>
-                <span className="text-xs text-gray-500 mt-2">{item.month}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">{item.month}</span>
               </div>
             ))}
           </div>
@@ -120,16 +120,16 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold mb-4">Subject Performance</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold mb-4 dark:text-white">Subject Performance</h2>
           <div className="space-y-4">
             {(data?.subjectPerformance || []).map((item, idx) => (
               <div key={idx}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">{item.subject}</span>
-                  <span className="text-sm text-gray-500">{item.average}%</span>
+                  <span className="text-sm font-medium dark:text-white">{item.subject}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{item.average}%</span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-blue-500 rounded-full"
                     style={{ width: `${item.average}%` }}
@@ -140,16 +140,16 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold mb-4">Class Performance</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold mb-4 dark:text-white">Class Performance</h2>
           <div className="space-y-4">
             {(data?.classPerformance || []).map((item, idx) => (
               <div key={idx}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">{item.class}</span>
+                  <span className="text-sm font-medium dark:text-white">{item.class}</span>
                   <span className="text-sm text-gray-500">{item.average}%</span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-purple-500 rounded-full"
                     style={{ width: `${item.average}%` }}

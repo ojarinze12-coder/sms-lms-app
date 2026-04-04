@@ -38,20 +38,11 @@ export async function POST(
     // Get student's current enrollment/class to determine tier level
     const enrollment = await prisma.enrollment.findFirst({
       where: { studentId },
-      include: {
-        class: {
-          include: {
-            tier: true,
-          }
-        }
-      },
       orderBy: { createdAt: 'desc' }
     });
 
-    const tierLevel = enrollment?.class?.level || null;
-    const tierName = enrollment?.class?.tier?.name 
-      ? `${enrollment.class.tier.name} ${enrollment.class.name}`
-      : null;
+    const tierLevel = enrollment?.grade || null;
+    const tierName = null;
 
     // Check if already awarded
     const existing = await prisma.studentBadge.findUnique({

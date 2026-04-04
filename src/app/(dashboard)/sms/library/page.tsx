@@ -105,22 +105,22 @@ export default function LibraryPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Library Management</h1>
+      <h1 className="text-2xl font-bold dark:text-white">Library Management</h1>
 
-      <div className="flex gap-4 border-b">
-        <button className={`px-4 py-2 ${activeTab === 'books' ? 'border-b-2 border-blue-500 font-bold' : ''}`} onClick={() => setActiveTab('books')}>Books</button>
-        <button className={`px-4 py-2 ${activeTab === 'circulation' ? 'border-b-2 border-blue-500 font-bold' : ''}`} onClick={() => setActiveTab('circulation')}>Circulation</button>
+      <div className="flex gap-4 border-b dark:border-gray-700">
+        <button className={`px-4 py-2 dark:text-gray-300 ${activeTab === 'books' ? 'border-b-2 border-blue-500 font-bold' : ''}`} onClick={() => setActiveTab('books')}>Books</button>
+        <button className={`px-4 py-2 dark:text-gray-300 ${activeTab === 'circulation' ? 'border-b-2 border-blue-500 font-bold' : ''}`} onClick={() => setActiveTab('circulation')}>Circulation</button>
       </div>
 
       {activeTab === 'books' && (
         <>
           <div className="flex justify-between">
-            <h2 className="text-xl font-semibold">Books</h2>
+            <h2 className="text-xl font-semibold dark:text-white">Books</h2>
             <Button onClick={() => setShowBookForm(!showBookForm)}>{showBookForm ? 'Cancel' : 'Add Book'}</Button>
           </div>
           {showBookForm && (
-            <Card>
-              <CardHeader><CardTitle>Add New Book</CardTitle></CardHeader>
+            <Card className="dark:bg-gray-800">
+              <CardHeader><CardTitle className="dark:text-white">Add New Book</CardTitle></CardHeader>
               <CardContent>
                 <form onSubmit={handleAddBook} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -137,20 +137,33 @@ export default function LibraryPage() {
               </CardContent>
             </Card>
           )}
-          <Card>
+          <Card className="dark:bg-gray-800">
             <CardContent className="pt-6">
-              {loading ? <p>Loading...</p> : books.length === 0 ? <p className="text-gray-500">No books found.</p> : (
-                <div className="grid grid-cols-3 gap-4">
-                  {books.map(book => (
-                    <div key={book.id} className="border rounded p-4">
-                      <h3 className="font-bold">{book.title}</h3>
-                      <p className="text-sm text-gray-600">by {book.author}</p>
-                      <p className="text-sm">ISBN: {book.isbn}</p>
-                      <p className="text-sm">Category: {book.category}</p>
-                      <p className="text-sm mt-2">Available: {book.availableCopies}/{book.totalCopies}</p>
-                    </div>
-                  ))}
-                </div>
+              {loading ? <p className="dark:text-gray-300">Loading...</p> : circulations.length === 0 ? <p className="text-gray-500 dark:text-gray-400">No circulation records found.</p> : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b dark:border-gray-700">
+                      <th className="text-left py-2 dark:text-gray-300">Book</th>
+                      <th className="text-left py-2 dark:text-gray-300">Borrower</th>
+                      <th className="text-left py-2 dark:text-gray-300">Borrowed</th>
+                      <th className="text-left py-2 dark:text-gray-300">Due</th>
+                      <th className="text-left py-2 dark:text-gray-300">Status</th>
+                      <th className="text-left py-2 dark:text-gray-300">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {circulations.map(circ => (
+                      <tr key={circ.id} className="border-b dark:border-gray-700 dark:text-gray-300">
+                        <td className="py-2">{circ.bookTitle}</td>
+                        <td className="py-2">{circ.borrowerName}</td>
+                        <td className="py-2">{circ.borrowDate}</td>
+                        <td className="py-2">{circ.dueDate}</td>
+                        <td className="py-2"><Badge>{circ.status}</Badge></td>
+                        <td className="py-2">{circ.status === 'BORROWED' && <Button size="sm" onClick={() => returnBook(circ.id)}>Return</Button>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </CardContent>
           </Card>
@@ -160,21 +173,21 @@ export default function LibraryPage() {
       {activeTab === 'circulation' && (
         <>
           <div className="flex justify-between">
-            <h2 className="text-xl font-semibold">Circulation</h2>
+            <h2 className="text-xl font-semibold dark:text-white">Circulation</h2>
             <Button onClick={() => setShowCirculationForm(!showCirculationForm)}>{showCirculationForm ? 'Cancel' : 'Borrow Book'}</Button>
           </div>
           {showCirculationForm && (
-            <Card>
-              <CardHeader><CardTitle>Borrow Book</CardTitle></CardHeader>
+            <Card className="dark:bg-gray-800">
+              <CardHeader><CardTitle className="dark:text-white">Borrow Book</CardTitle></CardHeader>
               <CardContent>
                 <form onSubmit={handleBorrow} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <select className="border rounded px-3 py-2" value={circulationForm.bookId} onChange={e => setCirculationForm({...circulationForm, bookId: e.target.value})} required>
+                    <select className="border rounded px-3 py-2 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200" value={circulationForm.bookId} onChange={e => setCirculationForm({...circulationForm, bookId: e.target.value})} required>
                       <option value="">Select Book</option>
                       {books.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
                     </select>
                     <Input placeholder="Borrower Name" value={circulationForm.borrowerName} onChange={e => setCirculationForm({...circulationForm, borrowerName: e.target.value})} required />
-                    <select className="border rounded px-3 py-2" value={circulationForm.borrowerType} onChange={e => setCirculationForm({...circulationForm, borrowerType: e.target.value})}>
+                    <select className="border rounded px-3 py-2 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200" value={circulationForm.borrowerType} onChange={e => setCirculationForm({...circulationForm, borrowerType: e.target.value})}>
                       <option value="STUDENT">Student</option>
                       <option value="TEACHER">Teacher</option>
                       <option value="STAFF">Staff</option>
@@ -186,8 +199,8 @@ export default function LibraryPage() {
               </CardContent>
             </Card>
           )}
-          <Card>
-            <CardHeader><CardTitle>Borrowed Books</CardTitle></CardHeader>
+          <Card className="dark:bg-gray-800">
+            <CardHeader><CardTitle className="dark:text-white">Borrowed Books</CardTitle></CardHeader>
             <CardContent>
               {loading ? <p>Loading...</p> : circulations.length === 0 ? <p className="text-gray-500">No circulation records found.</p> : (
                 <table className="w-full">

@@ -149,27 +149,27 @@ export default function AnnouncementsPage() {
   };
 
   const typeColors: Record<string, string> = {
-    GENERAL: 'bg-gray-100 text-gray-800',
-    ACADEMIC: 'bg-blue-100 text-blue-800',
-    EVENT: 'bg-purple-100 text-purple-800',
-    FEE: 'bg-green-100 text-green-800',
-    ATTENDANCE: 'bg-yellow-100 text-yellow-800',
-    EMERGENCY: 'bg-red-100 text-red-800',
+    GENERAL: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    ACADEMIC: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    EVENT: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+    FEE: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    ATTENDANCE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    EMERGENCY: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
   };
 
   const priorityColors: Record<string, string> = {
-    LOW: 'bg-gray-100 text-gray-600',
-    NORMAL: 'bg-blue-100 text-blue-600',
-    HIGH: 'bg-orange-100 text-orange-600',
-    URGENT: 'bg-red-100 text-red-600',
+    LOW: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+    NORMAL: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400',
+    HIGH: 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-400',
+    URGENT: 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400',
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Announcements</h1>
-          <p className="text-gray-500">School-wide notifications and communications</p>
+          <h1 className="text-2xl font-bold dark:text-white">Announcements</h1>
+          <p className="text-gray-500 dark:text-gray-400">School-wide notifications and communications</p>
         </div>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
@@ -178,14 +178,14 @@ export default function AnnouncementsPage() {
               New Announcement
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl dark:bg-gray-800">
             <DialogHeader>
-              <DialogTitle>Create Announcement</DialogTitle>
-              <DialogDescription>Send notifications to parents, students, and staff</DialogDescription>
+              <DialogTitle className="dark:text-white">Create Announcement</DialogTitle>
+              <DialogDescription className="dark:text-gray-400">Send notifications to parents, students, and staff</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Title</label>
+                <label className="text-sm font-medium mb-2 block dark:text-white">Title</label>
                 <Input 
                   placeholder="e.g., School Resumes Next Monday"
                   value={newAnnouncement.title}
@@ -193,7 +193,7 @@ export default function AnnouncementsPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Content</label>
+                <label className="text-sm font-medium mb-2 block dark:text-white">Content</label>
                 <Textarea 
                   placeholder="Write your announcement here..."
                   rows={5}
@@ -203,7 +203,7 @@ export default function AnnouncementsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Type</label>
+                  <label className="text-sm font-medium mb-2 block dark:text-white">Type</label>
                   <Select value={newAnnouncement.type} onValueChange={(v) => setNewAnnouncement(prev => ({ ...prev, type: v }))}>
                     <SelectTrigger>
                       <SelectValue />
@@ -219,7 +219,7 @@ export default function AnnouncementsPage() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Priority</label>
+                  <label className="text-sm font-medium mb-2 block dark:text-white">Priority</label>
                   <Select value={newAnnouncement.priority} onValueChange={(v) => setNewAnnouncement(prev => ({ ...prev, priority: v }))}>
                     <SelectTrigger>
                       <SelectValue />
@@ -239,7 +239,7 @@ export default function AnnouncementsPage() {
                   checked={newAnnouncement.isPublished}
                   onCheckedChange={(checked) => setNewAnnouncement(prev => ({ ...prev, isPublished: checked as boolean }))}
                 />
-                <label htmlFor="publish" className="text-sm">
+                <label htmlFor="publish" className="text-sm dark:text-gray-300">
                   Publish immediately (send to WhatsApp/SMS)
                 </label>
               </div>
@@ -253,41 +253,41 @@ export default function AnnouncementsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Bell className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <Bell className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{announcements.length}</p>
-                <p className="text-sm text-gray-500">Total Announcements</p>
+                <p className="text-2xl font-bold dark:text-white">{announcements.length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Announcements</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Send className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                <Send className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{announcements.filter(a => a.isPublished).length}</p>
-                <p className="text-sm text-gray-500">Published</p>
+                <p className="text-2xl font-bold dark:text-white">{announcements.filter(a => a.isPublished).length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Published</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Clock className="w-6 h-6 text-yellow-600" />
+              <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{announcements.filter(a => !a.isPublished).length}</p>
-                <p className="text-sm text-gray-500">Drafts</p>
+                <p className="text-2xl font-bold dark:text-white">{announcements.filter(a => !a.isPublished).length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Drafts</p>
               </div>
             </div>
           </CardContent>
@@ -295,34 +295,34 @@ export default function AnnouncementsPage() {
       </div>
 
       {/* Announcements List */}
-      <Card>
+      <Card className="dark:bg-gray-800">
         <CardHeader>
-          <CardTitle>All Announcements</CardTitle>
+          <CardTitle className="dark:text-white">All Announcements</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow className="dark:border-gray-700">
+                <TableHead className="dark:text-gray-300">Type</TableHead>
+                <TableHead className="dark:text-gray-300">Title</TableHead>
+                <TableHead className="dark:text-gray-300">Priority</TableHead>
+                <TableHead className="dark:text-gray-300">Status</TableHead>
+                <TableHead className="dark:text-gray-300">Created</TableHead>
+                <TableHead className="dark:text-gray-300">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {announcements.map((announcement) => {
                 const TypeIcon = typeIcons[announcement.type] || Bell;
                 return (
-                  <TableRow key={announcement.id}>
+                  <TableRow key={announcement.id} className="dark:border-gray-700">
                     <TableCell>
                       <Badge className={typeColors[announcement.type]}>
                         <TypeIcon className="w-3 h-3 mr-1" />
                         {announcement.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-medium">{announcement.title}</TableCell>
+                    <TableCell className="font-medium dark:text-gray-200">{announcement.title}</TableCell>
                     <TableCell>
                       <Badge className={priorityColors[announcement.priority]}>
                         {announcement.priority}
@@ -330,12 +330,12 @@ export default function AnnouncementsPage() {
                     </TableCell>
                     <TableCell>
                       {announcement.isPublished ? (
-                        <Badge className="bg-green-100 text-green-800">Published</Badge>
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Published</Badge>
                       ) : (
-                        <Badge className="bg-gray-100 text-gray-600">Draft</Badge>
+                        <Badge className="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">Draft</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
+                    <TableCell className="text-sm text-gray-500 dark:text-gray-400">
                       {new Date(announcement.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
@@ -352,7 +352,7 @@ export default function AnnouncementsPage() {
                           size="sm"
                           onClick={() => deleteAnnouncement(announcement.id)}
                         >
-                          <Trash2 className="w-4 h-4 text-red-500" />
+                          <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
                         </Button>
                       </div>
                     </TableCell>
@@ -361,7 +361,7 @@ export default function AnnouncementsPage() {
               })}
               {announcements.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
                     No announcements yet. Create your first announcement!
                   </TableCell>
                 </TableRow>
@@ -373,7 +373,7 @@ export default function AnnouncementsPage() {
 
       {/* View Dialog */}
       <Dialog open={!!selectedAnnouncement} onOpenChange={() => setSelectedAnnouncement(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl dark:bg-gray-800">
           {selectedAnnouncement && (
             <>
               <DialogHeader>
@@ -385,12 +385,12 @@ export default function AnnouncementsPage() {
                     {selectedAnnouncement.priority}
                   </Badge>
                 </div>
-                <DialogTitle className="mt-2">{selectedAnnouncement.title}</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="mt-2 dark:text-white">{selectedAnnouncement.title}</DialogTitle>
+                <DialogDescription className="dark:text-gray-400">
                   Created on {new Date(selectedAnnouncement.createdAt).toLocaleString()}
                 </DialogDescription>
               </DialogHeader>
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg dark:text-gray-200">
                 <p className="whitespace-pre-wrap">{selectedAnnouncement.content}</p>
               </div>
               <div className="mt-4 flex gap-2">

@@ -60,38 +60,38 @@ export default function LMSSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">LMS Settings</h1>
-        <p className="text-gray-600">Configure Learning Management System preferences</p>
+        <h1 className="text-2xl font-bold dark:text-white">LMS Settings</h1>
+        <p className="text-gray-600 dark:text-gray-400">Configure Learning Management System preferences</p>
       </div>
 
       {/* Course Settings */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <BookOpen className="w-5 h-5" />
             Course Settings
           </CardTitle>
-          <CardDescription>Default settings for courses</CardDescription>
+          <CardDescription className="dark:text-gray-400">Default settings for courses</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Default Course Visibility</label>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Default Course Visibility</label>
               <select
                 value={settings.defaultCourseVisibility}
                 onChange={(e) => setSettings({ ...settings, defaultCourseVisibility: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="PUBLISHED">Published</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Enrollment Type</label>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Enrollment Type</label>
               <select
                 value={settings.defaultEnrollmentType}
                 onChange={(e) => setSettings({ ...settings, defaultEnrollmentType: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="OPEN">Open Enrollment</option>
                 <option value="INVITE_ONLY">Invite Only</option>
@@ -99,10 +99,10 @@ export default function LMSSettingsPage() {
               </select>
             </div>
           </div>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div>
-              <p className="font-medium">Require Approval for Enrollment</p>
-              <p className="text-sm text-gray-500">Students need teacher approval to enroll</p>
+              <p className="font-medium dark:text-white">Require Approval for Enrollment</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Students need teacher approval to enroll</p>
             </div>
             <button
               onClick={() => setSettings({ ...settings, requireApprovalForEnrollment: !settings.requireApprovalForEnrollment })}
@@ -121,37 +121,39 @@ export default function LMSSettingsPage() {
       </Card>
 
       {/* Exam Settings */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <FileText className="w-5 h-5" />
             Exam Settings
           </CardTitle>
-          <CardDescription>Configure exam and assessment defaults</CardDescription>
+          <CardDescription className="dark:text-gray-400">Configure exam and assessment defaults</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Default Time Limit (minutes)</label>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Default Time Limit (minutes)</label>
               <Input
                 type="number"
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 value={settings.examTimeLimit}
                 onChange={(e) => setSettings({ ...settings, examTimeLimit: parseInt(e.target.value) })}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Passing Score (%)</label>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Passing Score (%)</label>
               <Input
                 type="number"
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 value={settings.passingScore}
                 onChange={(e) => setSettings({ ...settings, passingScore: parseInt(e.target.value) })}
               />
             </div>
           </div>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div>
-              <p className="font-medium">Allow Late Submission</p>
-              <p className="text-sm text-gray-500">Students can submit after deadline</p>
+              <p className="font-medium dark:text-white">Allow Late Submission</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Students can submit after deadline</p>
             </div>
             <button
               onClick={() => setSettings({ ...settings, allowLateSubmission: !settings.allowLateSubmission })}
@@ -168,12 +170,12 @@ export default function LMSSettingsPage() {
           </div>
           {settings.allowLateSubmission && (
             <div>
-              <label className="block text-sm font-medium mb-2">Late Penalty (% per day)</label>
+              <label className="block text-sm font-medium mb-2 dark:text-gray-300">Late Penalty (% per day)</label>
               <Input
                 type="number"
+                className="w-32 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 value={settings.latePenaltyPercent}
                 onChange={(e) => setSettings({ ...settings, latePenaltyPercent: parseInt(e.target.value) })}
-                className="w-32"
               />
             </div>
           )}
@@ -181,19 +183,19 @@ export default function LMSSettingsPage() {
       </Card>
 
       {/* Gamification Settings */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <Award className="w-5 h-5" />
             Gamification
           </CardTitle>
-          <CardDescription>Enable badges, certificates, and rewards</CardDescription>
+          <CardDescription className="dark:text-gray-400">Enable badges, certificates, and rewards</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div>
-              <p className="font-medium">Enable Certificates</p>
-              <p className="text-sm text-gray-500">Students can earn course completion certificates</p>
+              <p className="font-medium dark:text-white">Enable Certificates</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Students can earn course completion certificates</p>
             </div>
             <button
               onClick={() => setSettings({ ...settings, enableCertificates: !settings.enableCertificates })}
@@ -208,15 +210,15 @@ export default function LMSSettingsPage() {
               />
             </button>
           </div>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div>
-              <p className="font-medium">Enable Badges</p>
-              <p className="text-sm text-gray-500">Students can earn achievement badges</p>
+              <p className="font-medium dark:text-white">Enable Badges</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Students can earn achievement badges</p>
             </div>
             <button
               onClick={() => setSettings({ ...settings, enableBadges: !settings.enableBadges })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.enableBadges ? 'bg-blue-600' : 'bg-gray-300'
+                settings.enableBadges ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-500'
               }`}
             >
               <span
@@ -226,15 +228,15 @@ export default function LMSSettingsPage() {
               />
             </button>
           </div>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div>
-              <p className="font-medium">Enable Leaderboards</p>
-              <p className="text-sm text-gray-500">Display student rankings</p>
+              <p className="font-medium dark:text-white">Enable Leaderboards</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Display student rankings</p>
             </div>
             <button
               onClick={() => setSettings({ ...settings, enableLeaderboards: !settings.enableLeaderboards })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.enableLeaderboards ? 'bg-blue-600' : 'bg-gray-300'
+                settings.enableLeaderboards ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-500'
               }`}
             >
               <span
@@ -248,24 +250,24 @@ export default function LMSSettingsPage() {
       </Card>
 
       {/* Discussion Settings */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-white">
             <BarChart3 className="w-5 h-5" />
             Communication
           </CardTitle>
-          <CardDescription>Configure discussion and communication features</CardDescription>
+          <CardDescription className="dark:text-gray-400">Configure discussion and communication features</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div>
-              <p className="font-medium">Enable Discussion Forums</p>
-              <p className="text-sm text-gray-500">Students can discuss course content</p>
+              <p className="font-medium dark:text-white">Enable Discussion Forums</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Students can discuss course content</p>
             </div>
             <button
               onClick={() => setSettings({ ...settings, enableDiscussionForums: !settings.enableDiscussionForums })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.enableDiscussionForums ? 'bg-blue-600' : 'bg-gray-300'
+                settings.enableDiscussionForums ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-500'
               }`}
             >
               <span

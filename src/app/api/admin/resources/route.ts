@@ -14,26 +14,23 @@ export async function GET(request: NextRequest) {
 
     if (view === 'by-tenant') {
       const resources = await prisma.tenantResource.findMany({
-        include: {
-          tenant: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              plan: true,
-            },
-          },
-        },
         orderBy: { storageUsedBytes: 'desc' },
         take: 50,
       });
 
+      const tenantIds = resources.map(r => r.tenantId);
+      const tenants = await prisma.tenant.findMany({
+        where: { id: { in: tenantIds } },
+        select: { id: true, name: true, slug: true, plan: true },
+      });
+      const tenantMap = new Map(tenants.map(t => [t.id, t]));
+
       return NextResponse.json({
         resources: resources.map(r => ({
           tenantId: r.tenantId,
-          tenantName: r.tenant?.name,
-          tenantSlug: r.tenant?.slug,
-          plan: r.tenant?.plan,
+          tenantName: tenantMap.get(r.tenantId)?.name,
+          tenantSlug: tenantMap.get(r.tenantId)?.slug,
+          plan: tenantMap.get(r.tenantId)?.plan,
           storageUsed: Number(r.storageUsedBytes),
           storageLimit: Number(r.storageLimitBytes),
           storagePercent: Number(r.storageUsedBytes) > 0 
@@ -52,17 +49,15 @@ export async function GET(request: NextRequest) {
         where: {
           aiCallsUsed: { gt: 0 },
         },
-        include: {
-          tenant: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
         orderBy: { aiCallsUsed: 'desc' },
       });
+
+      const tenantIds = resources.map(r => r.tenantId);
+      const tenants = await prisma.tenant.findMany({
+        where: { id: { in: tenantIds } },
+        select: { id: true, name: true },
+      });
+      const tenantMap = new Map(tenants.map(t => [t.id, t]));
 
       const totalUsed = resources.reduce((sum, r) => sum + r.aiCallsUsed, 0);
       const totalLimit = resources.reduce((sum, r) => sum + r.aiCallsLimit, 0);
@@ -75,7 +70,7 @@ export async function GET(request: NextRequest) {
         },
         byTenant: resources.map(r => ({
           tenantId: r.tenantId,
-          tenantName: r.tenant?.name,
+          tenantName: tenantMap.get(r.tenantId)?.name,
           aiCallsUsed: r.aiCallsUsed,
           aiCallsLimit: r.aiCallsLimit,
           aiTokensUsed: r.aiTokensUsed,
@@ -89,17 +84,15 @@ export async function GET(request: NextRequest) {
         where: {
           storageUsedBytes: { gt: 0 },
         },
-        include: {
-          tenant: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
         orderBy: { storageUsedBytes: 'desc' },
       });
+
+      const tenantIds = resources.map(r => r.tenantId);
+      const tenants = await prisma.tenant.findMany({
+        where: { id: { in: tenantIds } },
+        select: { id: true, name: true },
+      });
+      const tenantMap = new Map(tenants.map(t => [t.id, t]));
 
       const totalUsed = resources.reduce((sum, r) => sum + Number(r.storageUsedBytes), 0);
       const totalLimit = resources.reduce((sum, r) => sum + Number(r.storageLimitBytes), 0);
@@ -114,7 +107,7 @@ export async function GET(request: NextRequest) {
         },
         byTenant: resources.map(r => ({
           tenantId: r.tenantId,
-          tenantName: r.tenant?.name,
+          tenantName: tenantMap.get(r.tenantId)?.name,
           storageUsed: Number(r.storageUsedBytes),
           storageLimit: Number(r.storageLimitBytes),
           storageUsedGB: (Number(r.storageUsedBytes) / (1024 * 1024 * 1024)).toFixed(2),

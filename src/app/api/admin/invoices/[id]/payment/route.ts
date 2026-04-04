@@ -36,26 +36,27 @@ export async function POST(
 
     const invoice = await prisma.subscriptionInvoice.findUnique({
       where: { id },
-      include: {
-        tenant: { select: { id: true, name: true, slug: true } },
-        plan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
-      },
     });
 
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
+    const [tenant, plan] = await Promise.all([
+      prisma.tenant.findUnique({ where: { id: invoice.tenantId }, select: { id: true, name: true, slug: true } }),
+      prisma.subscriptionPlan.findUnique({ where: { id: invoice.planId }, select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } }),
+    ]);
+
     if (invoice.status === 'PAID') {
       return NextResponse.json({ error: 'Invoice already paid' }, { status: 400 });
     }
 
     if (action === 'initialize') {
-      return initializePayment(invoice, gateway, authUser);
+      return initializePayment(invoice, tenant, plan, gateway, authUser);
     }
 
     if (action === 'record') {
-      return recordPayment(invoice, body, authUser);
+      return recordPayment(invoice, tenant, plan, body, authUser);
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -65,7 +66,7 @@ export async function POST(
   }
 }
 
-async function initializePayment(invoice: any, gateway: string, authUser: any) {
+async function initializePayment(invoice: any, tenant: any, plan: any, gateway: string, authUser: any) {
   const tenantAdmins = await prisma.user.findFirst({
     where: { tenantId: invoice.tenantId, role: 'ADMIN' },
     orderBy: { createdAt: 'asc' },
@@ -78,8 +79,8 @@ async function initializePayment(invoice: any, gateway: string, authUser: any) {
     invoiceId: invoice.id,
     invoiceNumber: invoice.invoiceNumber,
     tenantId: invoice.tenantId,
-    tenantName: invoice.tenant.name,
-    planName: invoice.plan.displayName,
+    tenantName: tenant?.name,
+    planName: plan?.displayName,
     billingCycle: invoice.billingCycle,
   };
 
@@ -151,8 +152,8 @@ async function initializePayment(invoice: any, gateway: string, authUser: any) {
   });
 }
 
-async function recordPayment(invoice: any, body: any, authUser: any) {
-  const { amount, method, transactionId, gatewayResponse, status, referenceNo } = body;
+async function recordPayment(invoice: any, tenant: any, plan: any, body: any, authUser: any) {
+  const { amount, method, transactionId, gatewayResponse, status, referenceNo, paymentGateway } = body;
 
   const payment = await prisma.subscriptionPayment.create({
     data: {
@@ -164,6 +165,7 @@ async function recordPayment(invoice: any, body: any, authUser: any) {
       referenceNo,
       transactionId,
       gatewayResponse,
+      paymentGateway: paymentGateway || 'MANUAL',
       paidAt: status === 'COMPLETED' ? new Date() : null,
     },
   });

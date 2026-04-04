@@ -85,26 +85,30 @@ export async function PUT(
         ? { enabled: true, limit: null, overageCost: null }
         : features[key];
 
-      await prisma.planFeature.upsert({
-        where: {
-          planId_featureKey: {
+      const existingFeature = await prisma.planFeature.findFirst({
+        where: { planId: id, featureKey: key },
+      });
+
+      if (existingFeature) {
+        await prisma.planFeature.update({
+          where: { id: existingFeature.id },
+          data: {
+            enabled: featureData.enabled ?? true,
+            limit: featureData.limit,
+            overageCost: featureData.overageCost,
+          },
+        });
+      } else {
+        await prisma.planFeature.create({
+          data: {
             planId: id,
             featureKey: key,
+            enabled: featureData.enabled ?? true,
+            limit: featureData.limit,
+            overageCost: featureData.overageCost,
           },
-        },
-        update: {
-          enabled: featureData.enabled ?? true,
-          limit: featureData.limit,
-          overageCost: featureData.overageCost,
-        },
-        create: {
-          planId: id,
-          featureKey: key,
-          enabled: featureData.enabled ?? true,
-          limit: featureData.limit,
-          overageCost: featureData.overageCost,
-        },
-      });
+        });
+      }
     }
 
     await prisma.platformAuditLog.create({

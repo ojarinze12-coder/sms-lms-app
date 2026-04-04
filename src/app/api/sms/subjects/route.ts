@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
@@ -9,36 +9,46 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const academicYearId = request.nextUrl.searchParams.get('academicYearId');
+  const academicClassId = request.nextUrl.searchParams.get('academicClassId') || request.nextUrl.searchParams.get('academicYearId');
   const search = request.nextUrl.searchParams.get('search') || '';
 
+  console.log('[SUBJECTS GET] academicClassId:', academicClassId, 'tenantId:', authUser.tenantId);
+
   try {
-    let query = supabase
-      .from('subjects')
-      .select('*, academic_classes(*, academic_years(*)), teachers(*)')
-      .eq('academic_classes.academic_years.tenantId', authUser.tenantId)
-      .order('isActive', { ascending: false })
-      .order('name', { ascending: true });
-
-    if (academicYearId) {
-      query = query.eq('academicClassId', academicYearId);
+    const where: any = {};
+    
+    if (authUser.tenantId) {
+      where.tenantId = authUser.tenantId;
     }
-
+    
+    if (academicClassId) {
+      where.academicClassId = academicClassId;
+    }
+    
     if (search) {
-      query = query.ilike('name', `%${search}%`);
+      where.name = { contains: search, mode: 'insensitive' };
     }
 
-    const { data: subjects, error } = await query.order('name', { ascending: true });
+    console.log('[SUBJECTS GET] Where clause:', JSON.stringify(where));
 
-    if (error) {
-      console.error('Error fetching subjects:', error);
-      return NextResponse.json({ error: 'Failed to fetch subjects' }, { status: 500 });
-    }
+    const subjects = await prisma.subject.findMany({
+      where,
+      include: {
+        academicClass: { select: { id: true, name: true, level: true } },
+        teacher: { select: { id: true, firstName: true, lastName: true } },
+      },
+      orderBy: [
+        { isActive: 'desc' },
+        { name: 'asc' },
+      ],
+      take: 100,
+    });
 
-    return NextResponse.json({ data: subjects || [], pagination: { page: 1, limit: 10, total: subjects?.length || 0 } });
-  } catch (error) {
-    console.error('Error fetching subjects:', error);
-    return NextResponse.json({ error: 'Failed to fetch subjects' }, { status: 500 });
+    console.log('[SUBJECTS GET] Found subjects:', subjects.length);
+    return NextResponse.json({ data: subjects, pagination: { page: 1, limit: 10, total: subjects.length } });
+  } catch (error: any) {
+    console.error('[SUBJECTS GET] Error:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -64,12 +74,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: existingSubject } = await supabase
-      .from('subjects')
-      .select('id')
-      .eq('academicClassId', academicClassId)
-      .eq('code', code)
-      .single();
+    const existingSubject = await prisma.subject.findFirst({
+      where: {
+        academicClassId,
+        code: code.toUpperCase(),
+      },
+    });
 
     if (existingSubject) {
       return NextResponse.json(
@@ -78,20 +88,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: subject, error } = await supabase
-      .from('subjects')
-      .insert({ name, code, academicClassId, teacherId: teacherId || null })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating subject:', error);
-      return NextResponse.json({ error: 'Failed to create subject' }, { status: 500 });
-    }
+    const subject = await prisma.subject.create({
+      data: {
+        name,
+        code: code.toUpperCase(),
+        academicClassId,
+        teacherId: teacherId || null,
+        tenantId: authUser.tenantId,
+      },
+      include: {
+        academicClass: { select: { id: true, name: true, level: true } },
+        teacher: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
 
     return NextResponse.json(subject, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating subject:', error);
-    return NextResponse.json({ error: 'Failed to create subject' }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -21,9 +21,8 @@ export async function GET(request: NextRequest) {
       const invoice = await prisma.subscriptionInvoice.findUnique({
         where: { id: invoiceId, tenantId: user.tenantId },
         include: {
-          plan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
+          subscriptionPlan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
           subscription: { select: { id: true, billingCycle: true } },
-          payments: { orderBy: { createdAt: 'desc' } },
         },
       });
 
@@ -41,8 +40,7 @@ export async function GET(request: NextRequest) {
       prisma.subscriptionInvoice.findMany({
         where,
         include: {
-          plan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
-          payments: { orderBy: { createdAt: 'desc' } },
+          subscriptionPlan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,

@@ -38,11 +38,7 @@ export async function POST(request: NextRequest) {
           tenantId: authUser.tenantId,
         },
         include: {
-          teacher: {
-            include: {
-              user: { select: { email: true } }
-            }
-          },
+          teacher: true,
         },
       });
 

@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { requireSuperAdmin } from '@/lib/auth-server';
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireSuperAdmin();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized - Super Admin only' }, { status: 401 });
+    }
+    
+    if (user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Forbidden - Super Admin only' }, { status: 403 });
+    }
     const { sql } = await request.json();
     
     if (!sql) {

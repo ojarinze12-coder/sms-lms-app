@@ -196,13 +196,13 @@ export default function GradingScalesPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Grading Scales</h1>
-          <p className="text-gray-500 mt-1">Configure how scores are converted to grades</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Grading Scales</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Configure how scores are converted to grades</p>
         </div>
         <div className="flex items-center gap-3">
           <select
             onChange={(e) => importTemplate(e.target.value)}
-            className="px-3 py-2 border rounded-lg"
+            className="px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             defaultValue=""
           >
             <option value="">Import Template...</option>
@@ -227,40 +227,40 @@ export default function GradingScalesPage() {
         {scales.map((scale) => (
           <div
             key={scale.name}
-            className={`bg-white rounded-xl border-2 p-6 ${
-              scale.isDefault ? 'border-blue-200 bg-blue-50/30' : 'border-gray-100'
+            className={`bg-white dark:bg-gray-800 rounded-xl border-2 p-6 ${
+              scale.isDefault ? 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/20' : 'border-gray-100 dark:border-gray-700'
             }`}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-semibold text-gray-900">{scale.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{scale.name}</h3>
                   {scale.isDefault && (
-                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
                       Default
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">{scale.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{scale.description}</p>
               </div>
               <div className="flex items-center gap-2">
                 {!scale.isDefault && (
                   <button
                     onClick={() => handleSetDefault(scale.name)}
-                    className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg"
+                    className="px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
                   >
                     Set as Default
                   </button>
                 )}
                 <button
                   onClick={() => openEditModal(scale)}
-                  className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+                  className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(scale.name)}
-                  className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                  className="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
                 >
                   Delete
                 </button>
@@ -297,30 +297,30 @@ export default function GradingScalesPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold mb-4 dark:text-white">
               {editingScale ? 'Edit Grading Scale' : 'Create Grading Scale'}
             </h2>
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Scale Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scale Name</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     placeholder="e.g., My School Scale"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                   <input
                     type="text"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   />
                 </div>
               </div>
@@ -355,8 +355,33 @@ export default function GradingScalesPage() {
                         type="text"
                         value={grade.letter}
                         onChange={(e) => updateGrade(idx, 'letter', e.target.value)}
-                        placeholder="Letter"
-                        className="w-20 px-2 py-1 border rounded"
+                        placeholder="A"
+                        className="flex-1 px-2 py-1 border dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white"
+                      />
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={grade.minScore}
+                        onChange={(e) => updateGrade(idx, 'minScore', parseFloat(e.target.value))}
+                        placeholder="Min"
+                        className="w-20 px-2 py-1 border dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white"
+                      />
+                      <span className="text-gray-400">-</span>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={grade.maxScore}
+                        onChange={(e) => updateGrade(idx, 'maxScore', parseFloat(e.target.value))}
+                        placeholder="Max"
+                        className="w-20 px-2 py-1 border dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white"
+                      />
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={grade.gradePoint}
+                        onChange={(e) => updateGrade(idx, 'gradePoint', parseFloat(e.target.value))}
+                        placeholder="GP"
+                        className="w-16 px-2 py-1 border dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white"
                       />
                       <input
                         type="number"
@@ -403,7 +428,7 @@ export default function GradingScalesPage() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
               >
                 Cancel
               </button>

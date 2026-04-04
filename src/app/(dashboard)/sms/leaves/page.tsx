@@ -183,27 +183,27 @@ export default function LeavesPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      PENDING: 'bg-yellow-100 text-yellow-700',
-      APPROVED: 'bg-green-100 text-green-700',
-      REJECTED: 'bg-red-100 text-red-700',
-      CANCELLED: 'bg-gray-100 text-gray-700',
+      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      APPROVED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      CANCELLED: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
     };
-    return colors[status] || 'bg-gray-100 text-gray-700';
+    return colors[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
   };
 
   const getLeaveTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      SICK: 'bg-red-100 text-red-700',
-      CASUAL: 'bg-blue-100 text-blue-700',
-      ANNUAL: 'bg-green-100 text-green-700',
-      MATERNITY: 'bg-purple-100 text-purple-700',
-      PATERNITY: 'bg-indigo-100 text-indigo-700',
-      UNPAID: 'bg-gray-100 text-gray-700',
-      EMERGENCY: 'bg-orange-100 text-orange-700',
-      EXAM_DUTY: 'bg-cyan-100 text-cyan-700',
-      OTHER: 'bg-gray-100 text-gray-700',
+      SICK: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      CASUAL: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      ANNUAL: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      MATERNITY: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      PATERNITY: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      UNPAID: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+      EMERGENCY: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      EXAM_DUTY: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+      OTHER: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
     };
-    return colors[type] || 'bg-gray-100 text-gray-700';
+    return colors[type] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
   };
 
   const calculateDays = (start: string, end: string) => {
@@ -234,8 +234,8 @@ export default function LeavesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Leave Management</h1>
-          <p className="text-gray-500">Manage staff leave requests and approvals</p>
+          <h1 className="text-2xl font-bold dark:text-white">Leave Management</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage staff leave requests and approvals</p>
         </div>
         <Dialog open={showForm} onOpenChange={setShowForm}>
           <DialogTrigger asChild>
@@ -244,25 +244,25 @@ export default function LeavesPage() {
               Request Leave
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="dark:bg-gray-800">
             <DialogHeader>
-              <DialogTitle>Request Leave</DialogTitle>
+              <DialogTitle className="dark:text-white">Request Leave</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Select Employee</label>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-200">Select Employee</label>
                 <Select value={formData.teacherId} onValueChange={(v) => setFormData({...formData, teacherId: v})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select employee" />
                   </SelectTrigger>
                   <SelectContent>
-                    <div className="px-2 py-1 text-xs font-semibold text-gray-500">Teaching Staff</div>
+                    <div className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400">Teaching Staff</div>
                     {teachers.map((teacher) => (
                       <SelectItem key={teacher.id} value={teacher.id}>
                         {teacher.firstName} {teacher.lastName} ({teacher.employeeId})
                       </SelectItem>
                     ))}
-                    <div className="px-2 py-1 text-xs font-semibold text-gray-500">Non-Teaching Staff</div>
+                    <div className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400">Non-Teaching Staff</div>
                     {staff.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.firstName} {s.lastName} ({s.employeeId})
@@ -273,7 +273,7 @@ export default function LeavesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Leave Type</label>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-200">Leave Type</label>
                 <Select value={formData.leaveType} onValueChange={(v) => setFormData({...formData, leaveType: v})}>
                   <SelectTrigger>
                     <SelectValue />
@@ -290,7 +290,7 @@ export default function LeavesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Start Date</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-200">Start Date</label>
                   <Input 
                     type="date" 
                     value={formData.startDate} 
@@ -303,7 +303,7 @@ export default function LeavesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">End Date</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-200">End Date</label>
                   <Input 
                     type="date" 
                     value={formData.endDate} 
@@ -315,17 +315,17 @@ export default function LeavesPage() {
               </div>
 
               {formData.startDate && formData.endDate && (
-                <div className="bg-blue-50 p-3 rounded-lg text-center">
-                  <p className="text-sm text-blue-700">
+                <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg text-center">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
                     Duration: <span className="font-bold">{calculateDays(formData.startDate, formData.endDate)} days</span>
                   </p>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-1">Reason</label>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-200">Reason</label>
                 <textarea 
-                  className="w-full border rounded-lg p-3 min-h-[100px]" 
+                  className="w-full border rounded-lg p-3 min-h-[100px] dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100" 
                   placeholder="Enter reason for leave..."
                   value={formData.reason}
                   onChange={(e) => setFormData({...formData, reason: e.target.value})}
@@ -343,45 +343,45 @@ export default function LeavesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-gray-500">Total Requests</p>
-              <p className="text-2xl font-bold">{leaves.length}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Requests</p>
+              <p className="text-2xl font-bold dark:text-white">{leaves.length}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-gray-500">Pending</p>
-              <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pendingCount}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-gray-500">Approved</p>
-              <p className="text-2xl font-bold text-green-600">{approvedCount}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{approvedCount}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-gray-500">Rejected</p>
-              <p className="text-2xl font-bold text-red-600">{rejectedCount}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Rejected</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{rejectedCount}</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="dark:bg-gray-800">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Leave Requests</CardTitle>
-            <CardDescription>View and manage all leave requests</CardDescription>
+            <CardTitle className="dark:text-white">Leave Requests</CardTitle>
+            <CardDescription className="dark:text-gray-400">View and manage all leave requests</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-400" />
@@ -400,8 +400,8 @@ export default function LeavesPage() {
         </CardHeader>
         <CardContent>
           {filteredLeaves.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <Calendar className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-600 mb-2" />
               <p>No leave requests found</p>
               <Button className="mt-4" onClick={() => setShowForm(true)}>
                 Request Leave
@@ -411,30 +411,30 @@ export default function LeavesPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-2">Employee</th>
-                    <th className="text-left py-3 px-2">Leave Type</th>
-                    <th className="text-left py-3 px-2">Start Date</th>
-                    <th className="text-left py-3 px-2">End Date</th>
-                    <th className="text-center py-3 px-2">Days</th>
-                    <th className="text-left py-3 px-2">Status</th>
-                    <th className="text-left py-3 px-2">Reason</th>
-                    <th className="text-left py-3 px-2">Actions</th>
+                  <tr className="border-b dark:border-gray-700">
+                    <th className="text-left py-3 px-2 dark:text-gray-300">Employee</th>
+                    <th className="text-left py-3 px-2 dark:text-gray-300">Leave Type</th>
+                    <th className="text-left py-3 px-2 dark:text-gray-300">Start Date</th>
+                    <th className="text-left py-3 px-2 dark:text-gray-300">End Date</th>
+                    <th className="text-center py-3 px-2 dark:text-gray-300">Days</th>
+                    <th className="text-left py-3 px-2 dark:text-gray-300">Status</th>
+                    <th className="text-left py-3 px-2 dark:text-gray-300">Reason</th>
+                    <th className="text-left py-3 px-2 dark:text-gray-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredLeaves.map((leave) => (
-                    <tr key={leave.id} className="border-b hover:bg-gray-50">
+                    <tr key={leave.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-xs text-blue-600 font-medium">
+                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
+                            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
                               {leave.teacher?.firstName?.[0]}{leave.teacher?.lastName?.[0]}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{leave.teacher?.firstName} {leave.teacher?.lastName}</p>
-                            <p className="text-xs text-gray-500">{leave.teacher?.employeeId}</p>
+                            <p className="font-medium text-sm dark:text-white">{leave.teacher?.firstName} {leave.teacher?.lastName}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{leave.teacher?.employeeId}</p>
                           </div>
                         </div>
                       </td>
@@ -443,10 +443,10 @@ export default function LeavesPage() {
                           {leaveTypes.find(t => t.value === leave.leaveType)?.label || leave.leaveType}
                         </span>
                       </td>
-                      <td className="py-3 px-2 text-sm">{formatDate(leave.startDate)}</td>
-                      <td className="py-3 px-2 text-sm">{formatDate(leave.endDate)}</td>
+                      <td className="py-3 px-2 text-sm dark:text-gray-300">{formatDate(leave.startDate)}</td>
+                      <td className="py-3 px-2 text-sm dark:text-gray-300">{formatDate(leave.endDate)}</td>
                       <td className="py-3 px-2 text-center">
-                        <span className="font-medium">{leave.days}</span>
+                        <span className="font-medium dark:text-white">{leave.days}</span>
                       </td>
                       <td className="py-3 px-2">
                         <Badge className={getStatusColor(leave.status)}>
@@ -454,7 +454,7 @@ export default function LeavesPage() {
                         </Badge>
                       </td>
                       <td className="py-3 px-2">
-                        <p className="text-sm text-gray-600 max-w-[200px] truncate">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 max-w-[200px] truncate">
                           {leave.reason}
                         </p>
                       </td>
@@ -464,7 +464,7 @@ export default function LeavesPage() {
                             <Button 
                               size="sm" 
                               variant="ghost"
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/30"
                               onClick={() => handleStatusChange(leave.id, 'approve')}
                             >
                               <Check className="h-4 w-4" />
@@ -472,7 +472,7 @@ export default function LeavesPage() {
                             <Button 
                               size="sm" 
                               variant="ghost"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30"
                               onClick={() => handleStatusChange(leave.id, 'reject')}
                             >
                               <X className="h-4 w-4" />

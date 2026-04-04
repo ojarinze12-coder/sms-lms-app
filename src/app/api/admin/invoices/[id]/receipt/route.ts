@@ -16,23 +16,20 @@ export async function GET(
 
     const invoice = await prisma.subscriptionInvoice.findUnique({
       where: { id },
-      include: {
-        tenant: { select: { id: true, name: true, slug: true, domain: true, brandColor: true, logo: true } },
-        plan: { select: { id: true, name: true, displayName: true, monthlyPrice: true, yearlyPrice: true } },
-        subscription: { select: { id: true, billingCycle: true } },
-        payments: {
-          where: { status: 'COMPLETED' },
-          orderBy: { paidAt: 'desc' },
-          take: 1,
-        },
-      },
     });
 
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    const payment = invoice.payments[0];
+    const [tenant, plan, payment] = await Promise.all([
+      prisma.tenant.findUnique({ where: { id: invoice.tenantId } }),
+      prisma.subscriptionPlan.findUnique({ where: { id: invoice.planId } }),
+      prisma.subscriptionPayment.findFirst({
+        where: { invoiceId: invoice.id, status: 'COMPLETED' },
+        orderBy: { paidAt: 'desc' },
+      }),
+    ]);
     const receiptNumber = payment?.receiptNumber || `RCP-${Date.now()}`;
 
     const receipt = {
@@ -48,8 +45,8 @@ export async function GET(
       },
       
       to: {
-        name: invoice.tenant.name,
-        domain: invoice.tenant.domain,
+        name: tenant?.name || '',
+        domain: tenant?.domain || '',
       },
       
       invoice: {
@@ -75,9 +72,9 @@ export async function GET(
       } : null,
       
       plan: {
-        name: invoice.plan.displayName,
-        monthlyPrice: invoice.plan.monthlyPrice,
-        yearlyPrice: invoice.plan.yearlyPrice,
+        name: plan?.displayName || '',
+        monthlyPrice: plan?.monthlyPrice || 0,
+        yearlyPrice: plan?.yearlyPrice || 0,
       },
     };
 

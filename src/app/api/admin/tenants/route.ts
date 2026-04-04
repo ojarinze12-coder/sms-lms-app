@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
           prisma.student.count({ where: { tenantId: tenant.id } }),
           prisma.teacher.count({ where: { tenantId: tenant.id } }),
           prisma.user.count({ where: { tenantId: tenant.id } }),
-          prisma.subscription.findFirst({ where: { tenantId: tenant.id }, include: { plan: true } }),
+          prisma.subscription.findFirst({ where: { tenantId: tenant.id }, include: { subscriptionPlan: true } }),
           prisma.tenantConfig.findUnique({ where: { tenantId: tenant.id } }),
           prisma.tenantHealth.findUnique({ where: { tenantId: tenant.id } }),
         ]);
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
             teachers: teacherCount,
             users: userCount,
           },
-          subscription: subscription ? { plan: subscription.plan, status: subscription.status } : null,
+          subscription: subscription ? { plan: subscription.subscriptionPlan, status: subscription.status } : null,
           tenantConfig,
           tenantHealth,
         };
@@ -171,14 +171,21 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const fullTenant = await prisma.tenant.findUnique({
-      where: { id: tenant.id },
-      include: {
-        subscriptions: { include: { plan: true } },
-        tenantConfig: true,
-        tenantHealth: true,
-      },
-    });
+    const [tenantConfig, tenantHealth, subscriptions] = await Promise.all([
+      prisma.tenantConfig.findUnique({ where: { tenantId: tenant.id } }),
+      prisma.tenantHealth.findUnique({ where: { tenantId: tenant.id } }),
+      prisma.subscription.findMany({
+        where: { tenantId: tenant.id },
+        include: { subscriptionPlan: true },
+      }),
+    ]);
+
+    const fullTenant = {
+      ...tenant,
+      tenantConfig,
+      tenantHealth,
+      subscriptions,
+    };
 
     return NextResponse.json({ tenant: fullTenant }, { status: 201 });
   } catch (error) {

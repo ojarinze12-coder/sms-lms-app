@@ -32,7 +32,7 @@ export default function NewExamPage() {
       const [termsData, subjectsData] = await Promise.all([
         academicApi.getTerms(),
         academicApi.getSubjects(),
-      ]);
+      ]) as [any, any];
       setTerms(Array.isArray(termsData) ? termsData : (termsData?.data || []));
       setSubjects(Array.isArray(subjectsData) ? subjectsData : (subjectsData?.data || []));
     } catch (error) {
@@ -161,7 +161,7 @@ export default function NewExamPage() {
           type: q.type,
           points: q.points,
           order: q.order,
-          options: q.options,
+          options: q.options as any[],
         });
       }
 

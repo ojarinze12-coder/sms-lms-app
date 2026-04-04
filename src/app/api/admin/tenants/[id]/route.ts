@@ -26,48 +26,59 @@ export async function GET(
   try {
     const { id } = await params;
 
+    console.log('Fetching tenant with ID:', id);
+
     const tenant = await prisma.tenant.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: {
-            students: true,
-            teachers: true,
-            users: true,
-            courses: true,
-          },
-        },
-        subscriptions: {
-          include: {
-            plan: true,
-          },
-        },
-        tenantConfig: true,
-        tenantHealth: true,
-        tenantResources: true,
-      },
     });
+
+    console.log('Tenant found:', tenant?.name);
 
     if (!tenant) {
-      return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Tenant not found', details: id }, { status: 404 });
     }
 
-    const recentActivity = await prisma.platformAuditLog.findMany({
-      where: {
-        targetType: 'tenant',
-        targetId: id,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-    });
+    const [studentCount, teacherCount, userCount, courseCount, subscriptions, tenantConfig, tenantHealth, recentActivity] = await Promise.all([
+      prisma.student.count({ where: { tenantId: id } }),
+      prisma.teacher.count({ where: { tenantId: id } }),
+      prisma.user.count({ where: { tenantId: id } }),
+      prisma.course.count({ where: { tenantId: id } }),
+      prisma.subscription.findMany({
+        where: { tenantId: id },
+        include: { subscriptionPlan: true },
+      }),
+      prisma.tenantConfig.findUnique({ where: { tenantId: id } }),
+      prisma.tenantHealth.findUnique({ where: { tenantId: id } }),
+      prisma.platformAuditLog.findMany({
+        where: {
+          targetType: 'tenant',
+          targetId: id,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      }),
+    ]);
+
+    console.log(`[Admin Tenant API] Tenant ${id} counts:`, { studentCount, teacherCount, userCount, courseCount });
 
     return NextResponse.json({
-      tenant,
+      tenant: {
+        ...tenant,
+        _count: {
+          students: studentCount,
+          teachers: teacherCount,
+          users: userCount,
+          courses: courseCount,
+        },
+        subscriptions,
+        tenantConfig,
+        tenantHealth,
+      },
       recentActivity,
     });
   } catch (error) {
     console.error('Admin Tenant GET error:', error);
-    return NextResponse.json({ error: 'Failed to fetch tenant' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch tenant', details: String(error) }, { status: 500 });
   }
 }
 

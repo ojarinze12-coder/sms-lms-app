@@ -163,97 +163,427 @@ export const NERDC_SUBJECTS = {
 };
 
 export function getSubjectsByLevel(level: number): { name: string; code: string }[] {
-  const generateCode = (name: string) => name.substring(0, 4).toUpperCase().replace(/\s/g, '');
+  return getSubjectsByCurriculum(level, 'NERDC');
+}
+
+export function getSubjectsByCurriculum(level: number, curriculum: string, department?: string): { name: string; code: string }[] {
+  const normalizedCurriculum = (curriculum || '').toString().toUpperCase().trim();
+  const normalizedDepartment = (department || '').toString().toUpperCase().trim();
+  console.log('[DEBUG getSubjectsByCurriculum] level:', level, 'curriculum input:', curriculum, 'normalized:', normalizedCurriculum, 'department:', normalizedDepartment);
+  
+  if (!normalizedCurriculum) {
+    console.log('[DEBUG] No curriculum, returning empty');
+    return [];
+  }
+  
+  const prefix = normalizedCurriculum.substring(0, 4).toUpperCase();
+  console.log('[DEBUG getSubjectsByCurriculum] prefix:', prefix);
+  
+  const generateCode = (name: string, customPrefix?: string) => {
+    const pre = customPrefix || prefix;
+    return `${pre}_${name.substring(0, 4).toUpperCase().replace(/\s/g, '')}`;
+  };
+  
+  console.log('[DEBUG getSubjectsByCurriculum] checking curriculum match - NERDC:', normalizedCurriculum === 'NERDC', 'CAMBRIDGE:', normalizedCurriculum === 'CAMBRIDGE', 'AMERICAN:', normalizedCurriculum === 'AMERICAN', 'IB:', normalizedCurriculum === 'IB');
+  
+  if (normalizedCurriculum === 'NERDC') {
+    console.log('[DEBUG] Calling getSubjectsByLevelNERDC for level', level, 'department:', normalizedDepartment);
+    return getSubjectsByLevelNERDC(level, prefix, normalizedDepartment);
+  }
+  
+  if (normalizedCurriculum === 'CAMBRIDGE') {
+    console.log('[DEBUG] Calling getSubjectsByLevelCambridge for level', level);
+    return getSubjectsByLevelCambridge(level, prefix, normalizedDepartment);
+  }
+
+  if (normalizedCurriculum === 'AMERICAN') {
+    console.log('[DEBUG] Calling getSubjectsByLevelAmerican for level', level);
+    return getSubjectsByLevelAmerican(level, prefix, normalizedDepartment);
+  }
+
+  if (normalizedCurriculum === 'IB') {
+    console.log('[DEBUG] Calling getSubjectsByLevelIB for level', level);
+    return getSubjectsByLevelIB(level, prefix, normalizedDepartment);
+  }
+
+  console.log('[DEBUG] No curriculum match found, defaulting to NERDC');
+  return getSubjectsByLevelNERDC(level, prefix, normalizedDepartment);
+}
+
+function getSubjectsByLevelNERDC(level: number, prefix: string, department?: string): { name: string; code: string }[] {
+  const generateCode = (name: string) => `${prefix}_${name.substring(0, 4).toUpperCase().replace(/\s/g, '')}`;
   
   if (level >= 0 && level <= 4) {
     return [
-      { name: 'Basic Numeracy', code: 'BASC_NUM' },
-      { name: 'Basic Literacy', code: 'BASC_LIT' },
-      { name: 'Rhymes & Songs', code: 'RHYM' },
-      { name: 'Art & Craft', code: 'ART' },
-      { name: 'Physical Education', code: 'PE' },
+      { name: 'Basic Numeracy', code: generateCode('BASC_NUM') },
+      { name: 'Basic Literacy', code: generateCode('BASC_LIT') },
+      { name: 'Rhymes & Songs', code: generateCode('RHYM') },
+      { name: 'Art & Craft', code: generateCode('ART') },
+      { name: 'Physical Education', code: generateCode('PE') },
     ];
   }
   
   if (level >= 5 && level <= 10) {
     return [
-      { name: 'Mathematics', code: generateCode('Mathematics') },
-      { name: 'English Language', code: generateCode('English Language') },
-      { name: 'Basic Science', code: generateCode('Basic Science') },
-      { name: 'Social Studies', code: generateCode('Social Studies') },
-      { name: 'Civic Education', code: generateCode('Civic Education') },
-      { name: 'Yoruba', code: generateCode('Yoruba') },
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'English Language', code: generateCode('Engl') },
+      { name: 'Basic Science', code: generateCode('BASC') },
+      { name: 'Social Studies', code: generateCode('Soci') },
+      { name: 'Civic Education', code: generateCode('Civi') },
+      { name: 'Yoruba', code: generateCode('Yoru') },
       { name: 'Igbo', code: generateCode('Igbo') },
-      { name: 'Hausa', code: generateCode('Hausa') },
-      { name: 'French', code: generateCode('French') },
-      { name: 'Christian Religious Studies', code: generateCode('Christian Religious Studies') },
-      { name: 'Islamic Studies', code: generateCode('Islamic Studies') },
-      { name: 'Nigerian History', code: generateCode('Nigerian History') },
-      { name: 'Geography', code: generateCode('Geography') },
-      { name: 'Basic Technology', code: generateCode('Basic Technology') },
-      { name: 'Computer Studies', code: generateCode('Computer Studies') },
-      { name: 'Agricultural Science', code: generateCode('Agricultural Science') },
-      { name: 'Music', code: generateCode('Music') },
+      { name: 'Hausa', code: generateCode('Haus') },
+      { name: 'French', code: generateCode('Fren') },
+      { name: 'Christian Religious Studies', code: generateCode('Chri') },
+      { name: 'Islamic Studies', code: generateCode('Isla') },
+      { name: 'Nigerian History', code: generateCode('Nige') },
+      { name: 'Geography', code: generateCode('Geog') },
+      { name: 'Basic Technology', code: generateCode('Btec') },
+      { name: 'Computer Studies', code: generateCode('Comp') },
+      { name: 'Agricultural Science', code: generateCode('Agri') },
+      { name: 'Music', code: generateCode('Musi') },
       { name: 'Art', code: generateCode('Art') },
-      { name: 'Physical Education', code: generateCode('Physical Education') },
-      { name: 'Health Education', code: generateCode('Health Education') },
+      { name: 'Physical Education', code: generateCode('PE') },
+      { name: 'Health Education', code: generateCode('Heal') },
     ];
   }
   
   if (level >= 11 && level <= 13) {
     return [
-      { name: 'Mathematics', code: generateCode('Mathematics') },
-      { name: 'English Language', code: generateCode('English Language') },
-      { name: 'Physics', code: 'PHY' },
-      { name: 'Chemistry', code: 'CHEM' },
-      { name: 'Biology', code: 'BIO' },
-      { name: 'Social Studies', code: generateCode('Social Studies') },
-      { name: 'Civic Education', code: generateCode('Civic Education') },
-      { name: 'Yoruba', code: generateCode('Yoruba') },
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'English Language', code: generateCode('Engl') },
+      { name: 'Physics', code: `${prefix}_PHY` },
+      { name: 'Chemistry', code: `${prefix}_CHEM` },
+      { name: 'Biology', code: `${prefix}_BIO` },
+      { name: 'Social Studies', code: generateCode('Soci') },
+      { name: 'Civic Education', code: generateCode('Civi') },
+      { name: 'Yoruba', code: generateCode('Yoru') },
       { name: 'Igbo', code: generateCode('Igbo') },
-      { name: 'Hausa', code: generateCode('Hausa') },
-      { name: 'French', code: generateCode('French') },
-      { name: 'Christian Religious Studies', code: generateCode('Christian Religious Studies') },
-      { name: 'Islamic Studies', code: generateCode('Islamic Studies') },
-      { name: 'Nigerian History', code: generateCode('Nigerian History') },
-      { name: 'Geography', code: generateCode('Geography') },
-      { name: 'Commerce', code: generateCode('Commerce') },
-      { name: 'Economics', code: generateCode('Economics') },
-      { name: 'Basic Technology', code: generateCode('Basic Technology') },
-      { name: 'Computer Studies', code: generateCode('Computer Studies') },
-      { name: 'Agricultural Science', code: generateCode('Agricultural Science') },
-      { name: 'Music', code: generateCode('Music') },
+      { name: 'Hausa', code: generateCode('Haus') },
+      { name: 'French', code: generateCode('Fren') },
+      { name: 'Christian Religious Studies', code: generateCode('Chri') },
+      { name: 'Islamic Studies', code: generateCode('Isla') },
+      { name: 'Nigerian History', code: generateCode('Nige') },
+      { name: 'Geography', code: generateCode('Geog') },
+      { name: 'Commerce', code: generateCode('Com') },
+      { name: 'Economics', code: generateCode('Econ') },
+      { name: 'Basic Technology', code: generateCode('Btec') },
+      { name: 'Computer Studies', code: generateCode('Comp') },
+      { name: 'Agricultural Science', code: generateCode('Agri') },
+      { name: 'Music', code: generateCode('Musi') },
       { name: 'Art', code: generateCode('Art') },
-      { name: 'Physical Education', code: generateCode('Physical Education') },
+      { name: 'Physical Education', code: generateCode('PE') },
+    ];
+  }
+  
+  if (level >= 14 && level <= 16) {
+    const dept = (department || '').toUpperCase();
+    
+    const coreSubjects = [
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'English Language', code: generateCode('Engl') },
+      { name: 'Civic Education', code: generateCode('Civi') },
+      { name: 'Yoruba', code: generateCode('Yoru') },
+      { name: 'Igbo', code: generateCode('Igbo') },
+      { name: 'Hausa', code: generateCode('Haus') },
+      { name: 'French', code: generateCode('Fren') },
+      { name: 'Christian Religious Studies', code: generateCode('Chri') },
+      { name: 'Islamic Studies', code: generateCode('Isla') },
+      { name: 'Physical Education', code: generateCode('PE') },
+    ];
+
+    if (dept === 'SCI' || dept === 'SCIENCE' || dept === 'SCI') {
+      return [
+        ...coreSubjects,
+        { name: 'Physics', code: `${prefix}_PHY` },
+        { name: 'Chemistry', code: `${prefix}_CHEM` },
+        { name: 'Biology', code: `${prefix}_BIO` },
+        { name: 'Geography', code: generateCode('Geog') },
+        { name: 'Computer Studies', code: generateCode('Comp') },
+        { name: 'Agricultural Science', code: generateCode('Agri') },
+      ];
+    }
+    
+    if (dept === 'COM' || dept === 'COMM' || dept === 'COMMERCE') {
+      return [
+        ...coreSubjects,
+        { name: 'Economics', code: generateCode('Econ') },
+        { name: 'Commerce', code: generateCode('Com') },
+        { name: 'Accountancy', code: `${prefix}_ACCT` },
+        { name: 'Business Studies', code: generateCode('BUST') },
+        { name: 'Computer Studies', code: generateCode('Comp') },
+      ];
+    }
+    
+    if (dept === 'ART' || dept === 'ARTS' || dept === 'ART') {
+      return [
+        ...coreSubjects,
+        { name: 'Literature in English', code: `${prefix}_LIT` },
+        { name: 'Nigerian History', code: generateCode('Nige') },
+        { name: 'Geography', code: generateCode('Geog') },
+        { name: 'Government', code: `${prefix}_GOV` },
+        { name: 'Visual Art', code: generateCode('VART') },
+        { name: 'Music', code: generateCode('Musi') },
+      ];
+    }
+
+    return [
+      ...coreSubjects,
+      { name: 'Physics', code: `${prefix}_PHY` },
+      { name: 'Chemistry', code: `${prefix}_CHEM` },
+      { name: 'Biology', code: `${prefix}_BIO` },
+      { name: 'Civic Education', code: generateCode('Civi') },
+      { name: 'Yoruba', code: generateCode('Yoru') },
+      { name: 'Igbo', code: generateCode('Igbo') },
+      { name: 'Hausa', code: generateCode('Haus') },
+      { name: 'French', code: generateCode('Fren') },
+      { name: 'Christian Religious Studies', code: generateCode('Chri') },
+      { name: 'Islamic Studies', code: generateCode('Isla') },
+      { name: 'Literature in English', code: `${prefix}_LIT` },
+      { name: 'Nigerian History', code: generateCode('Nige') },
+      { name: 'Geography', code: generateCode('Geog') },
+      { name: 'Commerce', code: generateCode('Com') },
+      { name: 'Economics', code: generateCode('Econ') },
+      { name: 'Government', code: `${prefix}_GOV` },
+      { name: 'Accountancy', code: `${prefix}_ACCT` },
+      { name: 'Computer Studies', code: generateCode('Comp') },
+      { name: 'Agricultural Science', code: generateCode('Agri') },
+      { name: 'Music', code: generateCode('Musi') },
+      { name: 'Art', code: generateCode('Art') },
+      { name: 'Physical Education', code: generateCode('PE') },
+    ];
+  }
+  
+  return [];
+}
+
+function getSubjectsByLevelCambridge(level: number, prefix: string, department?: string): { name: string; code: string }[] {
+  const generateCode = (name: string, short?: string) => `${prefix}_${(short || name.substring(0, 4).toUpperCase().replace(/\s/g, ''))}`;
+  
+  if (level >= 0 && level <= 4) {
+    return [
+      { name: 'Early Years Mathematics', code: generateCode('Math', 'EYMA') },
+      { name: 'Early Years English', code: generateCode('Engl', 'EYEN') },
+      { name: 'Discovery', code: generateCode('Disc', 'DISC') },
+      { name: 'Creative Arts', code: generateCode('Arts', 'CART') },
+      { name: 'Physical Development', code: generateCode('PDev', 'PDEV') },
+    ];
+  }
+  
+  if (level >= 5 && level <= 10) {
+    return [
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'English', code: generateCode('Engl') },
+      { name: 'Science', code: generateCode('Sci') },
+      { name: 'Global Perspectives', code: generateCode('Glob', 'GP') },
+      { name: 'ICT', code: generateCode('ICT') },
+      { name: 'Art & Design', code: generateCode('Art') },
+      { name: 'Music', code: generateCode('Musi') },
+      { name: 'Physical Education', code: generateCode('PE') },
+      { name: 'French', code: generateCode('Fren') },
+      { name: 'Arabic', code: generateCode('Arab') },
+      { name: 'Hindi', code: generateCode('Hindi') },
+      { name: 'Urdu', code: generateCode('Urdu') },
+      { name: 'History', code: generateCode('Hist') },
+      { name: 'Geography', code: generateCode('Geog') },
+      { name: 'Computer Science', code: generateCode('Comp') },
+    ];
+  }
+  
+  if (level >= 11 && level <= 13) {
+    return [
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'English', code: generateCode('Engl') },
+      { name: 'Physics', code: `${prefix}_PHY` },
+      { name: 'Chemistry', code: `${prefix}_CHEM` },
+      { name: 'Biology', code: `${prefix}_BIO` },
+      { name: 'Computer Science', code: generateCode('Comp') },
+      { name: 'ICT', code: generateCode('ICT') },
+      { name: 'Accounting', code: generateCode('Acct') },
+      { name: 'Business Studies', code: generateCode('Busi') },
+      { name: 'Economics', code: generateCode('Econ') },
+      { name: 'History', code: generateCode('Hist') },
+      { name: 'Geography', code: generateCode('Geog') },
+      { name: 'Literature in English', code: generateCode('Lit') },
+      { name: 'French', code: generateCode('Fren') },
+      { name: 'Arabic', code: generateCode('Arab') },
+      { name: 'Art & Design', code: generateCode('Art') },
+      { name: 'Music', code: generateCode('Musi') },
+      { name: 'Physical Education', code: generateCode('PE') },
     ];
   }
   
   if (level >= 14 && level <= 16) {
     return [
-      { name: 'Mathematics', code: generateCode('Mathematics') },
-      { name: 'English Language', code: generateCode('English Language') },
-      { name: 'Physics', code: 'PHY' },
-      { name: 'Chemistry', code: 'CHEM' },
-      { name: 'Biology', code: 'BIO' },
-      { name: 'Civic Education', code: generateCode('Civic Education') },
-      { name: 'Yoruba', code: generateCode('Yoruba') },
-      { name: 'Igbo', code: generateCode('Igbo') },
-      { name: 'Hausa', code: generateCode('Hausa') },
-      { name: 'French', code: generateCode('French') },
-      { name: 'Christian Religious Studies', code: generateCode('Christian Religious Studies') },
-      { name: 'Islamic Studies', code: generateCode('Islamic Studies') },
-      { name: 'Literature in English', code: 'LIT' },
-      { name: 'Nigerian History', code: generateCode('Nigerian History') },
-      { name: 'Geography', code: generateCode('Geography') },
-      { name: 'Commerce', code: generateCode('Commerce') },
-      { name: 'Economics', code: generateCode('Economics') },
-      { name: 'Government', code: 'GOV' },
-      { name: 'Accountancy', code: 'ACCT' },
-      { name: 'Computer Studies', code: generateCode('Computer Studies') },
-      { name: 'Agricultural Science', code: generateCode('Agricultural Science') },
-      { name: 'Music', code: generateCode('Music') },
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'English', code: generateCode('Engl') },
+      { name: 'Physics', code: `${prefix}_PHY` },
+      { name: 'Chemistry', code: `${prefix}_CHEM` },
+      { name: 'Biology', code: `${prefix}_BIO` },
+      { name: 'Computer Science', code: generateCode('Comp') },
+      { name: 'ICT', code: generateCode('ICT') },
+      { name: 'Accounting', code: generateCode('Acct') },
+      { name: 'Business Studies', code: generateCode('Busi') },
+      { name: 'Economics', code: generateCode('Econ') },
+      { name: 'History', code: generateCode('Hist') },
+      { name: 'Geography', code: generateCode('Geog') },
+      { name: 'Literature in English', code: generateCode('Lit') },
+      { name: 'French', code: generateCode('Fren') },
+      { name: 'Arabic', code: generateCode('Arab') },
+      { name: 'Psychology', code: generateCode('Psyc') },
+      { name: 'Sociology', code: generateCode('Soci') },
+      { name: 'Art & Design', code: generateCode('Art') },
+      { name: 'Music', code: generateCode('Musi') },
+      { name: 'Physical Education', code: generateCode('PE') },
+    ];
+  }
+  
+  return [];
+}
+
+function getSubjectsByLevelAmerican(level: number, prefix: string, department?: string): { name: string; code: string }[] {
+  const generateCode = (name: string, short?: string) => `${prefix}_${(short || name.substring(0, 4).toUpperCase().replace(/\s/g, ''))}`;
+  
+  if (level >= 0 && level <= 4) {
+    return [
+      { name: 'Early Math', code: generateCode('Math', 'EM') },
+      { name: 'Early Literacy', code: generateCode('Lit', 'EL') },
+      { name: 'Science', code: generateCode('Sci') },
+      { name: 'Social Studies', code: generateCode('SSt') },
       { name: 'Art', code: generateCode('Art') },
-      { name: 'Physical Education', code: generateCode('Physical Education') },
+      { name: 'Physical Education', code: generateCode('PE') },
+      { name: 'Music', code: generateCode('Musi') },
+    ];
+  }
+  
+  if (level >= 5 && level <= 10) {
+    return [
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'English Language Arts', code: generateCode('ELA') },
+      { name: 'Science', code: generateCode('Sci') },
+      { name: 'Social Studies', code: generateCode('SSt') },
+      { name: 'World Languages', code: generateCode('WL') },
+      { name: 'Art', code: generateCode('Art') },
+      { name: 'Music', code: generateCode('Musi') },
+      { name: 'Physical Education', code: generateCode('PE') },
+      { name: 'Health', code: generateCode('Heal') },
+      { name: 'Technology', code: generateCode('Tech') },
+    ];
+  }
+  
+  if (level >= 11 && level <= 13) {
+    return [
+      { name: 'Algebra I', code: `${prefix}_ALG1` },
+      { name: 'Geometry', code: `${prefix}_GEO` },
+      { name: 'Algebra II', code: `${prefix}_ALG2` },
+      { name: 'English Language Arts', code: generateCode('ELA') },
+      { name: 'Biology', code: generateCode('Bio') },
+      { name: 'Chemistry', code: generateCode('Chem') },
+      { name: 'Physics', code: generateCode('Phys') },
+      { name: 'World History', code: generateCode('WH') },
+      { name: 'US History', code: generateCode('USH') },
+      { name: 'Civics & Government', code: generateCode('Civ') },
+      { name: 'Economics', code: generateCode('Econ') },
+      { name: 'Art', code: generateCode('Art') },
+      { name: 'Music', code: generateCode('Musi') },
+      { name: 'Physical Education', code: generateCode('PE') },
+      { name: 'Health', code: generateCode('Heal') },
+    ];
+  }
+  
+  if (level >= 14 && level <= 16) {
+    return [
+      { name: 'Precalculus', code: `${prefix}_PREC` },
+      { name: 'Calculus', code: generateCode('Calc') },
+      { name: 'Statistics', code: generateCode('Stat') },
+      { name: 'English Literature', code: generateCode('ELIT') },
+      { name: 'Biology', code: generateCode('Bio') },
+      { name: 'Chemistry', code: generateCode('Chem') },
+      { name: 'Physics', code: generateCode('Phys') },
+      { name: 'Environmental Science', code: generateCode('EnSc') },
+      { name: 'US Government', code: generateCode('USG') },
+      { name: 'Economics', code: generateCode('Econ') },
+      { name: 'Psychology', code: generateCode('Psyc') },
+      { name: 'Sociology', code: generateCode('Soci') },
+      { name: 'World Languages', code: generateCode('WL') },
+      { name: 'Art History', code: generateCode('Arth') },
+      { name: 'Music Theory', code: generateCode('Muth') },
+      { name: 'Physical Education', code: generateCode('PE') },
+    ];
+  }
+  
+  return [];
+}
+
+function getSubjectsByLevelIB(level: number, prefix: string, department?: string): { name: string; code: string }[] {
+  const generateCode = (name: string, short?: string) => `${prefix}_${(short || name.substring(0, 4).toUpperCase().replace(/\s/g, ''))}`;
+  
+  if (level >= 0 && level <= 4) {
+    return [
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'Language Arts', code: generateCode('LA') },
+      { name: 'Science', code: generateCode('Sci') },
+      { name: 'Social Studies', code: generateCode('SSt') },
+      { name: 'Arts', code: generateCode('Arts') },
+      { name: 'Physical Education', code: generateCode('PE') },
+      { name: 'Music', code: generateCode('Musi') },
+    ];
+  }
+  
+  if (level >= 5 && level <= 10) {
+    return [
+      { name: 'Mathematics', code: generateCode('Math') },
+      { name: 'Language & Literature', code: generateCode('LAL') },
+      { name: 'Sciences', code: generateCode('Sci') },
+      { name: 'Individuals & Societies', code: generateCode('IAS') },
+      { name: 'Languages', code: generateCode('Lang') },
+      { name: 'Arts', code: generateCode('Arts') },
+      { name: 'Physical Education', code: generateCode('PE') },
+      { name: 'Design Technology', code: generateCode('DT') },
+      { name: 'Computer Science', code: generateCode('CS') },
+    ];
+  }
+  
+  if (level >= 11 && level <= 13) {
+    return [
+      { name: 'Mathematics AI', code: `${prefix}_MAI` },
+      { name: 'Mathematics AA', code: `${prefix}_MAA` },
+      { name: 'English A Literature', code: generateCode('EAL') },
+      { name: 'English A Language', code: generateCode('EAGA') },
+      { name: 'Biology', code: generateCode('Bio') },
+      { name: 'Chemistry', code: generateCode('Chem') },
+      { name: 'Physics', code: generateCode('Phys') },
+      { name: 'Computer Science', code: generateCode('CS') },
+      { name: 'History', code: generateCode('Hist') },
+      { name: 'Geography', code: generateCode('Geog') },
+      { name: 'Economics', code: generateCode('Econ') },
+      { name: 'Business Management', code: generateCode('BM') },
+      { name: 'Psychology', code: generateCode('Psyc') },
+      { name: 'Visual Arts', code: generateCode('VA') },
+      { name: 'Music', code: generateCode('Musi') },
+      { name: 'Theatre Arts', code: generateCode('Thea') },
+      { name: 'Physical Education', code: generateCode('PE') },
+    ];
+  }
+  
+  if (level >= 14 && level <= 16) {
+    return [
+      { name: 'Mathematics AI', code: `${prefix}_MAI` },
+      { name: 'Mathematics AA', code: `${prefix}_MAA` },
+      { name: 'English A Literature HL', code: generateCode('ELHL') },
+      { name: 'English B', code: generateCode('EB') },
+      { name: 'Biology HL', code: `${prefix}_BIOH` },
+      { name: 'Chemistry HL', code: `${prefix}_CHEMH` },
+      { name: 'Physics HL', code: `${prefix}_PHYH` },
+      { name: 'Computer Science HL', code: generateCode('CS') },
+      { name: 'History HL', code: generateCode('Hist') },
+      { name: 'Geography', code: generateCode('Geog') },
+      { name: 'Economics', code: generateCode('Econ') },
+      { name: 'Business Management', code: generateCode('BM') },
+      { name: 'Psychology', code: generateCode('Psyc') },
+      { name: 'Visual Arts', code: generateCode('VA') },
+      { name: 'Music', code: generateCode('Musi') },
+      { name: 'Theory of Knowledge', code: generateCode('TOK') },
     ];
   }
   

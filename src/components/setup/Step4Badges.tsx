@@ -26,22 +26,22 @@ export default function Step4Badges({
   onBack,
 }: Step4BadgesProps) {
   return (
-    <div className="bg-white rounded-xl border p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-          <Award className="h-6 w-6 text-amber-600" />
+        <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+          <Award className="h-6 w-6 text-amber-600 dark:text-amber-400" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">Badge & Achievement System</h2>
-          <p className="text-gray-600 text-sm">
+          <h2 className="text-xl font-bold dark:text-white">Badge & Achievement System</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
             Configure how students earn and display badges
           </p>
         </div>
       </div>
 
       <div className="space-y-6">
-        <div className="p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <p className="text-sm text-blue-800 dark:text-blue-300">
             Badges are awards that students can earn for achievements, participation, and excellence. 
             You can configure whether badges are automatically awarded or require manual approval.
           </p>

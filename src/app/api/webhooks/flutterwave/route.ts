@@ -25,9 +25,10 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('verif-hash');
 
     const flutterwaveSecret = process.env.FLUTTERWAVE_WEBHOOK_SECRET;
-    if (flutterwaveSecret && signature !== flutterwaveSecret) {
-      const hash = crypto.createHash('sha256').update(body).digest('hex');
-      if (hash !== signature) {
+    if (flutterwaveSecret) {
+      const hash = crypto.createHmac('sha256', flutterwaveSecret).update(body).digest('hex');
+      if (signature !== hash) {
+        console.error('Flutterwave webhook signature verification failed');
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     }
@@ -82,11 +83,20 @@ async function handleSubscriptionPayment(data: any, metadata: any) {
 
   const invoice = await prisma.subscriptionInvoice.findUnique({
     where: { id: invoiceId },
-    include: { tenant: true, plan: true },
+    include: { subscriptionPlan: true, subscription: true },
   });
 
   if (!invoice) {
     console.error('Subscription invoice not found:', invoiceId);
+    return;
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: invoice.tenantId },
+  });
+
+  if (!tenant) {
+    console.error('Tenant not found for invoice:', invoiceId);
     return;
   }
 
@@ -165,14 +175,14 @@ async function handleSubscriptionPayment(data: any, metadata: any) {
     
     await sendPaymentReceiptEmail(
       tenantAdmin.email,
-      invoice.tenant.name,
+      tenant.name,
       invoice.invoiceNumber,
       receiptNumber,
       amount,
       invoice.currency,
       new Date().toLocaleDateString('en-NG'),
       billingPeriod,
-      invoice.plan.displayName,
+      invoice.subscriptionPlan.displayName,
       'Online',
       'Flutterwave'
     );

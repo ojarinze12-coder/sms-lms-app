@@ -27,13 +27,24 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const search = searchParams.get('search');
 
-    const where: any = {
-      subject: {
-        academicClass: {
-          academicYear: { tenantId: authUser.tenantId }
-        }
-      }
-    };
+    // Build tenant filter - allow SUPER_ADMIN to see all, others filtered by tenant
+    let tenantFilter: any = {};
+    if (authUser.role !== 'SUPER_ADMIN' && authUser.tenantId) {
+      tenantFilter = {
+        OR: [
+          { tenantId: authUser.tenantId },
+          {
+            subject: {
+              academicClass: {
+                academicYear: { tenantId: authUser.tenantId }
+              }
+            }
+          }
+        ]
+      };
+    }
+
+    const where: any = tenantFilter;
 
     if (authUser.role === 'STUDENT') {
       where.status = 'PUBLISHED';

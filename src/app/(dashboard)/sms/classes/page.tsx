@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getSubjectsByLevel } from '@/lib/nigeria';
+import { getSubjectsByCurriculum } from '@/lib/nigeria';
+import { CURRICULUM_INFO } from '@/types';
+import { Loader2, Plus, Pencil, Trash2, BookOpen } from 'lucide-react';
 
 interface AcademicYear {
   id: string;
@@ -10,20 +12,38 @@ interface AcademicYear {
   isActive?: boolean;
 }
 
+interface Tier {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface Department {
+  id: string;
+  name: string;
+  code: string;
+}
+
 interface AcademicClass {
   id: string;
   name: string;
   level: number;
   capacity: number;
+  section?: string | null;
   academicYearId: string;
+  tierId?: string | null;
+  department?: { id: string; name: string; code: string } | null;
   subjects?: { id: string }[];
   enrollments?: { id: string }[];
 }
 
 export default function ClassesPage() {
   const [years, setYears] = useState<AcademicYear[]>([]);
+  const [tiers, setTiers] = useState<Tier[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedYearId, setSelectedYearId] = useState<string>('');
   const [classes, setClasses] = useState<AcademicClass[]>([]);
+  const [currentCurriculum, setCurrentCurriculum] = useState<string>('NERDC');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -33,18 +53,27 @@ export default function ClassesPage() {
     level: '',
     capacity: '40',
     addNerdcSubjects: true,
+    tierId: '',
+    departmentId: '',
+    section: '',
   });
   const [editFormData, setEditFormData] = useState({
     name: '',
     level: '',
     capacity: '40',
     addNerdcSubjects: false,
+    tierId: '',
+    departmentId: '',
+    section: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadYears();
+    loadTiers();
+    loadDepartments();
+    loadCurriculum();
   }, []);
 
   useEffect(() => {
@@ -56,6 +85,10 @@ export default function ClassesPage() {
   const loadYears = async () => {
     try {
       const res = await fetch('/api/sms/academic-years');
+      if (!res.ok) {
+        console.error('Failed to load years:', res.status);
+        return;
+      }
       const data = await res.json();
       setYears(data);
       if (data.length > 0) {
@@ -69,9 +102,51 @@ export default function ClassesPage() {
     }
   };
 
+  const loadTiers = async () => {
+    try {
+      const res = await fetch('/api/sms/tiers');
+      if (res.ok) {
+        const data = await res.json();
+        setTiers(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load tiers:', err);
+    }
+  };
+
+  const loadDepartments = async () => {
+    try {
+      const res = await fetch('/api/sms/departments');
+      if (res.ok) {
+        const data = await res.json();
+        setDepartments(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load departments:', err);
+    }
+  };
+
+  const loadCurriculum = async () => {
+    try {
+      const res = await fetch('/api/tenant/curriculum');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.data?.settings?.curriculumType) {
+          setCurrentCurriculum(data.data.settings.curriculumType);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load curriculum:', err);
+    }
+  };
+
   const loadClasses = async (yearId: string) => {
     try {
       const res = await fetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      if (!res.ok) {
+        console.error('Failed to load classes:', res.status);
+        return;
+      }
       const data = await res.json();
       setClasses(data.data || []);
     } catch (err) {
@@ -84,36 +159,37 @@ export default function ClassesPage() {
     setSubmitting(true);
     setError('');
 
-    const payload = {
+    const requestBody = {
       name: formData.name,
       level: parseInt(formData.level),
       academicYearId: selectedYearId,
       capacity: parseInt(formData.capacity),
       addNerdcSubjects: formData.addNerdcSubjects,
+      tierId: formData.tierId || null,
+      departmentId: formData.departmentId || null,
+      section: formData.section || null,
     };
-    console.log('Creating class with payload:', payload);
+    console.log('[CLASSES] Request body:', JSON.stringify(requestBody));
 
     try {
       const res = await fetch('/api/sms/academic-classes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          level: parseInt(formData.level),
-          academicYearId: selectedYearId,
-          capacity: parseInt(formData.capacity),
-          addNerdcSubjects: formData.addNerdcSubjects,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('[CLASSES] Response status:', res.status);
+      const responseData = await res.json();
+      console.log('[CLASSES] Response data:', JSON.stringify(responseData));
+
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || 'Failed to create class');
+        setError(responseData.error || 'Failed to create class');
         return;
       }
 
+      console.log('[CLASSES] Class created successfully, refreshing list');
       setShowModal(false);
-      setFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: true });
+      setFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: true, tierId: '', departmentId: '', section: '' });
       loadClasses(selectedYearId);
     } catch {
       setError('An error occurred');
@@ -129,6 +205,9 @@ export default function ClassesPage() {
       level: cls.level.toString(),
       capacity: cls.capacity.toString(),
       addNerdcSubjects: false,
+      tierId: cls.tierId || '',
+      departmentId: cls.department?.id || '',
+      section: cls.section || '',
     });
     setShowEditModal(true);
   };
@@ -148,13 +227,16 @@ export default function ClassesPage() {
           level: parseInt(editFormData.level),
           capacity: parseInt(editFormData.capacity),
           addNerdcSubjects: editFormData.addNerdcSubjects,
+          tierId: editFormData.tierId || null,
+          departmentId: editFormData.departmentId || null,
+          section: editFormData.section || null,
         }),
       });
 
       if (res.ok) {
         setShowEditModal(false);
         setEditingClass(null);
-        setEditFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: false });
+        setEditFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: false, tierId: '', departmentId: '', section: '' });
         loadClasses(selectedYearId);
       } else {
         const data = await res.json();
@@ -189,26 +271,58 @@ export default function ClassesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Classes</h1>
-          <p className="text-gray-600">Manage classes for each academic year</p>
+          <h1 className="text-2xl font-bold dark:text-white">Classes</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage classes for each academic year</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          disabled={!selectedYearId}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-        >
-          Add Class
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              if (!confirm('This will add missing subjects to all classes. Continue?')) return;
+              setSubmitting(true);
+              try {
+                const res = await fetch('/api/sms/subjects/add-missing', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ createMissingClasses: true }),
+                });
+                const data = await res.json();
+                console.log('[ADD-MISSING] Response:', JSON.stringify(data, null, 2));
+                if (res.ok) {
+                  alert(`Results:\nClasses Created: ${data.classesCreated}\nSubjects Created: ${data.subjectsCreated}\n\nDebug: ${JSON.stringify(data.debug, null, 2)}`);
+                  loadClasses(selectedYearId);
+                } else {
+                  alert('Error: ' + JSON.stringify(data));
+                }
+              } catch (err) {
+                alert('Exception: ' + err);
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+            disabled={!selectedYearId || submitting}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 dark:text-gray-300 flex items-center gap-2"
+          >
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            Add Missing Subjects
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            disabled={!selectedYearId}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600"
+          >
+            Add Class
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl border p-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Select Academic Year
         </label>
         <select
           value={selectedYearId}
           onChange={(e) => setSelectedYearId(e.target.value)}
-          className="w-full max-w-md px-3 py-2 border rounded-lg"
+          className="w-full max-w-md px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
         >
           <option value="">Select a year...</option>
           {years.map((year) => (
@@ -222,57 +336,64 @@ export default function ClassesPage() {
       {selectedYearId && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {classes.length === 0 ? (
-            <div className="col-span-full bg-white rounded-xl border p-8 text-center text-gray-500">
+            <div className="col-span-full bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
               No classes yet. Add your first class for this academic year.
             </div>
           ) : (
-            classes.map((cls) => (
-              <div key={cls.id} className="bg-white rounded-xl border p-4 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-lg">{cls.name}</h3>
-                    <p className="text-sm text-gray-500">
+            classes.map((cls) => {
+              const fullClassName = cls.department 
+                ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
+                : cls.section 
+                  ? `${cls.name}-${cls.section}`
+                  : cls.name;
+              return (
+                <div key={cls.id} className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-lg dark:text-white">{fullClassName}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {getLevelName(cls.level)}
+                      </p>
+                    </div>
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs">
                       {getLevelName(cls.level)}
-                    </p>
+                    </span>
                   </div>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                    {getLevelName(cls.level)}
-                  </span>
+                  <div className="mt-4 pt-4 border-t dark:border-gray-700 flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                    <span>Capacity: {cls.capacity}</span>
+                    <span>Subjects: {cls.subjects?.length || 0}</span>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <Link
+                      href={`/sms/classes/${cls.id}/subjects`}
+                      className="flex-1 text-center px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    >
+                      Subjects
+                    </Link>
+                    <button
+                      onClick={() => handleEdit(cls)}
+                      className="px-3 py-2 text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800"
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-4 pt-4 border-t flex justify-between text-sm text-gray-600">
-                  <span>Capacity: {cls.capacity}</span>
-                  <span>Subjects: {cls.subjects?.length || 0}</span>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <Link
-                    href={`/sms/classes/${cls.id}/subjects`}
-                    className="flex-1 text-center px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200"
-                  >
-                    Subjects
-                  </Link>
-                  <button
-                    onClick={() => handleEdit(cls)}
-                    className="px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
-                  >
-                    Edit
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
 
       {!selectedYearId && years.length > 0 && (
-        <div className="bg-white rounded-xl border p-8 text-center text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
           Please select an academic year to view its classes.
         </div>
       )}
 
       {years.length === 0 && (
-        <div className="bg-white rounded-xl border p-8 text-center text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
           No academic years found. Please{' '}
-          <Link href="/sms/academic-years" className="text-blue-600 hover:underline">
+          <Link href="/sms/academic-years" className="text-blue-600 dark:text-blue-400 hover:underline">
             create an academic year
           </Link>{' '}
           first.
@@ -281,18 +402,18 @@ export default function ClassesPage() {
 
       {/* Create Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Class</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Add Class</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Class Name
                 </label>
                 <input
@@ -300,20 +421,20 @@ export default function ClassesPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., Grade 10-A"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Class Level
                   </label>
                   <select
                     value={formData.level}
                     onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   >
                     <option value="">Select...</option>
@@ -347,17 +468,70 @@ export default function ClassesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Capacity
                   </label>
                   <input
                     type="number"
                     value={formData.capacity}
                     onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     min="1"
                   />
                 </div>
+              </div>
+
+              {tiers.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Tier
+                  </label>
+                  <select
+                    value={formData.tierId}
+                    onChange={(e) => setFormData({ ...formData, tierId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">Select tier...</option>
+                    {tiers.map((tier) => (
+                      <option key={tier.id} value={tier.id}>
+                        {tier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {departments.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Department (Stream)
+                  </label>
+                  <select
+                    value={formData.departmentId}
+                    onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">Select department...</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name} ({dept.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Section
+                </label>
+                <input
+                  type="text"
+                  value={formData.section}
+                  onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                  placeholder="e.g., A, B, EXCELLENT"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                />
               </div>
 
               <div className="flex items-center gap-2 pt-2">
@@ -368,17 +542,18 @@ export default function ClassesPage() {
                   onChange={(e) => setFormData({ ...formData, addNerdcSubjects: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <label htmlFor="addNerdcSubjects" className="text-sm text-gray-700">
-                  Add NERDC subjects for this class level
+                <label htmlFor="addNerdcSubjects" className="text-sm text-gray-700 dark:text-gray-300">
+                  Add subjects for {CURRICULUM_INFO[currentCurriculum as keyof typeof CURRICULUM_INFO]?.name || currentCurriculum}
                 </label>
               </div>
 
               {formData.addNerdcSubjects && formData.level && (
-                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-2 rounded">
                   {(() => {
                     const level = parseInt(formData.level);
-                    const subjects = isNaN(level) ? [] : getSubjectsByLevel(level);
-                    return `Will add ${subjects.length} subjects: ${subjects.slice(0, 3).map(s => s.name).join(', ')}...`;
+                    const dept = departments.find(d => d.id === formData.departmentId);
+                    const subjects = isNaN(level) ? [] : getSubjectsByCurriculum(level, currentCurriculum, dept?.code);
+                    return `Will add ${subjects.length} subjects: ${subjects.slice(0, 3).map((s) => s.name).join(', ')}...`;
                   })()}
                 </div>
               )}
@@ -394,7 +569,7 @@ export default function ClassesPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
@@ -406,38 +581,38 @@ export default function ClassesPage() {
 
       {/* Edit Modal */}
       {showEditModal && editingClass && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Edit Class</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md my-8 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Edit Class</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Class Name
                 </label>
                 <input
                   type="text"
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Class Level
                   </label>
                   <select
                     value={editFormData.level}
                     onChange={(e) => setEditFormData({ ...editFormData, level: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     required
                   >
                     <option value="">Select...</option>
@@ -471,17 +646,70 @@ export default function ClassesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Capacity
                   </label>
                   <input
                     type="number"
                     value={editFormData.capacity}
                     onChange={(e) => setEditFormData({ ...editFormData, capacity: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     min="1"
                   />
                 </div>
+              </div>
+
+              {tiers.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Tier
+                  </label>
+                  <select
+                    value={editFormData.tierId}
+                    onChange={(e) => setEditFormData({ ...editFormData, tierId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">Select tier...</option>
+                    {tiers.map((tier) => (
+                      <option key={tier.id} value={tier.id}>
+                        {tier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {departments.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Department (Stream)
+                  </label>
+                  <select
+                    value={editFormData.departmentId}
+                    onChange={(e) => setEditFormData({ ...editFormData, departmentId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">Select department...</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name} ({dept.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Section
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.section}
+                  onChange={(e) => setEditFormData({ ...editFormData, section: e.target.value })}
+                  placeholder="e.g., A, B, EXCELLENT"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                />
               </div>
 
               <div className="flex items-center gap-2 pt-2">
@@ -492,16 +720,17 @@ export default function ClassesPage() {
                   onChange={(e) => setEditFormData({ ...editFormData, addNerdcSubjects: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <label htmlFor="editAddNerdcSubjects" className="text-sm text-gray-700">
-                  Add missing NERDC subjects for this level
+                <label htmlFor="editAddNerdcSubjects" className="text-sm text-gray-700 dark:text-gray-300">
+                  Add missing subjects for {CURRICULUM_INFO[currentCurriculum as keyof typeof CURRICULUM_INFO]?.name || currentCurriculum}
                 </label>
               </div>
 
               {editFormData.addNerdcSubjects && editFormData.level && (
-                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-2 rounded">
                   {(() => {
                     const level = parseInt(editFormData.level);
-                    const subjects = isNaN(level) ? [] : getSubjectsByLevel(level);
+                    const dept = departments.find(d => d.id === editFormData.departmentId);
+                    const subjects = isNaN(level) ? [] : getSubjectsByCurriculum(level, currentCurriculum, dept?.code);
                     return `Will add missing subjects from: ${subjects.slice(0, 3).map(s => s.name).join(', ')}...`;
                   })()}
                 </div>
@@ -522,7 +751,7 @@ export default function ClassesPage() {
                     setEditingClass(null);
                     setError('');
                   }}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>

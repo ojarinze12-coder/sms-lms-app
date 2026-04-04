@@ -55,6 +55,8 @@ interface Invoice {
   billingPeriodStart: string;
   billingPeriodEnd: string;
   description: string | null;
+  issueDate?: string;
+  receiptNumber?: string;
   tenant: {
     id: string;
     name: string;
@@ -237,11 +239,11 @@ export default function AdminInvoicesPage() {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-bold flex items-center gap-2 dark:text-white">
             <Receipt className="w-6 h-6" />
             Subscription Invoices
           </h1>
-          <p className="text-gray-500">Manage platform subscription billing</p>
+          <p className="text-gray-500 dark:text-gray-400">Manage platform subscription billing</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
@@ -339,44 +341,44 @@ export default function AdminInvoicesPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4 mb-6">
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
+            <CardTitle className="text-sm font-medium dark:text-gray-400">Total Invoices</CardTitle>
             <Receipt className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{invoices.length}</div>
+            <div className="text-2xl font-bold dark:text-white">{invoices.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium dark:text-gray-400">Pending</CardTitle>
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold dark:text-white">
               {invoices.filter(i => i.status === 'PENDING').length}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Paid</CardTitle>
+            <CardTitle className="text-sm font-medium dark:text-gray-400">Paid</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold dark:text-white">
               {invoices.filter(i => i.status === 'PAID').length}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium dark:text-gray-400">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold dark:text-white">
               {formatCurrency(
                 invoices
                   .filter(i => i.status === 'PAID')
@@ -387,7 +389,7 @@ export default function AdminInvoicesPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
@@ -396,7 +398,7 @@ export default function AdminInvoicesPage() {
                 placeholder="Search invoices..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 dark:bg-gray-700 dark:text-white dark:border-gray-600"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -417,28 +419,28 @@ export default function AdminInvoicesPage() {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Tenant</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Billing Period</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow className="dark:bg-gray-700 dark:text-gray-400">
+                <TableHead className="dark:text-gray-400">Invoice #</TableHead>
+                <TableHead className="dark:text-gray-400">Tenant</TableHead>
+                <TableHead className="dark:text-gray-400">Plan</TableHead>
+                <TableHead className="dark:text-gray-400">Amount</TableHead>
+                <TableHead className="dark:text-gray-400">Billing Period</TableHead>
+                <TableHead className="dark:text-gray-400">Due Date</TableHead>
+                <TableHead className="dark:text-gray-400">Status</TableHead>
+                <TableHead className="dark:text-gray-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredInvoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500 dark:text-gray-400">
                     No invoices found
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                  <TableRow key={invoice.id} className="dark:hover:bg-gray-700">
+                    <TableCell className="font-medium dark:text-white">{invoice.invoiceNumber}</TableCell>
                     <TableCell>{invoice.tenant.name}</TableCell>
                     <TableCell>{invoice.plan.displayName}</TableCell>
                     <TableCell>{formatCurrency(invoice.amount, invoice.currency)}</TableCell>
@@ -525,13 +527,13 @@ export default function AdminInvoicesPage() {
                 </div>
               </div>
 
-              {selectedInvoice.payment && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500 mb-2">Payment Details</p>
+              {selectedInvoice.payments && selectedInvoice.payments.length > 0 && (
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Payment Details</p>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>Reference: {selectedInvoice.payment.referenceNo}</div>
-                    <div>Method: {selectedInvoice.payment.method}</div>
-                    <div>Date: {selectedInvoice.payment.paidAt ? formatDate(selectedInvoice.payment.paidAt) : 'N/A'}</div>
+                    <div>Reference: {selectedInvoice.payments[0]?.referenceNo || 'N/A'}</div>
+                    <div>Method: {selectedInvoice.payments[0]?.method || 'N/A'}</div>
+                    <div>Date: {selectedInvoice.payments[0]?.paidAt ? formatDate(selectedInvoice.payments[0].paidAt) : 'N/A'}</div>
                   </div>
                 </div>
               )}

@@ -1,15 +1,19 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production';
 
 export interface JWTPayload {
+  id: string;
   userId: string;
   email: string;
   tenantId?: string;
   role: string;
   firstName?: string;
   lastName?: string;
+  tokenVersion?: number;
   type?: string;
   originalUserId?: string;
   originalRole?: string;
@@ -43,3 +47,40 @@ export function comparePassword(password: string, hash: string): boolean {
     return false;
   }
 }
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        return null;
+      }
+    })
+  ],
+  session: {
+    strategy: 'jwt',
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.tenantId = user.tenantId;
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.tenantId = token.tenantId as string;
+        session.user.role = token.role as string;
+      }
+      return session;
+    }
+  },
+  pages: {
+    signIn: '/login',
+  },
+};

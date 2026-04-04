@@ -25,33 +25,38 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const exam = await prisma.exam.findFirst({
-      where: {
-        id,
-        subject: {
-          academicClass: {
-            academicYear: { tenantId: authUser.tenantId }
-          }
-        }
-      },
+    const exam = await prisma.exam.findUnique({
+      where: { id },
       include: {
         term: true,
         subject: {
           include: {
-            teacher: true
+            teacher: true,
+            academicClass: {
+              include: {
+                academicYear: true
+              }
+            }
           }
-        },
-        createdBy: {
-          select: { id: true, firstName: true, lastName: true, email: true }
         },
         questions: {
           include: { options: true },
           orderBy: { order: 'asc' }
         }
       }
-    });
+    }) as any;
 
     if (!exam) {
+      return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+    }
+
+    // Check tenant access - allow if user is SUPER_ADMIN or if tenant matches
+    if (authUser.role !== 'SUPER_ADMIN' && exam.tenantId && exam.tenantId !== authUser.tenantId) {
+      return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+    }
+
+    // Check subject's tenant if exam doesn't have direct tenantId
+    if (authUser.role !== 'SUPER_ADMIN' && !exam.tenantId && exam.subject?.academicClass?.academicYear?.tenantId !== authUser.tenantId) {
       return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
     }
 
@@ -62,9 +67,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
       
       // Remove correct answers from questions
-      exam.questions = exam.questions.map((q) => ({
+      exam.questions = exam.questions.map((q: any) => ({
         ...q,
-        options: q.options.map((o) => ({
+        options: q.options.map((o: any) => ({
           id: o.id,
           content: o.content,
           order: o.order,
@@ -92,15 +97,19 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const existingExam = await prisma.exam.findFirst({
-      where: {
-        id,
-        tenantId: authUser.tenantId
-      }
-    });
+    const existingExam = await prisma.exam.findUnique({ where: { id } });
 
     if (!existingExam) {
       return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+    }
+
+    // Check tenant access
+    if (authUser.role !== 'SUPER_ADMIN') {
+      const hasAccess = existingExam.tenantId === authUser.tenantId || 
+        (await checkExamTenantAccess(existingExam, authUser.tenantId));
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+      }
     }
 
     if (existingExam.status !== 'DRAFT') {
@@ -142,15 +151,19 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const existingExam = await prisma.exam.findFirst({
-      where: {
-        id,
-        tenantId: authUser.tenantId
-      }
-    });
+    const existingExam = await prisma.exam.findUnique({ where: { id } });
 
     if (!existingExam) {
       return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+    }
+
+    // Check tenant access
+    if (authUser.role !== 'SUPER_ADMIN') {
+      const hasAccess = existingExam.tenantId === authUser.tenantId || 
+        (await checkExamTenantAccess(existingExam, authUser.tenantId));
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+      }
     }
 
     if (existingExam.status !== 'DRAFT') {
@@ -166,4 +179,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     console.error('Exam DELETE error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+async function checkExamTenantAccess(exam: any, tenantId: string): Promise<boolean> {
+  if (!exam.subjectId) return false;
+  const subject = await prisma.subject.findUnique({
+    where: { id: exam.subjectId },
+    include: { academicClass: { include: { academicYear: true } } }
+  });
+  return subject?.academicClass?.academicYear?.tenantId === tenantId;
 }

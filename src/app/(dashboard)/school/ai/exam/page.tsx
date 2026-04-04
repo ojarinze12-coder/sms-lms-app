@@ -75,6 +75,10 @@ export default function SchoolAIExamPage() {
   const loadYears = async () => {
     try {
       const res = await fetch('/api/sms/academic-years');
+      if (!res.ok) {
+        console.error('Failed to load years:', res.status);
+        return;
+      }
       const data = await res.json();
       setYears(data);
       if (data.length > 0) {
@@ -89,6 +93,10 @@ export default function SchoolAIExamPage() {
   const loadClasses = async (yearId: string) => {
     try {
       const res = await fetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      if (!res.ok) {
+        console.error('Failed to load classes:', res.status);
+        return;
+      }
       const data = await res.json();
       setClasses(data.data || []);
     } catch (err) {
@@ -99,6 +107,10 @@ export default function SchoolAIExamPage() {
   const loadSubjects = async (classId: string) => {
     try {
       const res = await fetch(`/api/sms/subjects?academicYearId=${classId}`);
+      if (!res.ok) {
+        console.error('Failed to load subjects:', res.status);
+        return;
+      }
       const data = await res.json();
       setSubjects(data.data || []);
     } catch (err) {
@@ -211,25 +223,25 @@ export default function SchoolAIExamPage() {
           <Sparkles className="h-6 w-6 text-purple-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">AI Exam Generator</h1>
-          <p className="text-gray-600">Generate exam questions using AI</p>
+          <h1 className="text-2xl font-bold dark:text-white">AI Exam Generator</h1>
+          <p className="text-gray-600 dark:text-gray-400">Generate exam questions using AI</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border p-4">
-            <h3 className="font-semibold mb-4">Exam Configuration</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
+            <h3 className="font-semibold mb-4 dark:text-white">Exam Configuration</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Academic Year
                 </label>
                 <select
                   value={selectedYearId}
                   onChange={(e) => setSelectedYearId(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 >
                   <option value="">Select year...</option>
                   {years.map((year) => (
@@ -240,7 +252,7 @@ export default function SchoolAIExamPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Class
                   </label>
                   <select
@@ -249,7 +261,7 @@ export default function SchoolAIExamPage() {
                       setSelectedClassId(e.target.value);
                       setSelectedSubjectId('');
                     }}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   >
                     <option value="">Select class...</option>
                     {classes.map((cls) => (
@@ -259,13 +271,13 @@ export default function SchoolAIExamPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Subject
                   </label>
                   <select
                     value={selectedSubjectId}
                     onChange={(e) => setSelectedSubjectId(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     disabled={!selectedClassId}
                   >
                     <option value="">Select subject...</option>
@@ -279,13 +291,13 @@ export default function SchoolAIExamPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Exam Type
                 </label>
                 <select
                   value={examType}
                   onChange={(e) => setExamType(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 >
                   {EXAM_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>{type.label}</option>
@@ -294,7 +306,7 @@ export default function SchoolAIExamPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Topic / Description
                 </label>
                 <textarea
@@ -302,19 +314,19 @@ export default function SchoolAIExamPage() {
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="e.g., Algebra - Linear equations, quadratic formulas"
                   rows={3}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Difficulty
                   </label>
                   <select
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value as any)}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   >
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
@@ -323,13 +335,13 @@ export default function SchoolAIExamPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Question Type
                   </label>
                   <select
                     value={questionType}
                     onChange={(e) => setQuestionType(e.target.value as any)}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   >
                     <option value="MULTIPLE_CHOICE">Multiple Choice</option>
                     <option value="TRUE_FALSE">True/False</option>
@@ -338,7 +350,7 @@ export default function SchoolAIExamPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Number of Questions
                 </label>
                 <input
@@ -347,7 +359,7 @@ export default function SchoolAIExamPage() {
                   onChange={(e) => setNumQuestions(parseInt(e.target.value) || 10)}
                   min={1}
                   max={50}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
               </div>
 
@@ -371,8 +383,8 @@ export default function SchoolAIExamPage() {
               </button>
 
               {questions.length > 0 && (
-                <div className="border-t pt-4 mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="border-t pt-4 mt-4 dark:border-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Exam Title
                   </label>
                   <input
@@ -380,7 +392,7 @@ export default function SchoolAIExamPage() {
                     value={examTitle}
                     onChange={(e) => setExamTitle(e.target.value)}
                     placeholder="Enter exam title..."
-                    className="w-full px-3 py-2 border rounded-lg mb-3"
+                    className="w-full px-3 py-2 border rounded-lg mb-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                   <button
                     type="button"
@@ -411,30 +423,30 @@ export default function SchoolAIExamPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border p-4">
-          <h3 className="font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
+          <h3 className="font-semibold mb-4 dark:text-white">
             Generated Questions ({questions.length})
           </h3>
           
           {questions.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Select exam details and click generate to create questions</p>
             </div>
           ) : (
             <div className="space-y-4 max-h-[500px] overflow-y-auto">
               {questions.map((q, index) => (
-                <div key={index} className="border rounded-lg p-4">
+                <div key={index} className="border rounded-lg p-4 dark:border-gray-600 dark:bg-gray-700/50">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">Q{index + 1}</span>
-                      <span className="text-xs px-2 py-0.5 bg-gray-100 rounded">
+                      <span className="font-medium dark:text-white">Q{index + 1}</span>
+                      <span className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-600 dark:text-gray-300 rounded">
                         {q.type === 'MULTIPLE_CHOICE' ? 'MCQ' : 'T/F'}
                       </span>
-                      <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded">
+                      <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded">
                         {q.points} pt
                       </span>
-                      <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
+                      <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
                         {EXAM_TYPES.find(t => t.value === examType)?.label || 'Class Exam'}
                       </span>
                     </div>
@@ -445,13 +457,13 @@ export default function SchoolAIExamPage() {
                       <X className="h-4 w-4" />
                     </button>
                   </div>
-                  <p className="text-sm mb-3">{q.content}</p>
+                  <p className="text-sm mb-3 dark:text-gray-300">{q.content}</p>
                   <div className="space-y-1">
                     {q.options.map((opt, i) => (
                       <div
                         key={i}
                         className={`text-xs px-2 py-1 rounded ${
-                          opt.isCorrect ? 'bg-green-100 text-green-700' : 'bg-gray-50'
+                          opt.isCorrect ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' : 'bg-gray-50 dark:bg-gray-600 dark:text-gray-300'
                         }`}
                       >
                         {String.fromCharCode(65 + i)}. {opt.content}

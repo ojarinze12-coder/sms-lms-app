@@ -158,8 +158,8 @@ export default function ParentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Parent Links</h1>
-          <p className="text-gray-500">Manage parent-student linking requests</p>
+          <h1 className="text-2xl font-bold dark:text-white">Parent Links</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage parent-student linking requests</p>
         </div>
         <Button variant="outline" onClick={fetchLinks}>
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -168,44 +168,44 @@ export default function ParentsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pendingCount}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Approved</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Approved</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{approvedCount}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{approvedCount}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Rejected</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Rejected</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{rejectedCount}</div>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{rejectedCount}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{links.length}</div>
+            <div className="text-2xl font-bold dark:text-white">{links.length}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="dark:bg-gray-800">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Link Requests</CardTitle>
+            <CardTitle className="dark:text-white">Link Requests</CardTitle>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Search className="h-4 w-4 text-gray-400" />
@@ -219,7 +219,7 @@ export default function ParentsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border rounded-lg"
+                className="px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
               >
                 <option value="all">All Status</option>
                 <option value="PENDING">Pending</option>
@@ -231,61 +231,61 @@ export default function ParentsPage() {
         </CardHeader>
         <CardContent>
           {filteredLinks.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Users className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-600 mb-2" />
               <p>No link requests found</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Parent</TableHead>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Relationship</TableHead>
-                  <TableHead>Primary Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                <TableRow className="dark:border-gray-700">
+                  <TableHead className="dark:text-gray-300">Parent</TableHead>
+                  <TableHead className="dark:text-gray-300">Student</TableHead>
+                  <TableHead className="dark:text-gray-300">Relationship</TableHead>
+                  <TableHead className="dark:text-gray-300">Primary Contact</TableHead>
+                  <TableHead className="dark:text-gray-300">Status</TableHead>
+                  <TableHead className="dark:text-gray-300">Date</TableHead>
+                  <TableHead className="dark:text-gray-300">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLinks.map((link) => (
-                  <TableRow key={link.id}>
+                  <TableRow key={link.id} className="dark:border-gray-700">
                     <TableCell>
                       <div>
-                        <p className="font-medium">{link.parent.firstName} {link.parent.lastName}</p>
-                        <p className="text-sm text-gray-500">{link.parent.email}</p>
+                        <p className="font-medium dark:text-white">{link.parent.firstName} {link.parent.lastName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{link.parent.email}</p>
                         {link.parent.phone && (
-                          <p className="text-sm text-gray-500">{link.parent.phone}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{link.parent.phone}</p>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{link.student.firstName} {link.student.lastName}</p>
-                        <p className="text-sm text-gray-500">{link.student.studentId}</p>
+                        <p className="font-medium dark:text-white">{link.student.firstName} {link.student.lastName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{link.student.studentId}</p>
                       </div>
                     </TableCell>
-                    <TableCell>{link.relationship}</TableCell>
-                    <TableCell>{link.isPrimaryContact ? 'Yes' : 'No'}</TableCell>
+                    <TableCell className="dark:text-gray-300">{link.relationship}</TableCell>
+                    <TableCell className="dark:text-gray-300">{link.isPrimaryContact ? 'Yes' : 'No'}</TableCell>
                     <TableCell>
                       {link.approvalStatus === 'PENDING' && (
-                        <span className="flex items-center gap-1 text-yellow-600">
+                        <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
                           <Clock className="h-4 w-4" /> Pending
                         </span>
                       )}
                       {link.approvalStatus === 'APPROVED' && (
-                        <span className="flex items-center gap-1 text-green-600">
+                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
                           <CheckCircle className="h-4 w-4" /> Approved
                         </span>
                       )}
                       {link.approvalStatus === 'REJECTED' && (
-                        <span className="flex items-center gap-1 text-red-600">
+                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
                           <XCircle className="h-4 w-4" /> Rejected
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="dark:text-gray-300">
                       {new Date(link.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
@@ -294,7 +294,7 @@ export default function ParentsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-green-600 border-green-600 hover:bg-green-50"
+                            className="text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
                             onClick={() => handleApprove(link.id)}
                             disabled={actionLoading === link.id}
                           >
@@ -307,7 +307,7 @@ export default function ParentsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-red-600 border-red-600 hover:bg-red-50"
+                            className="text-red-600 border-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
                             onClick={() => handleReject(link.id)}
                             disabled={actionLoading === link.id}
                           >

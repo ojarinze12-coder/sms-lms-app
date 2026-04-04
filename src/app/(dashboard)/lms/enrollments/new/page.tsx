@@ -15,6 +15,8 @@ interface ClassItem {
   id: string;
   name: string;
   level?: number;
+  section?: string | null;
+  department?: { id: string; name: string; code: string } | null;
   academicYearId?: string;
 }
 
@@ -106,29 +108,29 @@ export default function NewEnrollmentPage() {
       <div className="mb-6">
         <Link
           href="/lms/enrollments"
-          className="text-sm text-gray-600 hover:text-gray-900"
+          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
         >
           ← Back to Enrollments
         </Link>
-        <h1 className="text-2xl font-bold mt-2">Add New Enrollment</h1>
+        <h1 className="text-2xl font-bold mt-2 dark:text-white">Add New Enrollment</h1>
       </div>
 
-      <div className="bg-white rounded-xl border p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Academic Year
             </label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
               required
             >
               <option value="">Select academic year</option>
@@ -141,25 +143,25 @@ export default function NewEnrollmentPage() {
           </div>
 
           {students.length === 0 && (
-            <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg text-sm">
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-lg text-sm">
               Please create students first.
             </div>
           )}
 
           {classes.length === 0 && selectedYear && (
-            <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg text-sm">
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-lg text-sm">
               No classes found for the selected academic year. Please create classes first.
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Student
             </label>
             <select
               value={formData.studentId}
               onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
               required
             >
               <option value="">Select a student</option>
@@ -172,21 +174,28 @@ export default function NewEnrollmentPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Class
             </label>
             <select
               value={formData.classId}
               onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
               required
             >
               <option value="">Select a class</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name} {cls.level ? `(Level ${cls.level})` : ''}
-                </option>
-              ))}
+              {classes.map((cls) => {
+                const fullClassName = cls.department 
+                  ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
+                  : cls.section 
+                    ? `${cls.name}-${cls.section}`
+                    : cls.name;
+                return (
+                  <option key={cls.id} value={cls.id}>
+                    {fullClassName}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -200,7 +209,7 @@ export default function NewEnrollmentPage() {
             </button>
             <Link
               href="/lms/enrollments"
-              className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+              className="px-6 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300"
             >
               Cancel
             </Link>

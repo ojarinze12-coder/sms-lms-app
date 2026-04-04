@@ -5,7 +5,10 @@ import { logPlatformAudit } from '@/lib/platform-audit';
 
 export async function POST(request: NextRequest) {
   try {
-    const authToken = request.cookies.get('auth-token')?.value;
+    const pccToken = request.cookies.get('pcc-token')?.value;
+    const sccToken = request.cookies.get('scc-token')?.value;
+    const legacyToken = request.cookies.get('auth-token')?.value;
+    const authToken = pccToken || sccToken || legacyToken;
     
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,7 +29,11 @@ export async function POST(request: NextRequest) {
       select: { allowedIps: true },
     });
 
-    let allowedIps = user?.allowedIps || [];
+    let allowedIps: string[] = [];
+
+    if (user?.allowedIps) {
+      allowedIps = user.allowedIps.split(',').filter(Boolean);
+    }
 
     if (action === 'add') {
       if (!ip) {
@@ -39,7 +46,7 @@ export async function POST(request: NextRequest) {
         
         await prisma.user.update({
           where: { id: payload.userId },
-          data: { allowedIps },
+          data: { allowedIps: allowedIps.join(',') },
         });
 
         await logPlatformAudit({
@@ -64,7 +71,7 @@ export async function POST(request: NextRequest) {
       
       await prisma.user.update({
         where: { id: payload.userId },
-        data: { allowedIps },
+        data: { allowedIps: allowedIps.join(',') },
       });
 
       await logPlatformAudit({
@@ -81,7 +88,7 @@ export async function POST(request: NextRequest) {
     if (action === 'clear') {
       await prisma.user.update({
         where: { id: payload.userId },
-        data: { allowedIps: [] },
+        data: { allowedIps: '' },
       });
 
       await logPlatformAudit({
@@ -103,7 +110,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const authToken = request.cookies.get('auth-token')?.value;
+    const pccToken = request.cookies.get('pcc-token')?.value;
+    const sccToken = request.cookies.get('scc-token')?.value;
+    const legacyToken = request.cookies.get('auth-token')?.value;
+    const authToken = pccToken || sccToken || legacyToken;
     
     if (!authToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

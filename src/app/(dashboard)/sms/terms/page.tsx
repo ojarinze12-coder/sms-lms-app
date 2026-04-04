@@ -48,6 +48,10 @@ export default function TermsPage() {
   const loadYears = async () => {
     try {
       const res = await fetch('/api/sms/academic-years');
+      if (!res.ok) {
+        console.error('Failed to load years:', res.status);
+        return;
+      }
       const data = await res.json();
       setYears(data);
       if (data.length > 0) {
@@ -64,6 +68,10 @@ export default function TermsPage() {
   const loadTerms = async (yearId: string) => {
     try {
       const res = await fetch(`/api/sms/terms?academicYearId=${yearId}`);
+      if (!res.ok) {
+        console.error('Failed to load terms:', res.status);
+        return;
+      }
       const data = await res.json();
       setTerms(data);
     } catch (err) {
@@ -164,8 +172,8 @@ export default function TermsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Terms</h1>
-          <p className="text-gray-600">Manage terms for each academic year</p>
+          <h1 className="text-2xl font-bold dark:text-white">Terms</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage terms for each academic year</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -176,14 +184,14 @@ export default function TermsPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border p-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Select Academic Year
         </label>
         <select
           value={selectedYearId}
           onChange={(e) => setSelectedYearId(e.target.value)}
-          className="w-full max-w-md px-3 py-2 border rounded-lg"
+          className="w-full max-w-md px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
         >
           <option value="">Select a year...</option>
           {years.map((year) => (
@@ -195,37 +203,37 @@ export default function TermsPage() {
       </div>
 
       {selectedYearId && (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Start Date</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">End Date</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Status</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Name</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Start Date</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">End Date</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y dark:divide-gray-700">
               {!terms || terms.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     No terms yet for this academic year. Add your first term.
                   </td>
                 </tr>
               ) : (
                 terms.map((term) => (
-                  <tr key={term.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium">{term.name}</td>
-                    <td className="px-6 py-4 text-sm">{formatDate(term.startDate)}</td>
-                    <td className="px-6 py-4 text-sm">{formatDate(term.endDate)}</td>
+                  <tr key={term.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 text-sm font-medium dark:text-white">{term.name}</td>
+                    <td className="px-6 py-4 text-sm dark:text-gray-300">{formatDate(term.startDate)}</td>
+                    <td className="px-6 py-4 text-sm dark:text-gray-300">{formatDate(term.endDate)}</td>
                     <td className="px-6 py-4 text-sm">
                       {term.isCurrent ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                        <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs">
                           Current
                         </span>
                       ) : (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs">
                           Inactive
                         </span>
                       )}
@@ -233,7 +241,7 @@ export default function TermsPage() {
                     <td className="px-6 py-4 text-sm">
                       <button
                         onClick={() => handleEdit(term)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 text-sm font-medium"
                       >
                         Edit
                       </button>
@@ -247,15 +255,15 @@ export default function TermsPage() {
       )}
 
       {!selectedYearId && years.length > 0 && (
-        <div className="bg-white rounded-xl border p-8 text-center text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
           Please select an academic year to view its terms.
         </div>
       )}
 
       {years.length === 0 && (
-        <div className="bg-white rounded-xl border p-8 text-center text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
           No academic years found. Please{' '}
-          <Link href="/sms/academic-years" className="text-blue-600 hover:underline">
+          <Link href="/sms/academic-years" className="text-blue-600 dark:text-blue-400 hover:underline">
             create an academic year
           </Link>{' '}
           first.
@@ -265,23 +273,23 @@ export default function TermsPage() {
       {/* Create Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Term</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Add Term</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Term Name
                 </label>
                 <select
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 >
                   <option value="">Select term...</option>
@@ -293,26 +301,26 @@ export default function TermsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Start Date
                   </label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     End Date
                   </label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
@@ -342,7 +350,7 @@ export default function TermsPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
@@ -355,23 +363,23 @@ export default function TermsPage() {
       {/* Edit Modal */}
       {showEditModal && editingTerm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Edit Term</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Edit Term</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Term Name
                 </label>
                 <select
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                   required
                 >
                   <option value="">Select term...</option>
@@ -383,26 +391,26 @@ export default function TermsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Start Date
                   </label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     End Date
                   </label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
@@ -416,7 +424,7 @@ export default function TermsPage() {
                   onChange={(e) => setFormData({ ...formData, isCurrent: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <label htmlFor="editIsCurrent" className="text-sm text-gray-700">
+                <label htmlFor="editIsCurrent" className="text-sm text-gray-700 dark:text-gray-300">
                   Set as current term
                 </label>
               </div>
@@ -436,7 +444,7 @@ export default function TermsPage() {
                     setEditingTerm(null);
                     setError('');
                   }}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  className="px-6 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>

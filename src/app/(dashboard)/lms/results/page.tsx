@@ -89,8 +89,8 @@ export default function ResultsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Results</h1>
-        <p className="text-muted-foreground">View your exam results and grades</p>
+        <h1 className="text-3xl font-bold tracking-tight dark:text-white">Results</h1>
+        <p className="text-muted-foreground dark:text-gray-400">View your exam results and grades</p>
       </div>
 
       <Card>

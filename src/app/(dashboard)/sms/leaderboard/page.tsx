@@ -94,10 +94,10 @@ export default function LeaderboardPage() {
   };
 
   const getRankBg = (rank: number) => {
-    if (rank === 1) return 'bg-yellow-50 border-yellow-200';
-    if (rank === 2) return 'bg-gray-50 border-gray-200';
-    if (rank === 3) return 'bg-amber-50 border-amber-200';
-    return 'bg-white border';
+    if (rank === 1) return 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800';
+    if (rank === 2) return 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600';
+    if (rank === 3) return 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800';
+    return 'bg-white dark:bg-gray-800 border dark:border-gray-700';
   };
 
   if (loading) {
@@ -111,17 +111,17 @@ export default function LeaderboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Student Leaderboard</h1>
-        <p className="text-gray-500">Top performing students by average score</p>
+        <h1 className="text-2xl font-bold dark:text-white">Student Leaderboard</h1>
+        <p className="text-gray-500 dark:text-gray-400">Top performing students by average score</p>
       </div>
 
       <div className="flex flex-wrap gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
           <select
             value={selectedYearId}
             onChange={(e) => setSelectedYearId(e.target.value)}
-            className="px-3 py-2 border rounded-lg"
+            className="px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
             {years.map((year) => (
               <option key={year.id} value={year.id}>{year.name}</option>
@@ -129,11 +129,11 @@ export default function LeaderboardPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Term</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term</label>
           <select
             value={selectedTermId}
             onChange={(e) => setSelectedTermId(e.target.value)}
-            className="px-3 py-2 border rounded-lg"
+            className="px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
             {terms.map((term) => (
               <option key={term.id} value={term.id}>{term.name}</option>
@@ -141,11 +141,11 @@ export default function LeaderboardPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Class (Optional)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Class (Optional)</label>
           <select
             value={selectedClassId}
             onChange={(e) => setSelectedClassId(e.target.value)}
-            className="px-3 py-2 border rounded-lg"
+            className="px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
           >
             <option value="">All Classes</option>
           </select>
@@ -154,7 +154,7 @@ export default function LeaderboardPage() {
 
       {leaderboard.length === 0 ? (
         <Card>
-          <CardContent className="p-8 text-center text-gray-500">
+          <CardContent className="p-8 text-center text-gray-500 dark:text-gray-400">
             No leaderboard data available for the selected term.
           </CardContent>
         </Card>
@@ -169,15 +169,15 @@ export default function LeaderboardPage() {
                       {getRankIcon(entry.rank)}
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg">{entry.studentName}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="font-bold text-lg dark:text-white">{entry.studentName}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {entry.studentIdNo} • {entry.className}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-600">{entry.average.toFixed(1)}%</p>
-                    <p className="text-sm text-gray-500">Grade: {entry.grade}</p>
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{entry.average.toFixed(1)}%</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Grade: {entry.grade}</p>
                   </div>
                 </div>
               </CardContent>

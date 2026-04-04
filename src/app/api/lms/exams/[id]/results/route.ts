@@ -15,6 +15,33 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { id: examId } = await params;
 
+    // First verify the exam exists and user has access
+    const exam = await prisma.exam.findUnique({
+      where: { id: examId },
+      include: {
+        subject: {
+          include: {
+            academicClass: {
+              include: { academicYear: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!exam) {
+      return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+    }
+
+    // Check tenant access
+    if (authUser.role !== 'SUPER_ADMIN') {
+      const hasAccess = exam.tenantId === authUser.tenantId || 
+        exam.subject?.academicClass?.academicYear?.tenantId === authUser.tenantId;
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+      }
+    }
+
     const results = await prisma.result.findMany({
       where: { examId },
       include: {

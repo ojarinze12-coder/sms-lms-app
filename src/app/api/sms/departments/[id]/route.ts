@@ -19,20 +19,6 @@ export async function GET(
       where: { id },
       include: {
         tier: true,
-        _count: {
-          select: {
-            subjects: true,
-            classes: true,
-          },
-        },
-        subjects: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-          orderBy: { name: 'asc' },
-        },
       },
     });
 
@@ -120,14 +106,6 @@ export async function DELETE(
 
     const existingDept = await prisma.department.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: {
-            subjects: true,
-            classes: true,
-          },
-        },
-      },
     });
     
     if (!existingDept) {
@@ -136,21 +114,6 @@ export async function DELETE(
 
     if (existingDept.tenantId !== user.tenantId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    // Check if department has subjects or classes
-    if (existingDept._count.subjects > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete department with existing subjects. Remove subjects first.' },
-        { status: 400 }
-      );
-    }
-
-    if (existingDept._count.classes > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete department with assigned classes. Reassign classes first.' },
-        { status: 400 }
-      );
     }
 
     await prisma.department.delete({ where: { id } });

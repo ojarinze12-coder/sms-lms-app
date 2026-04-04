@@ -47,6 +47,8 @@ interface Enrollment {
     id: string;
     name: string;
     level: number;
+    section?: string | null;
+    department?: { id: string; name: string; code: string } | null;
   };
 }
 
@@ -61,6 +63,8 @@ interface AcademicClass {
   id: string;
   name: string;
   level: number;
+  section?: string | null;
+  department?: { id: string; name: string; code: string } | null;
 }
 
 export default function EnrollmentsPage() {
@@ -157,8 +161,8 @@ export default function EnrollmentsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Course Enrollments</h1>
-          <p className="text-gray-500">Manage student enrollments in courses and classes</p>
+          <h1 className="text-2xl font-bold dark:text-white">Course Enrollments</h1>
+          <p className="text-gray-500 dark:text-gray-400">Manage student enrollments in courses and classes</p>
         </div>
         <Link href="/lms/enrollments/new">
           <Button>
@@ -170,54 +174,54 @@ export default function EnrollmentsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{enrollments.length}</p>
-                <p className="text-sm text-gray-500">Total Enrollments</p>
+                <p className="text-2xl font-bold dark:text-white">{enrollments.length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Enrollments</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{enrollments.filter(e => e.status === 'ACTIVE').length}</p>
-                <p className="text-sm text-gray-500">Active</p>
+                <p className="text-2xl font-bold dark:text-white">{enrollments.filter(e => e.status === 'ACTIVE').length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Clock className="w-6 h-6 text-yellow-600" />
+              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{enrollments.filter(e => e.status === 'COMPLETED').length}</p>
-                <p className="text-sm text-gray-500">Completed</p>
+                <p className="text-2xl font-bold dark:text-white">{enrollments.filter(e => e.status === 'COMPLETED').length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-red-100 rounded-lg">
-                <XCircle className="w-6 h-6 text-red-600" />
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{enrollments.filter(e => e.status === 'DROPPED').length}</p>
-                <p className="text-sm text-gray-500">Dropped</p>
+                <p className="text-2xl font-bold dark:text-white">{enrollments.filter(e => e.status === 'DROPPED').length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Dropped</p>
               </div>
             </div>
           </CardContent>
@@ -225,9 +229,9 @@ export default function EnrollmentsPage() {
       </div>
 
       {/* Enrollments Table */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader>
-          <CardTitle>All Enrollments</CardTitle>
+          <CardTitle className="dark:text-white">All Enrollments</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -242,23 +246,31 @@ export default function EnrollmentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {enrollments.map((enrollment) => (
-                <TableRow key={enrollment.id}>
-                  <TableCell className="font-medium">{enrollment.student?.studentId || '-'}</TableCell>
-                  <TableCell>{enrollment.student?.firstName} {enrollment.student?.lastName}</TableCell>
-                  <TableCell>{enrollment.academicClass?.name || '-'}</TableCell>
-                  <TableCell>{enrollment.academicClass?.level || '-'}</TableCell>
-                  <TableCell>
-                    <Badge className={statusColors[enrollment.status] || 'bg-gray-100'}>
-                      {enrollment.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{enrollment.grade || '-'}</TableCell>
-                </TableRow>
-              ))}
+              {enrollments.map((enrollment) => {
+                const cls = enrollment.academicClass;
+                const fullClassName = cls?.department 
+                  ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
+                  : cls?.section 
+                    ? `${cls.name}-${cls.section}`
+                    : cls?.name || '-';
+                return (
+                  <TableRow key={enrollment.id}>
+                    <TableCell className="font-medium dark:text-white">{enrollment.student?.studentId || '-'}</TableCell>
+                    <TableCell className="dark:text-gray-300">{enrollment.student?.firstName} {enrollment.student?.lastName}</TableCell>
+                    <TableCell className="dark:text-gray-300">{fullClassName}</TableCell>
+                    <TableCell className="dark:text-gray-300">{enrollment.academicClass?.level || '-'}</TableCell>
+                    <TableCell>
+                      <Badge className={statusColors[enrollment.status] || 'bg-gray-100 dark:bg-gray-700 dark:text-gray-300'}>
+                        {enrollment.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="dark:text-gray-300">{enrollment.grade || '-'}</TableCell>
+                  </TableRow>
+                );
+              })}
               {enrollments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
                     No enrollments yet
                   </TableCell>
                 </TableRow>
