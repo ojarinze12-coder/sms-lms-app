@@ -51,7 +51,7 @@ interface AcademicClass {
   id: string;
   name: string;
   level: number;
-  section?: string | null;
+  stream?: string | null;
   department?: { id: string; name: string; code: string } | null;
 }
 
@@ -274,9 +274,9 @@ export default function AttendancePage() {
                 <SelectContent>
                   {classes.map((cls) => {
                     const fullClassName = cls.department 
-                      ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
-                      : cls.section 
-                        ? `${cls.name}-${cls.section}`
+                      ? `${cls.name}-${cls.department.code}${cls.stream ? '-' + cls.stream : ''}`
+                      : cls.stream 
+                        ? `${cls.name}-${cls.stream}`
                         : cls.name;
                     return (
                       <SelectItem key={cls.id} value={cls.id}>

@@ -32,7 +32,7 @@ interface VirtualClass {
 interface ClassOption {
   id: string
   name: string
-  section?: string | null;
+  stream?: string | null;
   department?: { id: string; name: string; code: string } | null;
 }
 
@@ -354,9 +354,9 @@ export default function VirtualClassesPage() {
                   <SelectContent position="popper" sideOffset={4}>
                     {classOptions.length > 0 ? classOptions.map((c) => {
                       const fullClassName = c.department 
-                        ? `${c.name}-${c.department.code}${c.section ? '-' + c.section : ''}`
-                        : c.section 
-                          ? `${c.name}-${c.section}`
+                        ? `${c.name}-${c.department.code}${c.stream ? '-' + c.stream : ''}`
+                        : c.stream 
+                          ? `${c.name}-${c.stream}`
                           : c.name;
                       return (
                         <SelectItem key={c.id} value={c.id}>{fullClassName}</SelectItem>

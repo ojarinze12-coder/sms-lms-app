@@ -24,7 +24,7 @@ interface Enrollment {
     id: string;
     name: string;
     level: number;
-    section?: string | null;
+    stream?: string | null;
     department?: { id: string; name: string; code: string } | null;
     subjects: Array<{
       id: string;
@@ -363,9 +363,9 @@ export default function StudentPortalPage() {
                 {data.enrollments.map((enrollment) => {
                   const cls = enrollment.academicClass;
                   const fullClassName = cls?.department 
-                    ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
-                    : cls?.section 
-                      ? `${cls.name}-${cls.section}`
+                    ? `${cls.name}-${cls.department.code}${cls.stream ? '-' + cls.stream : ''}`
+                    : cls?.stream 
+                      ? `${cls.name}-${cls.stream}`
                       : cls?.name || 'General';
                   return (
                     <div key={enrollment.id} className="border rounded-lg p-4">

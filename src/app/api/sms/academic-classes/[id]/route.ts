@@ -21,7 +21,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, level, capacity, addNerdcSubjects, section, departmentId } = body;
+    const { name, level, capacity, addNerdcSubjects, stream, departmentId } = body;
 
     if (!name || level === undefined || !capacity) {
       return NextResponse.json(
@@ -38,18 +38,18 @@ export async function PUT(
       return NextResponse.json({ error: 'Class not found' }, { status: 404 });
     }
 
-    // Check for duplicate - considering section
+    // Check for duplicate - considering stream
     const duplicateClass = await prisma.academicClass.findFirst({
       where: {
         academicYearId: existingClass.academicYearId,
         name: name,
-        section: section || null,
+        stream: stream || null,
         id: { not: id },
       },
     });
     if (duplicateClass) {
       return NextResponse.json(
-        { error: 'A class with this name and section already exists in the selected academic year' },
+        { error: 'A class with this name and stream already exists in the selected academic year' },
         { status: 400 }
       );
     }
@@ -61,7 +61,7 @@ export async function PUT(
       name,
       level: levelNum,
       capacity: parseInt(capacity),
-      section: section || null,
+      stream: stream || null,
       departmentId: departmentId || null,
     };
     

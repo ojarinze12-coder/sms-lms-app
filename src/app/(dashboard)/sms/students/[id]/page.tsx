@@ -44,7 +44,7 @@ interface Student {
     id: string;
     academicClass: {
       name: string;
-      section?: string | null;
+      stream?: string | null;
       department?: { id: string; name: string; code: string } | null;
     };
     status: string;
@@ -277,9 +277,9 @@ export default function StudentDetailPage() {
                       {student.enrollments.map((enrollment) => {
                         const cls = enrollment.academicClass;
                         const fullClassName = cls?.department 
-                          ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
-                          : cls?.section 
-                            ? `${cls.name}-${cls.section}`
+                          ? `${cls.name}-${cls.department.code}${cls.stream ? '-' + cls.stream : ''}`
+                          : cls?.stream 
+                            ? `${cls.name}-${cls.stream}`
                             : cls?.name || 'General';
                         return (
                           <div key={enrollment.id} className="flex items-center justify-between p-3 border rounded-lg">

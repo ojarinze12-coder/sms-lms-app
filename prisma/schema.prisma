@@ -350,7 +350,7 @@ model AcademicClass {
   name           String
   level          Int
   capacity       Int?            @default(40)
-  section        String?         // Section identifier: "A", "B", "EXCELLENT", "PREMIUM", etc.
+  stream         String?         // Stream identifier: "A", "B", "C", "D" or "SCI", "COMM", "ARTS", "TECH" etc.
   academicYearId String?         @db.Uuid
   tenantId       String?         @db.Uuid
   createdAt      DateTime?       @default(now()) @db.Timestamptz(6)
@@ -366,7 +366,7 @@ model AcademicClass {
   transcripts    Transcript[]
   applications  Application[]
 
-  @@unique([academicYearId, name, section], map: "academic_classes_academicYearId_name_section_unique")
+  @@unique([academicYearId, name, stream], map: "academic_classes_academicYearId_name_stream_unique")
   @@index([academicYearId], map: "idx_academic_classes_academic_year")
   @@index([tierId], map: "idx_academic_classes_tier")
   @@index([tenantId], map: "idx_academic_classes_tenant")
@@ -519,6 +519,21 @@ model TenantSettings {
   enableClassSections        Boolean    @default(false)
   defaultSectionNaming       String     @default("A,B,C")
   sectionsPerClass           Int        @default(2)
+
+  // Payment Gateway Configuration (School Fees)
+  paymentGatewayEnabled      Boolean    @default(false)
+  paymentGateway             String?    // 'PAYSTACK', 'FLUTTERWAVE'
+  paymentGatewaySecretKey    String?    // Encrypted
+  paymentGatewayPublicKey    String?
+  paymentGatewayWebhookSecret String?
+  paymentDemoMode           Boolean    @default(false)
+
+  // Remita Configuration (Payroll)
+  remitaEnabled              Boolean    @default(false)
+  remitaMerchantId           String?
+  remitaApiKey               String?    // Encrypted
+  remitaServiceTypeId        String?
+  remitaEnvironment          String?    // 'DEMO', 'LIVE'
 
   @@map("tenant_settings")
 }
@@ -2533,4 +2548,24 @@ enum ReportCategory {
   STAFF
   REGULATORY
   CUSTOM
+}
+
+model PlatformSettings {
+  id                      String   @id @default("platform")
+  paymentGatewayEnabled  Boolean  @default(false)
+  paymentGateway          String   @default("PAYSTACK") // 'PAYSTACK', 'FLUTTERWAVE'
+  paystackSecretKey       String?  // Encrypted
+  paystackPublicKey       String?
+  paystackWebhookSecret   String?
+  flutterwaveSecretKey    String?  // Encrypted
+  flutterwavePublicKey    String?
+  flutterwaveWebhookSecret String?
+  demoMode               Boolean  @default(false)
+  remitaMerchantId        String?
+  remitaApiKey            String?  // Encrypted
+  remitaServiceTypeId     String?
+  createdAt               DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@map("platform_settings")
 }

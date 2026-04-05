@@ -64,9 +64,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, level, capacity, academicYearId, addNerdcSubjects, tierId, section, departmentId } = body;
+    const { name, level, capacity, academicYearId, addNerdcSubjects, tierId, stream, departmentId } = body;
 
-    console.log('[CLASSES POST] Creating class:', name, 'level:', level, 'section:', section, 'department:', departmentId, 'year:', academicYearId, 'tenant:', authUser.tenantId, 'addSubjects:', addNerdcSubjects, 'tierId:', tierId);
+    console.log('[CLASSES POST] Creating class:', name, 'level:', level, 'stream:', stream, 'department:', departmentId, 'year:', academicYearId, 'tenant:', authUser.tenantId, 'addSubjects:', addNerdcSubjects, 'tierId:', tierId);
 
     // Ensure addNerdcSubjects is a proper boolean
     const shouldAddSubjects = addNerdcSubjects === true || addNerdcSubjects === 'true' || addNerdcSubjects === true;
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         name,
         level: levelNum,
         capacity: capacity || 40,
-        section: section || null,
+        stream: stream || null,
         departmentId: departmentId || null,
         academicYearId,
         tenantId: authUser.tenantId,

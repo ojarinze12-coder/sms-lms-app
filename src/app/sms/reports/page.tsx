@@ -347,9 +347,9 @@ export default function ReportsPage() {
                   <SelectItem value="">All Classes</SelectItem>
                   {classes.map((cls: any) => {
                     const fullClassName = cls.department 
-                      ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
-                      : cls.section 
-                        ? `${cls.name}-${cls.section}`
+                      ? `${cls.name}-${cls.department.code}${cls.stream ? '-' + cls.stream : ''}`
+                      : cls.stream 
+                        ? `${cls.name}-${cls.stream}`
                         : cls.name;
                     return (
                       <SelectItem key={cls.id} value={cls.id}>{fullClassName}</SelectItem>

@@ -17,8 +17,22 @@ import {
   Moon,
   Monitor,
   Upload,
-  X
+  X,
+  CreditCard,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function AdminSettingsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -39,11 +53,57 @@ export default function AdminSettingsPage() {
     themeMode: 'system',
     logo: '',
   });
+  const [paymentSettings, setPaymentSettings] = useState({
+    paymentGatewayEnabled: false,
+    paymentGateway: 'PAYSTACK',
+    paystackSecretKey: '',
+    paystackPublicKey: '',
+    paystackWebhookSecret: '',
+    flutterwaveSecretKey: '',
+    flutterwavePublicKey: '',
+    flutterwaveWebhookSecret: '',
+    demoMode: false,
+    paystackConfigured: false,
+    flutterwaveConfigured: false,
+    source: 'env',
+  });
+  const [loadingPayment, setLoadingPayment] = useState(true);
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const res = await fetch('/api/admin/platform-settings');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.settings) {
+            setSettings(prev => ({
+              ...prev,
+              platformName: data.settings.platformName || 'Edunext',
+              supportEmail: data.settings.supportEmail || 'support@edunext.com',
+              defaultPlan: data.settings.defaultPlan || 'FREE',
+              allowRegistration: data.settings.allowRegistration ?? true,
+              aiFeaturesEnabled: data.settings.aiFeaturesEnabled ?? true,
+              brandColor: data.settings.brandColor || '#1a56db',
+              themeMode: data.settings.themeMode || 'system',
+              logo: data.settings.logo || '',
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch platform settings:', err);
+      }
+    }
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     if (branding.brandColor) {
       setSettings(prev => ({ ...prev, brandColor: branding.brandColor }));
     }
+    if (branding.logo) {
+      setSettings(prev => ({ ...prev, logo: branding.logo || '' }));
+    }
+    fetchPaymentSettings();
   }, [branding]);
 
   const handleSave = async () => {
@@ -116,7 +176,9 @@ export default function AdminSettingsPage() {
       setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
+        const dataUrl = reader.result as string;
+        setLogoPreview(dataUrl);
+        setSettings(prev => ({ ...prev, logo: dataUrl }));
       };
       reader.readAsDataURL(file);
     }
@@ -126,6 +188,52 @@ export default function AdminSettingsPage() {
     setLogoFile(null);
     setLogoPreview(null);
     setSettings(prev => ({ ...prev, logo: '' }));
+  };
+
+  const fetchPaymentSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/payment-gateways');
+      if (res.ok) {
+        const data = await res.json();
+        setPaymentSettings(prev => ({
+          ...prev,
+          ...data,
+          paystackSecretKey: '',
+          flutterwaveSecretKey: '',
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch payment settings:', err);
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
+
+  const handleSavePaymentSettings = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/payment-gateways', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentSettings),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+        fetchPaymentSettings();
+      } else {
+        setError(data.error || 'Failed to save payment settings');
+      }
+    } catch (err) {
+      console.error('Failed to save payment settings:', err);
+      setError('Failed to save payment settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (authLoading) {
@@ -140,20 +248,26 @@ export default function AdminSettingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold dark:text-white">Platform Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Platform Settings</h1>
         <p className="text-gray-600 dark:text-gray-400">Configure platform-wide settings and preferences</p>
       </div>
 
-      {/* General Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 dark:text-white">
-            <Building2 className="h-5 w-5" />
-            General Settings
-          </CardTitle>
-          <CardDescription className="dark:text-gray-400">Basic platform information</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="bg-gray-100 dark:bg-gray-800 p-1">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+                <Building2 className="h-5 w-5" />
+                General Settings
+              </CardTitle>
+              <CardDescription className="dark:text-gray-400">Basic platform information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Platform Name
@@ -378,6 +492,224 @@ export default function AdminSettingsPage() {
           {saving ? 'Saving...' : 'Save Settings'}
         </button>
       </div>
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <Card>
+          <CardHeader>
+          <CardTitle className="flex items-center gap-2 dark:text-white">
+            <CreditCard className="h-5 w-5" />
+            Payment Gateway Configuration
+          </CardTitle>
+          <CardDescription className="dark:text-gray-400">
+            Configure payment gateway for tenant subscription payments
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {loadingPayment ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* Enable Online Payments Toggle */}
+              <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="font-medium text-blue-800 dark:text-blue-200">Enable Online Payments</div>
+                    <div className="text-sm text-blue-700 dark:text-blue-300">Activate payment gateway for tenant subscriptions</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {paymentSettings.paymentGatewayEnabled ? (
+                    <span className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                      <CheckCircle className="h-4 w-4" /> Active
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-gray-500 text-sm font-medium">
+                      <AlertCircle className="h-4 w-4" /> Inactive
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setPaymentSettings({ ...paymentSettings, paymentGatewayEnabled: !paymentSettings.paymentGatewayEnabled })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      paymentSettings.paymentGatewayEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        paymentSettings.paymentGatewayEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {paymentSettings.paymentGatewayEnabled && (
+              <>
+              {/* Demo Mode Toggle */}
+              <div className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <div>
+                  <div className="font-medium text-yellow-800 dark:text-yellow-200">Demo/Test Mode</div>
+                  <div className="text-sm text-yellow-700 dark:text-yellow-300">Enable demo payments for testing</div>
+                </div>
+                <button
+                  onClick={() => setPaymentSettings({ ...paymentSettings, demoMode: !paymentSettings.demoMode })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    paymentSettings.demoMode ? 'bg-yellow-600' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      paymentSettings.demoMode ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Gateway Status */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-4 rounded-lg border ${paymentSettings.paystackConfigured ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium dark:text-white">Paystack</span>
+                    {paymentSettings.paystackConfigured ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-gray-400" />
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {paymentSettings.paystackConfigured ? 'Configured' : 'Not configured'}
+                  </p>
+                </div>
+                <div className={`p-4 rounded-lg border ${paymentSettings.flutterwaveConfigured ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium dark:text-white">Flutterwave</span>
+                    {paymentSettings.flutterwaveConfigured ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-gray-400" />
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {paymentSettings.flutterwaveConfigured ? 'Configured' : 'Not configured'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Gateway Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">Default Payment Gateway</label>
+                <Select
+                  value={paymentSettings.paymentGateway}
+                  onValueChange={(value) => setPaymentSettings({ ...paymentSettings, paymentGateway: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PAYSTACK">Paystack</SelectItem>
+                    <SelectItem value="FLUTTERWAVE">Flutterwave</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Paystack Credentials */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-medium dark:text-white">Paystack Configuration</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Public Key</label>
+                    <Input
+                      value={paymentSettings.paystackPublicKey}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, paystackPublicKey: e.target.value })}
+                      placeholder="pk_..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Secret Key</label>
+                    <Input
+                      type="password"
+                      value={paymentSettings.paystackSecretKey}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, paystackSecretKey: e.target.value })}
+                      placeholder={paymentSettings.paystackConfigured ? "••••••••••••" : "sk_..."}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave empty to keep current key</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Flutterwave Credentials */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-medium dark:text-white">Flutterwave Configuration</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Public Key</label>
+                    <Input
+                      value={paymentSettings.flutterwavePublicKey}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, flutterwavePublicKey: e.target.value })}
+                      placeholder="FLWPUBK-..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Secret Key</label>
+                    <Input
+                      type="password"
+                      value={paymentSettings.flutterwaveSecretKey}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, flutterwaveSecretKey: e.target.value })}
+                      placeholder={paymentSettings.flutterwaveConfigured ? "••••••••••••" : "FLWSECK-..."}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave empty to keep current key</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Webhook Configuration */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-medium dark:text-white">Webhook Configuration</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Configure webhook secrets for payment verification</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Paystack Webhook Secret</label>
+                    <Input
+                      type="password"
+                      value={paymentSettings.paystackWebhookSecret}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, paystackWebhookSecret: e.target.value })}
+                      placeholder="Enter webhook secret"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Flutterwave Webhook Secret</label>
+                    <Input
+                      type="password"
+                      value={paymentSettings.flutterwaveWebhookSecret}
+                      onChange={(e) => setPaymentSettings({ ...paymentSettings, flutterwaveWebhookSecret: e.target.value })}
+                      placeholder="Enter webhook secret"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleSavePaymentSettings} disabled={saving}>
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Payment Settings'
+                  )}
+                </Button>
+              </div>
+              </>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

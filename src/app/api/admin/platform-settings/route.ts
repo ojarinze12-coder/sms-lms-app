@@ -21,9 +21,11 @@ export async function GET() {
       settings: {
         platformName: config?.smtpFromName || 'Edunext',
         supportEmail: config?.smtpFromEmail || 'support@edunext.com',
-        allowParentRegistration: settings?.allowParentRegistration ?? true,
+        allowRegistration: settings?.allowParentRegistration ?? true,
+        aiFeaturesEnabled: true,
         themeMode: settings?.themeMode || 'system',
-        primaryColor: config?.primaryColor || '#1a56db',
+        brandColor: config?.primaryColor || '#1a56db',
+        logo: config?.logo || '',
       },
     });
   } catch (error) {
@@ -40,17 +42,17 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { platformName, supportEmail, allowParentRegistration, themeMode, primaryColor, logo } = body;
+    const { platformName, supportEmail, allowRegistration, aiFeaturesEnabled, themeMode, brandColor, logo } = body;
 
     await prisma.tenantSettings.upsert({
       where: { tenantId: user.tenantId },
       update: {
-        allowParentRegistration,
+        allowParentRegistration: allowRegistration,
         themeMode,
       },
       create: {
         tenantId: user.tenantId,
-        allowParentRegistration,
+        allowParentRegistration: allowRegistration,
         themeMode,
       },
     });
@@ -60,15 +62,15 @@ export async function PUT(req: NextRequest) {
       update: {
         smtpFromName: platformName,
         smtpFromEmail: supportEmail,
-        primaryColor,
-        logo,
+        primaryColor: brandColor,
+        logo: logo,
       },
       create: {
         tenantId: user.tenantId,
         smtpFromName: platformName,
         smtpFromEmail: supportEmail,
-        primaryColor,
-        logo,
+        primaryColor: brandColor,
+        logo: logo,
       },
     });
 

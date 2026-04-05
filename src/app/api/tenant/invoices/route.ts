@@ -3,6 +3,43 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/rbac';
 import { paystack, formatAmountToKobo } from '@/lib/paystack';
 import { flutterwave } from '@/lib/flutterwave';
+import { decrypt } from '@/lib/security';
+
+async function getPlatformPaymentConfig() {
+  const platformSettings = await prisma.platformSettings.findUnique({
+    where: { id: 'platform' },
+  });
+
+  if (!platformSettings) {
+    return {
+      useEnvVars: true,
+      paymentGatewayEnabled: false,
+      paymentGateway: process.env.DEFAULT_PAYMENT_GATEWAY || 'PAYSTACK',
+      paystackSecretKey: process.env.PAYSTACK_SECRET_KEY,
+      flutterwaveSecretKey: process.env.FLUTTERWAVE_SECRET_KEY,
+      demoMode: false,
+    };
+  }
+
+  let paystackKey = platformSettings.paystackSecretKey;
+  let flutterwaveKey = platformSettings.flutterwaveSecretKey;
+
+  if (paystackKey) {
+    try { paystackKey = decrypt(paystackKey); } catch (e) { paystackKey = null; }
+  }
+  if (flutterwaveKey) {
+    try { flutterwaveKey = decrypt(flutterwaveKey); } catch (e) { flutterwaveKey = null; }
+  }
+
+  return {
+    useEnvVars: false,
+    paymentGatewayEnabled: platformSettings.paymentGatewayEnabled || false,
+    paymentGateway: platformSettings.paymentGateway,
+    paystackSecretKey: paystackKey,
+    flutterwaveSecretKey: flutterwaveKey,
+    demoMode: platformSettings.demoMode || false,
+  };
+}
 
 export async function GET(request: NextRequest) {
   const user = await requireAuth(request);
@@ -112,14 +149,26 @@ async function initializePayment(user: any, invoiceId: string, gateway: string) 
   let paymentLink: string;
   let paymentGateway = gateway;
 
-  const paystackKey = process.env.PAYSTACK_SECRET_KEY;
-  const flutterwaveKey = process.env.FLUTTERWAVE_SECRET_KEY;
+  const platformConfig = await getPlatformPaymentConfig();
+  
+  if (!platformConfig.paymentGatewayEnabled) {
+    return NextResponse.json({ 
+      error: 'Payment gateway not enabled. Please contact platform administrator.' 
+    }, { status: 400 });
+  }
 
-  if (!paystackKey && gateway === 'PAYSTACK') {
+  const effectiveGateway = platformConfig.paymentGateway || gateway;
+  const paystackKey = platformConfig.paystackSecretKey;
+  const flutterwaveKey = platformConfig.flutterwaveSecretKey;
+  const isDemoMode = platformConfig.demoMode;
+
+  if (isDemoMode || (!paystackKey && effectiveGateway === 'PAYSTACK') || (!flutterwaveKey && effectiveGateway === 'FLUTTERWAVE')) {
+    const demoGateway = effectiveGateway === 'FLUTTERWAVE' ? 'FLUTTERWAVE' : 'PAYSTACK';
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${invoice.amount}`;
+    paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${invoice.amount}&gateway=${demoGateway}`;
     paymentGateway = 'DEMO';
-  } else if (gateway === 'PAYSTACK') {
+  } else if (effectiveGateway === 'PAYSTACK') {
+    process.env.PAYSTACK_SECRET_KEY = paystackKey;
     const response = await paystack.initializePayment({
       email,
       amount: formatAmountToKobo(invoice.amount),
@@ -133,12 +182,13 @@ async function initializePayment(user: any, invoiceId: string, gateway: string) 
     }
 
     paymentLink = response.data.authorization_url;
-  } else if (gateway === 'FLUTTERWAVE') {
+  } else if (effectiveGateway === 'FLUTTERWAVE') {
     if (!flutterwaveKey) {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${invoice.amount}`;
+      paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${invoice.amount}&gateway=FLUTTERWAVE`;
       paymentGateway = 'DEMO';
     } else {
+      process.env.FLUTTERWAVE_SECRET_KEY = flutterwaveKey;
       const response = await flutterwave.initializePayment({
         email,
         name: invoice.tenant.name,

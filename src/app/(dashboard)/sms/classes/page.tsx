@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getSubjectsByCurriculum } from '@/lib/nigeria';
 import { CURRICULUM_INFO } from '@/types';
-import { Loader2, Plus, Pencil, Trash2, BookOpen } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, BookOpen, ChevronDown } from 'lucide-react';
 
 interface AcademicYear {
   id: string;
@@ -20,8 +20,9 @@ interface Tier {
 
 interface Department {
   id: string;
-  name: string;
   code: string;
+  name: string;
+  tierId?: string;
 }
 
 interface AcademicClass {
@@ -29,13 +30,18 @@ interface AcademicClass {
   name: string;
   level: number;
   capacity: number;
-  section?: string | null;
+  stream?: string | null;
   academicYearId: string;
   tierId?: string | null;
   department?: { id: string; name: string; code: string } | null;
   subjects?: { id: string }[];
   enrollments?: { id: string }[];
 }
+
+const STREAM_OPTIONS = {
+  DEFAULT: ['A', 'B', 'C', 'D'] as string[],
+  SSS: ['SCI', 'COMM', 'ARTS', 'TECH', 'GEN'] as string[],
+};
 
 export default function ClassesPage() {
   const [years, setYears] = useState<AcademicYear[]>([]);
@@ -55,7 +61,7 @@ export default function ClassesPage() {
     addNerdcSubjects: true,
     tierId: '',
     departmentId: '',
-    section: '',
+    stream: '',
   });
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -64,10 +70,31 @@ export default function ClassesPage() {
     addNerdcSubjects: false,
     tierId: '',
     departmentId: '',
-    section: '',
+    stream: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [streamOptions, setStreamOptions] = useState<string[]>(STREAM_OPTIONS.DEFAULT);
+  const [editStreamOptions, setEditStreamOptions] = useState<string[]>(STREAM_OPTIONS.DEFAULT);
+
+  const getStreamOptions = (deptId?: string, deptCode?: string) => {
+    if (deptCode && STREAM_OPTIONS.SSS.includes(deptCode.toUpperCase())) {
+      return STREAM_OPTIONS.SSS;
+    }
+    return STREAM_OPTIONS.DEFAULT;
+  };
+
+  useEffect(() => {
+    const dept = departments.find(d => d.id === formData.departmentId);
+    const options = getStreamOptions(formData.departmentId, dept?.code);
+    setStreamOptions(options);
+  }, [formData.departmentId]);
+
+  useEffect(() => {
+    const dept = departments.find(d => d.id === editFormData.departmentId);
+    const options = getStreamOptions(editFormData.departmentId, dept?.code);
+    setEditStreamOptions(options);
+  }, [editFormData.departmentId]);
 
   useEffect(() => {
     loadYears();
@@ -167,7 +194,7 @@ export default function ClassesPage() {
       addNerdcSubjects: formData.addNerdcSubjects,
       tierId: formData.tierId || null,
       departmentId: formData.departmentId || null,
-      section: formData.section || null,
+      stream: formData.stream || null,
     };
     console.log('[CLASSES] Request body:', JSON.stringify(requestBody));
 
@@ -189,7 +216,7 @@ export default function ClassesPage() {
 
       console.log('[CLASSES] Class created successfully, refreshing list');
       setShowModal(false);
-      setFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: true, tierId: '', departmentId: '', section: '' });
+      setFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: true, tierId: '', departmentId: '', stream: '' });
       loadClasses(selectedYearId);
     } catch {
       setError('An error occurred');
@@ -207,7 +234,7 @@ export default function ClassesPage() {
       addNerdcSubjects: false,
       tierId: cls.tierId || '',
       departmentId: cls.department?.id || '',
-      section: cls.section || '',
+      stream: cls.stream || '',
     });
     setShowEditModal(true);
   };
@@ -229,14 +256,14 @@ export default function ClassesPage() {
           addNerdcSubjects: editFormData.addNerdcSubjects,
           tierId: editFormData.tierId || null,
           departmentId: editFormData.departmentId || null,
-          section: editFormData.section || null,
+          stream: editFormData.stream || null,
         }),
       });
 
       if (res.ok) {
         setShowEditModal(false);
         setEditingClass(null);
-        setEditFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: false, tierId: '', departmentId: '', section: '' });
+        setEditFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: false, tierId: '', departmentId: '', stream: '' });
         loadClasses(selectedYearId);
       } else {
         const data = await res.json();
@@ -342,9 +369,9 @@ export default function ClassesPage() {
           ) : (
             classes.map((cls) => {
               const fullClassName = cls.department 
-                ? `${cls.name}-${cls.department.code}${cls.section ? '-' + cls.section : ''}`
-                : cls.section 
-                  ? `${cls.name}-${cls.section}`
+                ? `${cls.name}-${cls.department.code}${cls.stream ? '-' + cls.stream : ''}`
+                : cls.stream 
+                  ? `${cls.name}-${cls.stream}`
                   : cls.name;
               return (
                 <div key={cls.id} className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
@@ -523,15 +550,38 @@ export default function ClassesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Section
+                  Stream
                 </label>
-                <input
-                  type="text"
-                  value={formData.section}
-                  onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                  placeholder="e.g., A, B, EXCELLENT"
-                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                />
+                <div className="relative">
+                  <select
+                    value={streamOptions.includes(formData.stream) ? formData.stream : 'custom'}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setFormData({ ...formData, stream: '' });
+                      } else {
+                        setFormData({ ...formData, stream: e.target.value });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white pr-8"
+                  >
+                    <option value="">Select stream</option>
+                    {streamOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                    <option value="custom">+ Custom...</option>
+                  </select>
+                  {!streamOptions.includes(formData.stream) && formData.stream && (
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        value={formData.stream}
+                        onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
+                        placeholder="Enter custom stream"
+                        className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 pt-2">
@@ -701,15 +751,38 @@ export default function ClassesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Section
+                  Stream
                 </label>
-                <input
-                  type="text"
-                  value={editFormData.section}
-                  onChange={(e) => setEditFormData({ ...editFormData, section: e.target.value })}
-                  placeholder="e.g., A, B, EXCELLENT"
-                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                />
+                <div className="relative">
+                  <select
+                    value={editStreamOptions.includes(editFormData.stream) ? editFormData.stream : 'custom'}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setEditFormData({ ...editFormData, stream: '' });
+                      } else {
+                        setEditFormData({ ...editFormData, stream: e.target.value });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white pr-8"
+                  >
+                    <option value="">Select stream</option>
+                    {editStreamOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                    <option value="custom">+ Custom...</option>
+                  </select>
+                  {!editStreamOptions.includes(editFormData.stream) && editFormData.stream && (
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        value={editFormData.stream}
+                        onChange={(e) => setEditFormData({ ...editFormData, stream: e.target.value })}
+                        placeholder="Enter custom stream"
+                        className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 pt-2">

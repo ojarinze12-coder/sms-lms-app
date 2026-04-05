@@ -4,6 +4,21 @@ import { requireAuth } from '@/lib/rbac';
 import { paystack, formatAmountToKobo } from '@/lib/paystack';
 import { flutterwave } from '@/lib/flutterwave';
 import { sendFeeReminder } from '@/lib/notifications';
+import { decrypt } from '@/lib/security';
+
+async function getTenantPaymentConfig(tenantId: string) {
+  const settings = await prisma.tenantSettings.findUnique({
+    where: { tenantId },
+    select: {
+      paymentGatewayEnabled: true,
+      paymentGateway: true,
+      paymentGatewaySecretKey: true,
+      paymentGatewayPublicKey: true,
+      paymentDemoMode: true,
+    }
+  });
+  return settings;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -105,6 +120,25 @@ async function initializePayment(
     return NextResponse.json({ error: 'No email found for payment' }, { status: 400 });
   }
 
+  const tenantConfig = await getTenantPaymentConfig(user.tenantId);
+  
+  if (!tenantConfig?.paymentGatewayEnabled) {
+    return NextResponse.json({ 
+      error: 'Payment gateway not configured. Please configure payment settings in School Settings.' 
+    }, { status: 400 });
+  }
+
+  const effectiveGateway = tenantConfig.paymentGateway || gateway;
+  let decryptedSecretKey = null;
+  
+  if (tenantConfig.paymentGatewaySecretKey) {
+    try {
+      decryptedSecretKey = decrypt(tenantConfig.paymentGatewaySecretKey);
+    } catch (e) {
+      console.error('Failed to decrypt payment gateway key:', e);
+    }
+  }
+
   const referenceNo = `FEE_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const metadata = {
     tenantId: user.tenantId,
@@ -116,22 +150,21 @@ async function initializePayment(
   };
 
   let paymentLink;
-  let paymentGateway: string = gateway;
+  let paymentGateway: string = effectiveGateway;
 
-  // Check if payment gateway is configured
-  const paystackKey = process.env.PAYSTACK_SECRET_KEY;
-  const flutterwaveKey = process.env.FLUTTERWAVE_SECRET_KEY;
-
-  if (!paystackKey && gateway === 'PAYSTACK') {
-    // Demo mode - create mock payment link
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
-    paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${amount}`;
+  const tenantDemoMode = tenantConfig.paymentDemoMode || false;
+  const isDemoMode = tenantDemoMode || (!decryptedSecretKey && (effectiveGateway === 'PAYSTACK' || effectiveGateway === 'FLUTTERWAVE'));
+  
+  if (isDemoMode) {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${amount}&gateway=${effectiveGateway}`;
     paymentGateway = 'DEMO';
-  } else if (!flutterwaveKey && gateway === 'FLUTTERWAVE') {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
-    paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${amount}`;
-    paymentGateway = 'DEMO';
-  } else if (gateway === 'PAYSTACK') {
+  } else if (effectiveGateway === 'PAYSTACK') {
+    if (!decryptedSecretKey) {
+      return NextResponse.json({ error: 'Paystack secret key not configured. Please configure in Settings.' }, { status: 400 });
+    }
+    
+    process.env.PAYSTACK_SECRET_KEY = decryptedSecretKey;
     const response = await paystack.initializePayment({
       email,
       amount: formatAmountToKobo(amount),
@@ -145,7 +178,12 @@ async function initializePayment(
     }
 
     paymentLink = response.data.authorization_url;
-  } else {
+  } else if (effectiveGateway === 'FLUTTERWAVE') {
+    if (!decryptedSecretKey) {
+      return NextResponse.json({ error: 'Flutterwave secret key not configured. Please configure in Settings.' }, { status: 400 });
+    }
+    
+    process.env.FLUTTERWAVE_SECRET_KEY = decryptedSecretKey;
     const response = await flutterwave.initializePayment({
       email,
       name: `${student.firstName} ${student.lastName}`,

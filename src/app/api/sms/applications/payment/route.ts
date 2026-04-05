@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { PaystackService } from '@/lib/paystack';
 import { FlutterwaveService } from '@/lib/flutterwave';
+import { decrypt } from '@/lib/security';
 
 const initializePaymentSchema = z.object({
   applicationId: z.string().uuid(),
@@ -31,12 +32,39 @@ export async function POST(request: NextRequest) {
 
     const settings = await prisma.tenantSettings.findUnique({
       where: { tenantId: application.tenantId },
+      select: {
+        applicationFee: true,
+        paymentGatewayEnabled: true,
+        paymentGateway: true,
+        paymentGatewaySecretKey: true,
+      }
     });
 
     const applicationFee = settings?.applicationFee || 0;
 
     if (applicationFee <= 0) {
       return NextResponse.json({ error: 'No application fee required' }, { status: 400 });
+    }
+
+    if (!settings?.paymentGatewayEnabled) {
+      return NextResponse.json({ 
+        error: 'Payment gateway not configured. Please configure payment settings in School Settings.' 
+      }, { status: 400 });
+    }
+
+    const effectiveGateway = settings.paymentGateway || gateway;
+    let decryptedSecretKey = null;
+    
+    if (settings.paymentGatewaySecretKey) {
+      try {
+        decryptedSecretKey = decrypt(settings.paymentGatewaySecretKey);
+      } catch (e) {
+        console.error('Failed to decrypt payment gateway key:', e);
+      }
+    }
+
+    if (!decryptedSecretKey) {
+      return NextResponse.json({ error: 'Payment gateway not properly configured. Please update settings.' }, { status: 400 });
     }
 
     const paymentData = {
@@ -55,7 +83,8 @@ export async function POST(request: NextRequest) {
     let paymentUrl: string;
     let reference: string;
 
-    if (gateway === 'PAYSTACK') {
+    if (effectiveGateway === 'PAYSTACK') {
+      process.env.PAYSTACK_SECRET_KEY = decryptedSecretKey;
       const paystack = new PaystackService();
       const response = await paystack.initializePayment({
         ...paymentData,
@@ -64,6 +93,7 @@ export async function POST(request: NextRequest) {
       paymentUrl = response.data.authorization_url;
       reference = response.data.reference;
     } else {
+      process.env.FLUTTERWAVE_SECRET_KEY = decryptedSecretKey;
       const flutterwave = new FlutterwaveService();
       const response = await flutterwave.initializePayment({
         ...paymentData,
@@ -78,7 +108,7 @@ export async function POST(request: NextRequest) {
     await prisma.application.update({
       where: { id: applicationId },
       data: {
-        notes: `Payment Ref: ${reference}, Gateway: ${gateway}`,
+        notes: `Payment Ref: ${reference}, Gateway: ${effectiveGateway}`,
       } as any,
     });
 

@@ -21,6 +21,7 @@ export async function GET() {
             id: true,
             name: true,
             brandColor: true,
+            logo: true,
           },
         },
       },
@@ -41,6 +42,7 @@ export async function GET() {
           id: user.tenant.id,
           name: user.tenant.name,
           brandColor: user.tenant.brandColor,
+          logo: user.tenant.logo,
         } : null
       }
     });
