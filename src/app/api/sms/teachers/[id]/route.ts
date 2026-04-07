@@ -21,6 +21,12 @@ export async function GET(
           orderBy: { startDate: 'desc' },
           take: 5,
         },
+        departmentRelation: {
+          select: { id: true, name: true, code: true }
+        },
+        formMasterClasses: {
+          select: { id: true, name: true, stream: true }
+        }
       },
     });
 
@@ -61,6 +67,8 @@ export async function PUT(
         experience: body.experience,
         status: body.status,
         cardStatus: body.cardStatus,
+        position: body.position || null,
+        departmentId: body.departmentId || null,
       },
     });
 

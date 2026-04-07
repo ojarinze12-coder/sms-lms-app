@@ -158,7 +158,7 @@ export default function StaffPage() {
           if (!open) handleCancel();
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => setShowAddDialog(true)}>
               <UserPlus className="mr-2 h-4 w-4" />
               Add Staff
             </Button>

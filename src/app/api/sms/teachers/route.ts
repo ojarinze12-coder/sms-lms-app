@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const authUser = await getAuthUser();
     
@@ -10,9 +10,28 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const searchParams = request.nextUrl.searchParams;
+    const position = searchParams.get('position');
+    const departmentId = searchParams.get('departmentId');
+
+    const where: any = { tenantId: authUser.tenantId };
+    
+    if (position) {
+      where.position = position;
+    }
+    
+    if (departmentId) {
+      where.departmentId = departmentId;
+    }
+
     const teachers = await prisma.teacher.findMany({
-      where: { tenantId: authUser.tenantId },
+      where,
       orderBy: { createdAt: 'desc' },
+      include: {
+        departmentRelation: {
+          select: { id: true, name: true, code: true }
+        }
+      }
     });
 
     return NextResponse.json(teachers || []);
@@ -31,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json();
-    const { employeeId, firstName, lastName, email, specialty, phone } = data;
+    const { employeeId, firstName, lastName, email, specialty, phone, position, departmentId } = data;
 
     if (!employeeId || !firstName || !lastName || !email) {
       return NextResponse.json(
@@ -62,6 +81,8 @@ export async function POST(request: NextRequest) {
         email,
         specialty,
         phone,
+        position: position || null,
+        departmentId: departmentId || null,
         tenantId: authUser.tenantId,
       },
     });

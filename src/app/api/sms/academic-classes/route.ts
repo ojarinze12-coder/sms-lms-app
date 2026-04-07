@@ -38,6 +38,15 @@ export async function GET(request: NextRequest) {
         },
         department: {
           select: { id: true, name: true, code: true }
+        },
+        classTeacher: {
+          select: { id: true, firstName: true, lastName: true, employeeId: true, position: true }
+        },
+        formMaster: {
+          select: { id: true, firstName: true, lastName: true, employeeId: true, position: true }
+        },
+        caregiver: {
+          select: { id: true, firstName: true, lastName: true, employeeId: true, category: true }
         }
       }
     });
@@ -64,9 +73,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, level, capacity, academicYearId, addNerdcSubjects, tierId, stream, departmentId } = body;
+    const { name, level, capacity, academicYearId, addNerdcSubjects, tierId, stream, departmentId, classTeacherId, formMasterId, caregiverId } = body;
 
-    console.log('[CLASSES POST] Creating class:', name, 'level:', level, 'stream:', stream, 'department:', departmentId, 'year:', academicYearId, 'tenant:', authUser.tenantId, 'addSubjects:', addNerdcSubjects, 'tierId:', tierId);
+    console.log('[CLASSES POST] Creating class:', name, 'level:', level, 'stream:', stream, 'department:', departmentId, 'year:', academicYearId, 'tenant:', authUser.tenantId, 'addSubjects:', addNerdcSubjects, 'tierId:', tierId, 'formMasterId:', formMasterId, 'caregiverId:', caregiverId);
 
     // Ensure addNerdcSubjects is a proper boolean
     const shouldAddSubjects = addNerdcSubjects === true || addNerdcSubjects === 'true' || addNerdcSubjects === true;
@@ -100,6 +109,9 @@ export async function POST(request: NextRequest) {
         academicYearId,
         tenantId: authUser.tenantId,
         tierId: tierId || null,
+        classTeacherId: classTeacherId || null,
+        formMasterId: formMasterId || null,
+        caregiverId: caregiverId || null,
       },
     });
 

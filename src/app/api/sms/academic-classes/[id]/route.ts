@@ -21,53 +21,64 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, level, capacity, addNerdcSubjects, stream, departmentId } = body;
+    const { name, level, capacity, addNerdcSubjects, stream, departmentId, classTeacherId, formMasterId, caregiverId } = body;
 
     if (!name || level === undefined || !capacity) {
-      return NextResponse.json(
-        { error: 'Name, level, and capacity are required' },
-        { status: 400 }
-      );
-    }
+    return NextResponse.json(
+      { error: 'Name, level, and capacity are required' },
+      { status: 400 }
+    );
+  }
 
-    const existingClass = await prisma.academicClass.findUnique({
-      where: { id },
-    });
+  const existingClass = await prisma.academicClass.findUnique({
+    where: { id },
+  });
 
-    if (!existingClass) {
-      return NextResponse.json({ error: 'Class not found' }, { status: 404 });
-    }
+  if (!existingClass) {
+    return NextResponse.json({ error: 'Class not found' }, { status: 404 });
+  }
 
-    // Check for duplicate - considering stream
-    const duplicateClass = await prisma.academicClass.findFirst({
-      where: {
-        academicYearId: existingClass.academicYearId,
-        name: name,
-        stream: stream || null,
-        id: { not: id },
-      },
-    });
-    if (duplicateClass) {
-      return NextResponse.json(
-        { error: 'A class with this name and stream already exists in the selected academic year' },
-        { status: 400 }
-      );
-    }
-
-    const levelNum = typeof level === 'string' ? parseInt(level) : level;
-    
-    // Update class with tier if provided
-    const updateData: any = {
-      name,
-      level: levelNum,
-      capacity: parseInt(capacity),
+  // Check for duplicate - considering stream
+  const duplicateClass = await prisma.academicClass.findFirst({
+    where: {
+      academicYearId: existingClass.academicYearId,
+      name: name,
       stream: stream || null,
-      departmentId: departmentId || null,
-    };
-    
-    if (body.tierId !== undefined) {
-      updateData.tierId = body.tierId || null;
-    }
+      id: { not: id },
+    },
+  });
+  if (duplicateClass) {
+    return NextResponse.json(
+      { error: 'A class with this name and stream already exists in the selected academic year' },
+      { status: 400 }
+    );
+  }
+
+  const levelNum = typeof level === 'string' ? parseInt(level) : level;
+  
+  // Update class with tier if provided
+  const updateData: any = {
+    name,
+    level: levelNum,
+    capacity: parseInt(capacity),
+    stream: stream || null,
+    departmentId: departmentId || null,
+  };
+  
+  if (body.tierId !== undefined) {
+    updateData.tierId = body.tierId || null;
+  }
+  
+  // Add classTeacherId, formMasterId and caregiverId for teacher assignment
+  if (classTeacherId !== undefined) {
+    updateData.classTeacherId = classTeacherId || null;
+  }
+  if (formMasterId !== undefined) {
+    updateData.formMasterId = formMasterId || null;
+  }
+  if (caregiverId !== undefined) {
+    updateData.caregiverId = caregiverId || null;
+  }
     
     const academicClass = await prisma.academicClass.update({
       where: { id },

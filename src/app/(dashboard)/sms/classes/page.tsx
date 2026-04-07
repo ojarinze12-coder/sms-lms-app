@@ -36,6 +36,26 @@ interface AcademicClass {
   department?: { id: string; name: string; code: string } | null;
   subjects?: { id: string }[];
   enrollments?: { id: string }[];
+  classTeacher?: { id: string; firstName: string; lastName: string; employeeId: string; position: string | null } | null;
+  formMaster?: { id: string; firstName: string; lastName: string; employeeId: string; position: string | null } | null;
+  caregiver?: { id: string; firstName: string; lastName: string; employeeId: string; category: string } | null;
+}
+
+interface Teacher {
+  id: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  position?: string | null;
+  departmentRelation?: { id: string; name: string; code: string } | null;
+}
+
+interface Staff {
+  id: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  category: string;
 }
 
 const STREAM_OPTIONS = {
@@ -62,6 +82,9 @@ export default function ClassesPage() {
     tierId: '',
     departmentId: '',
     stream: '',
+    classTeacherId: '',
+    formMasterId: '',
+    caregiverId: '',
   });
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -71,11 +94,19 @@ export default function ClassesPage() {
     tierId: '',
     departmentId: '',
     stream: '',
+    classTeacherId: '',
+    formMasterId: '',
+    caregiverId: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [streamOptions, setStreamOptions] = useState<string[]>(STREAM_OPTIONS.DEFAULT);
   const [editStreamOptions, setEditStreamOptions] = useState<string[]>(STREAM_OPTIONS.DEFAULT);
+  const [isCustomStream, setIsCustomStream] = useState(false);
+  const [editIsCustomStream, setEditIsCustomStream] = useState(false);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [selectedTierCode, setSelectedTierCode] = useState<string>('');
 
   const getStreamOptions = (deptId?: string, deptCode?: string) => {
     if (deptCode && STREAM_OPTIONS.SSS.includes(deptCode.toUpperCase())) {
@@ -101,6 +132,8 @@ export default function ClassesPage() {
     loadTiers();
     loadDepartments();
     loadCurriculum();
+    loadTeachers();
+    loadStaff();
   }, []);
 
   useEffect(() => {
@@ -108,6 +141,23 @@ export default function ClassesPage() {
       loadClasses(selectedYearId);
     }
   }, [selectedYearId]);
+
+  // Tier detection for Create Modal
+  useEffect(() => {
+    let tierCode = '';
+    if (formData.tierId) {
+      const tier = tiers.find(t => t.id === formData.tierId);
+      tierCode = tier?.code || '';
+    } else if (formData.level) {
+      const levelNum = parseInt(formData.level);
+      if (levelNum <= 1) tierCode = 'PRE_NUR';
+      else if (levelNum <= 4) tierCode = 'NUR';
+      else if (levelNum <= 10) tierCode = 'PRI';
+      else if (levelNum <= 13) tierCode = 'JSS';
+      else if (levelNum <= 16) tierCode = 'SSS';
+    }
+    setSelectedTierCode(tierCode);
+  }, [formData.tierId, formData.level, tiers]);
 
   const loadYears = async () => {
     try {
@@ -181,6 +231,30 @@ export default function ClassesPage() {
     }
   };
 
+  const loadTeachers = async () => {
+    try {
+      const res = await fetch('/api/sms/teachers');
+      if (res.ok) {
+        const data = await res.json();
+        setTeachers(Array.isArray(data) ? data : data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load teachers:', err);
+    }
+  };
+
+  const loadStaff = async () => {
+    try {
+      const res = await fetch('/api/sms/staff?category=CAREGIVER');
+      if (res.ok) {
+        const data = await res.json();
+        setStaff(Array.isArray(data) ? data : data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load staff:', err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -195,6 +269,9 @@ export default function ClassesPage() {
       tierId: formData.tierId || null,
       departmentId: formData.departmentId || null,
       stream: formData.stream || null,
+      classTeacherId: formData.classTeacherId || null,
+      formMasterId: formData.formMasterId || null,
+      caregiverId: formData.caregiverId || null,
     };
     console.log('[CLASSES] Request body:', JSON.stringify(requestBody));
 
@@ -216,7 +293,8 @@ export default function ClassesPage() {
 
       console.log('[CLASSES] Class created successfully, refreshing list');
       setShowModal(false);
-      setFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: true, tierId: '', departmentId: '', stream: '' });
+      setFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: true, tierId: '', departmentId: '', stream: '', classTeacherId: '', formMasterId: '', caregiverId: '' });
+      setIsCustomStream(false);
       loadClasses(selectedYearId);
     } catch {
       setError('An error occurred');
@@ -227,6 +305,26 @@ export default function ClassesPage() {
 
   const handleEdit = (cls: AcademicClass) => {
     setEditingClass(cls);
+    
+    // Check if stream is custom (not in predefined options)
+    const isCustom = cls.stream && !editStreamOptions.includes(cls.stream);
+    setEditIsCustomStream(isCustom);
+    
+    // Detect tier code for the editing class
+    let tierCode = '';
+    if (cls.tierId) {
+      const tier = tiers.find(t => t.id === cls.tierId);
+      tierCode = tier?.code || '';
+    } else {
+      const levelNum = cls.level;
+      if (levelNum <= 1) tierCode = 'PRE_NUR';
+      else if (levelNum <= 4) tierCode = 'NUR';
+      else if (levelNum <= 10) tierCode = 'PRI';
+      else if (levelNum <= 13) tierCode = 'JSS';
+      else if (levelNum <= 16) tierCode = 'SSS';
+    }
+    setSelectedTierCode(tierCode);
+    
     setEditFormData({
       name: cls.name,
       level: cls.level.toString(),
@@ -235,6 +333,9 @@ export default function ClassesPage() {
       tierId: cls.tierId || '',
       departmentId: cls.department?.id || '',
       stream: cls.stream || '',
+      classTeacherId: cls.classTeacher?.id || '',
+      formMasterId: cls.formMaster?.id || '',
+      caregiverId: cls.caregiver?.id || '',
     });
     setShowEditModal(true);
   };
@@ -257,13 +358,17 @@ export default function ClassesPage() {
           tierId: editFormData.tierId || null,
           departmentId: editFormData.departmentId || null,
           stream: editFormData.stream || null,
+          classTeacherId: editFormData.classTeacherId || null,
+          formMasterId: editFormData.formMasterId || null,
+          caregiverId: editFormData.caregiverId || null,
         }),
       });
 
       if (res.ok) {
         setShowEditModal(false);
         setEditingClass(null);
-        setEditFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: false, tierId: '', departmentId: '', stream: '' });
+        setEditFormData({ name: '', level: '', capacity: '40', addNerdcSubjects: false, tierId: '', departmentId: '', stream: '', classTeacherId: '', formMasterId: '', caregiverId: '' });
+        setEditIsCustomStream(false);
         loadClasses(selectedYearId);
       } else {
         const data = await res.json();
@@ -333,7 +438,7 @@ export default function ClassesPage() {
             Add Missing Subjects
           </button>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => { setShowModal(true); setIsCustomStream(false); setSelectedTierCode(''); }}
             disabled={!selectedYearId}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600"
           >
@@ -390,6 +495,13 @@ export default function ClassesPage() {
                     <span>Capacity: {cls.capacity}</span>
                     <span>Subjects: {cls.subjects?.length || 0}</span>
                   </div>
+                  {(cls.classTeacher || cls.formMaster || cls.caregiver) && (
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      {cls.classTeacher && <div>Teacher: {cls.classTeacher.firstName} {cls.classTeacher.lastName}</div>}
+                      {cls.formMaster && <div>Form Master: {cls.formMaster.firstName} {cls.formMaster.lastName}</div>}
+                      {cls.caregiver && <div>Caregiver: {cls.caregiver.firstName} {cls.caregiver.lastName}</div>}
+                    </div>
+                  )}
                   <div className="mt-4 flex gap-2">
                     <Link
                       href={`/sms/classes/${cls.id}/subjects`}
@@ -554,11 +666,13 @@ export default function ClassesPage() {
                 </label>
                 <div className="relative">
                   <select
-                    value={streamOptions.includes(formData.stream) ? formData.stream : 'custom'}
+                    value={isCustomStream ? '__custom__' : (streamOptions.includes(formData.stream) ? formData.stream : '__custom__')}
                     onChange={(e) => {
-                      if (e.target.value === 'custom') {
+                      if (e.target.value === '__custom__') {
+                        setIsCustomStream(true);
                         setFormData({ ...formData, stream: '' });
                       } else {
+                        setIsCustomStream(false);
                         setFormData({ ...formData, stream: e.target.value });
                       }
                     }}
@@ -568,15 +682,15 @@ export default function ClassesPage() {
                     {streamOptions.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
-                    <option value="custom">+ Custom...</option>
+                    <option value="__custom__">+ Custom Stream</option>
                   </select>
-                  {!streamOptions.includes(formData.stream) && formData.stream && (
+                  {isCustomStream && (
                     <div className="mt-2">
                       <input
                         type="text"
                         value={formData.stream}
-                        onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
-                        placeholder="Enter custom stream"
+                        onChange={(e) => setFormData({ ...formData, stream: e.target.value.toUpperCase() })}
+                        placeholder="Enter custom stream name"
                         className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                       />
                     </div>
@@ -605,6 +719,69 @@ export default function ClassesPage() {
                     const subjects = isNaN(level) ? [] : getSubjectsByCurriculum(level, currentCurriculum, dept?.code);
                     return `Will add ${subjects.length} subjects: ${subjects.slice(0, 3).map((s) => s.name).join(', ')}...`;
                   })()}
+                </div>
+              )}
+
+              {/* Care-giver - Show for Pre-Nursery (PRE_NUR) and Nursery (NUR) tiers */}
+              {(selectedTierCode === 'PRE_NUR' || selectedTierCode === 'NUR') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Care-giver
+                  </label>
+                  <select
+                    value={formData.caregiverId}
+                    onChange={(e) => setFormData({ ...formData, caregiverId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">No care-giver assigned</option>
+                    {staff.filter(s => s.category === 'CAREGIVER').map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.firstName} {s.lastName} ({s.employeeId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Class Teacher - Show for Pre-Nursery (PRE_NUR), Nursery (NUR), and Primary (PRI) tiers */}
+              {(selectedTierCode === 'PRE_NUR' || selectedTierCode === 'NUR' || selectedTierCode === 'PRI') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Class Teacher
+                  </label>
+                  <select
+                    value={formData.classTeacherId}
+                    onChange={(e) => setFormData({ ...formData, classTeacherId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">No class teacher assigned</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.firstName} {t.lastName} ({t.employeeId}){t.position ? ` - ${t.position}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Form Master - Show for JSS and SSS tiers */}
+              {(selectedTierCode === 'JSS' || selectedTierCode === 'SSS') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Form Master
+                  </label>
+                  <select
+                    value={formData.formMasterId}
+                    onChange={(e) => setFormData({ ...formData, formMasterId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">No form master assigned</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.firstName} {t.lastName} ({t.employeeId}){t.position ? ` - ${t.position}` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
@@ -755,11 +932,13 @@ export default function ClassesPage() {
                 </label>
                 <div className="relative">
                   <select
-                    value={editStreamOptions.includes(editFormData.stream) ? editFormData.stream : 'custom'}
+                    value={editIsCustomStream ? '__custom__' : (editStreamOptions.includes(editFormData.stream) ? editFormData.stream : '__custom__')}
                     onChange={(e) => {
-                      if (e.target.value === 'custom') {
+                      if (e.target.value === '__custom__') {
+                        setEditIsCustomStream(true);
                         setEditFormData({ ...editFormData, stream: '' });
                       } else {
+                        setEditIsCustomStream(false);
                         setEditFormData({ ...editFormData, stream: e.target.value });
                       }
                     }}
@@ -769,15 +948,15 @@ export default function ClassesPage() {
                     {editStreamOptions.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
-                    <option value="custom">+ Custom...</option>
+                    <option value="__custom__">+ Custom Stream</option>
                   </select>
-                  {!editStreamOptions.includes(editFormData.stream) && editFormData.stream && (
+                  {editIsCustomStream && (
                     <div className="mt-2">
                       <input
                         type="text"
                         value={editFormData.stream}
-                        onChange={(e) => setEditFormData({ ...editFormData, stream: e.target.value })}
-                        placeholder="Enter custom stream"
+                        onChange={(e) => setEditFormData({ ...editFormData, stream: e.target.value.toUpperCase() })}
+                        placeholder="Enter custom stream name"
                         className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                       />
                     </div>
@@ -809,6 +988,69 @@ export default function ClassesPage() {
                 </div>
               )}
 
+              {/* Care-giver - Show for Pre-Nursery (PRE_NUR) and Nursery (NUR) tiers */}
+              {(selectedTierCode === 'PRE_NUR' || selectedTierCode === 'NUR') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Care-giver
+                  </label>
+                  <select
+                    value={editFormData.caregiverId}
+                    onChange={(e) => setEditFormData({ ...editFormData, caregiverId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">No care-giver assigned</option>
+                    {staff.filter(s => s.category === 'CAREGIVER').map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.firstName} {s.lastName} ({s.employeeId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Class Teacher - Show for Pre-Nursery (PRE_NUR), Nursery (NUR), and Primary (PRI) tiers */}
+              {(selectedTierCode === 'PRE_NUR' || selectedTierCode === 'NUR' || selectedTierCode === 'PRI') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Class Teacher
+                  </label>
+                  <select
+                    value={editFormData.classTeacherId}
+                    onChange={(e) => setEditFormData({ ...editFormData, classTeacherId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">No class teacher assigned</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.firstName} {t.lastName} ({t.employeeId}){t.position ? ` - ${t.position}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Form Master - Show for JSS and SSS tiers */}
+              {(selectedTierCode === 'JSS' || selectedTierCode === 'SSS') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Form Master
+                  </label>
+                  <select
+                    value={editFormData.formMasterId}
+                    onChange={(e) => setEditFormData({ ...editFormData, formMasterId: e.target.value })}
+                    className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">No form master assigned</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.firstName} {t.lastName} ({t.employeeId}){t.position ? ` - ${t.position}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
@@ -823,6 +1065,8 @@ export default function ClassesPage() {
                     setShowEditModal(false);
                     setEditingClass(null);
                     setError('');
+                    setEditIsCustomStream(false);
+                    setSelectedTierCode('');
                   }}
                   className="px-6 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300"
                 >

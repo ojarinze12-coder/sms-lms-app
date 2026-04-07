@@ -144,7 +144,8 @@ model Teacher {
   lgaOfOrigin    String?
   nhfNumber      String?
   pensionPin     String?
-  position       String?
+  position       String?      // "HOD", "SENIOR_TEACHER", "FORM_MASTER", "CLASS_TEACHER"
+  departmentId   String?      @db.Uuid @map("department_id")  // For HOD - links to Department
   qualification  String?
   salary         Float?
   stateOfOrigin  String?
@@ -159,6 +160,9 @@ model Teacher {
   staffLeaves    StaffLeave[]
   subjects       Subject[]
   courses        Course[]
+  departmentRelation Department?  @relation("TeacherDepartments", fields: [departmentId], references: [id])
+  classTeacherClasses AcademicClass[] @relation("ClassTeacherClasses")
+  formMasterClasses AcademicClass[] @relation("FormMasterClasses")
 
   @@unique([tenantId, employeeId], map: "teachers_tenantId_employeeId_unique")
   @@index([tenantId], map: "idx_teachers_tenant")
@@ -204,6 +208,7 @@ model Staff {
   cardStatus     String              @default("NOT_ISSUED")
   qrCodeData     String?
   staffLeaves    StaffLeave[]
+  caregiverClasses AcademicClass[] @relation("CaregiverClasses")
 
   @@unique([tenantId, employeeId], map: "staff_tenantId_employeeId_unique")
   @@index([tenantId], map: "idx_staff_tenant")
@@ -351,6 +356,9 @@ model AcademicClass {
   level          Int
   capacity       Int?            @default(40)
   stream         String?         // Stream identifier: "A", "B", "C", "D" or "SCI", "COMM", "ARTS", "TECH" etc.
+  classTeacherId String?         @db.Uuid @map("class_teacher_id")  // Class Teacher (Pre-Nursery, Nursery, Primary)
+  formMasterId   String?         @db.Uuid @map("form_master_id")  // Secondary Form Master (JSS, SSS)
+  caregiverId    String?         @db.Uuid @map("caregiver_id")  // Pre-Nursery/Nursery Care-giver
   academicYearId String?         @db.Uuid
   tenantId       String?         @db.Uuid
   createdAt      DateTime?       @default(now()) @db.Timestamptz(6)
@@ -365,6 +373,9 @@ model AcademicClass {
   timetableSlots TimetableSlot[]
   transcripts    Transcript[]
   applications  Application[]
+  classTeacher  Teacher?        @relation("ClassTeacherClasses", fields: [classTeacherId], references: [id])
+  formMaster    Teacher?        @relation("FormMasterClasses", fields: [formMasterId], references: [id])
+  caregiver     Staff?          @relation("CaregiverClasses", fields: [caregiverId], references: [id])
 
   @@unique([academicYearId, name, stream], map: "academic_classes_academicYearId_name_stream_unique")
   @@index([academicYearId], map: "idx_academic_classes_academic_year")
@@ -430,6 +441,7 @@ model Department {
 
   tier            Tier            @relation(fields: [tierId], references: [id], onDelete: Cascade)
   academicClasses AcademicClass[]
+  teachers        Teacher[]       @relation("TeacherDepartments")
 
   @@unique([tenantId, code], map: "departments_tenantId_code_unique")
   @@index([tenantId], map: "idx_departments_tenant")
@@ -1924,6 +1936,9 @@ enum UserRole {
   ACADEMIC_ADMIN
   FINANCE_ADMIN
   BURSAR
+  SENIOR_TEACHER
+  HOD
+  FORM_MASTER
 }
 
 enum StudentStatus {
@@ -1941,6 +1956,8 @@ enum Gender {
 }
 
 enum StaffCategory {
+  TEACHING
+  CAREGIVER
   ADMINISTRATIVE
   BURSAR
   LIBRARIAN

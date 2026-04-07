@@ -99,6 +99,7 @@ export default function ImportPage() {
       { csv: 'department', required: false },
       { csv: 'specialty', required: false },
       { csv: 'qualification', required: false },
+      { csv: 'position', required: false }, // HOD, SENIOR_TEACHER, FORM_MASTER, CLASS_TEACHER
     ],
     staff: [
       { csv: 'firstName', required: true },
@@ -106,7 +107,7 @@ export default function ImportPage() {
       { csv: 'email', required: true },
       { csv: 'phone', required: false },
       { csv: 'employeeId', required: false },
-      { csv: 'role', required: false },
+      { csv: 'category', required: false }, // TEACHING, CAREGIVER, ADMINISTRATIVE, etc.
       { csv: 'department', required: false },
       { csv: 'designation', required: false },
     ],
@@ -134,8 +135,8 @@ export default function ImportPage() {
 
   const sampleCSV: Record<ImportType, string> = {
     students: 'firstName,lastName,gender,email,phone,stateOfOrigin\nJohn,Doe,MALE,john@example.com,08012345678,Lagos\nJane,Smith,FEMALE,jane@example.com,08023456789,Ogun',
-    teachers: 'firstName,lastName,email,phone,department\nMary,Johnson,mary@school.com,08034567890,Science\nPeter,Williams,peter@school.com,08045678901,Mathematics',
-    staff: 'firstName,lastName,email,phone,role,department\nSarah,Admin,sarah@school.com,08011111111,Admin,Administration\nJames,Driver,james@school.com,08022222222,Driver,Transport',
+    teachers: 'firstName,lastName,email,phone,department,position,qualification\nMary,Johnson,mary@school.com,08034567890,Science,HOD,B.Sc Education\nPeter,Williams,peter@school.com,08045678901,Mathematics,SENIOR_TEACHER,M.Sc\nJames,Teacher,james@school.com,08056789012,English,,NCE',
+    staff: 'firstName,lastName,email,phone,category,department,designation\nSarah,Admin,sarah@school.com,08011111111,Administrative,Administration,Admin Officer\nJames,Driver,james@school.com,08022222222,Driver,Transport,Driver\nGrace,Caregiver,grace@school.com,08033333333,Caregiver,Nursery,Care-giver',
     parents: 'firstName,lastName,phone,occupation,studentId\nJames,Abiodun,08056789012,Business,STU/001\nGrace,Abiodun,08067890123,Teacher,STU/001',
     legacy: 'studentId,academicYear,className,term,subject,caScore,examScore,totalScore,grade\nSTU/001,2023-2024,JSS 1,First Term,Mathematics,15,60,75,B\nSTU/001,2023-2024,JSS 1,First Term,English,18,65,83,A',
   };

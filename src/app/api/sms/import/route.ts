@@ -112,6 +112,18 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
+          // Get department ID if department name is provided
+          let departmentId = null;
+          if (record.department) {
+            const dept = await prisma.department.findFirst({
+              where: { 
+                name: { mode: 'insensitive', contains: record.department },
+                tenantId 
+              },
+            });
+            departmentId = dept?.id || null;
+          }
+
           const employeeId = record.employeeId || `EMP/${Date.now()}-${i}`;
           
           await prisma.teacher.create({
@@ -124,6 +136,8 @@ export async function POST(request: NextRequest) {
               department: record.department,
               specialty: record.specialty,
               qualification: record.qualification,
+              position: record.position || null,
+              departmentId,
               tenantId,
               status: 'ACTIVE',
             },
@@ -147,6 +161,38 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
+          // Map category from common names to enum values
+          const categoryMap: Record<string, string> = {
+            'admin': 'ADMINISTRATIVE',
+            'administrative': 'ADMINISTRATIVE',
+            'bursar': 'BURSAR',
+            'finance': 'BURSAR',
+            'librarian': 'LIBRARIAN',
+            'library': 'LIBRARIAN',
+            'security': 'SECURITY',
+            'guard': 'SECURITY',
+            'cleaner': 'CLEANER',
+            'janitor': 'CLEANER',
+            'driver': 'DRIVER',
+            'transport': 'DRIVER',
+            'cook': 'COOK',
+            'kitchen': 'COOK',
+            'maintenance': 'MAINTENANCE',
+            'it': 'IT_SUPPORT',
+            'it support': 'IT_SUPPORT',
+            'counselor': 'COUNSELOR',
+            'counselling': 'COUNSELOR',
+            'nurse': 'NURSE',
+            'health': 'NURSE',
+            'caregiver': 'CAREGIVER',
+            'care giver': 'CAREGIVER',
+            'nursery': 'CAREGIVER',
+            'teaching': 'TEACHING',
+            'teacher': 'TEACHING',
+          };
+          
+          const category = categoryMap[record.category?.toLowerCase()] || record.category?.toUpperCase() || 'OTHER';
+
           const employeeId = record.employeeId || `STF/${Date.now()}-${i}`;
           
           await prisma.staff.create({
@@ -156,9 +202,9 @@ export async function POST(request: NextRequest) {
               lastName: record.lastName,
               email: record.email,
               phone: record.phone,
-              role: record.role || 'STAFF',
+              category: category as any,
               department: record.department,
-              designation: record.designation,
+              position: record.designation,
               tenantId,
               status: 'ACTIVE',
             },

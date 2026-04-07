@@ -8,7 +8,7 @@ const createStaffSchema = z.object({
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  category: z.enum(['ADMINISTRATIVE', 'BURSAR', 'LIBRARIAN', 'SECURITY', 'CLEANER', 'DRIVER', 'COOK', 'MAINTENANCE', 'IT_SUPPORT', 'COUNSELOR', 'NURSE', 'OTHER']).optional(),
+  category: z.enum(['TEACHING', 'CAREGIVER', 'ADMINISTRATIVE', 'BURSAR', 'LIBRARIAN', 'SECURITY', 'CLEANER', 'DRIVER', 'COOK', 'MAINTENANCE', 'IT_SUPPORT', 'COUNSELOR', 'NURSE', 'OTHER']).optional(),
   phone: z.string().optional(),
   dateOfBirth: z.string().optional(),
   gender: z.string().optional(),

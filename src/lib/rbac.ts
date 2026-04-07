@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyToken, JWTPayload } from '@/lib/auth';
 
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'PRINCIPAL' | 'VICE_PRINCIPAL' | 'ACADEMIC_ADMIN' | 'FINANCE_ADMIN' | 'BURSAR' | 'TEACHER' | 'STUDENT' | 'PARENT';
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'PRINCIPAL' | 'VICE_PRINCIPAL' | 'ACADEMIC_ADMIN' | 'FINANCE_ADMIN' | 'BURSAR' | 'TEACHER' | 'STUDENT' | 'PARENT' | 'SENIOR_TEACHER' | 'HOD' | 'FORM_MASTER';
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   SUPER_ADMIN: [
@@ -62,8 +62,38 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'manage:payments',
     'view:reports',
   ],
+  SENIOR_TEACHER: [
+    'view:teachers',
+    'manage:subjects',
+    'view:department',
+    'view:academics',
+    'manage:exams',
+    'manage:results',
+    'view:reports',
+    'ai:generate',
+  ],
+  HOD: [
+    'manage:department:teachers',
+    'view:department:results',
+    'manage:department:exams',
+    'approve:results',
+    'view:teachers',
+    'manage:subjects',
+    'view:academics',
+    'view:reports',
+    'ai:generate',
+  ],
+  FORM_MASTER: [
+    'mark:attendance',
+    'view:class:results',
+    'manage:class:results',
+    'view:class:students',
+    'view:academics',
+    'view:reports',
+  ],
   TEACHER: [
     'view:academics',
+    'view:assigned:class',
     'manage:exams',
     'manage:results',
     'view:reports',
