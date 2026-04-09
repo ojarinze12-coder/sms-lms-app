@@ -1,49 +1,27 @@
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth-server';
-import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
     const authUser = await getAuthUser();
     
+    console.log('[Auth Me] User:', authUser);
+    
     if (!authUser) {
       return NextResponse.json(
-        { error: 'Not authenticated' },
+        { error: 'Not authenticated', user: null },
         { status: 401 }
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: authUser.userId },
-      include: {
-        tenant: {
-          select: {
-            id: true,
-            name: true,
-            brandColor: true,
-            logo: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json({ user: authUser });
-    }
-
     return NextResponse.json({ 
       user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        tenant: user.tenant ? {
-          id: user.tenant.id,
-          name: user.tenant.name,
-          brandColor: user.tenant.brandColor,
-          logo: user.tenant.logo,
-        } : null
+        id: authUser.userId,
+        email: authUser.email,
+        firstName: authUser.firstName,
+        lastName: authUser.lastName,
+        role: authUser.role,
+        tenantId: authUser.tenantId,
       }
     });
   } catch (error) {
