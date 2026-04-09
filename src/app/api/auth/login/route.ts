@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     const cookieName = isSuperAdmin ? 'pcc-token' : 'scc-token';
     response.cookies.set(cookieName, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',

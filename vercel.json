@@ -6,7 +6,11 @@
     "DATABASE_URL": "postgresql://postgres.tfsijcllawvisvuravtn:astar2207**@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
     "DIRECT_URL": "postgresql://postgres.tfsijcllawvisvuravtn:astar2207**@aws-1-eu-west-1.pooler.supabase.com:5432/postgres",
     "JWT_SECRET": "your-super-secret-key-change-in-production-min-32-chars",
+    "AUTH_SECRET": "your-super-secret-key-change-in-production-min-32-chars",
+    "NEXTAUTH_SECRET": "your-super-secret-key-change-in-production-min-32-chars",
+    "NEXTAUTH_URL": "https://your-vercel-app.vercel.app",
     "NEXT_PUBLIC_SUPABASE_URL": "https://tfsijcllawvisvuravtn.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmc2lqY2xsYXd2aXN2dXJhdnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjQ3NTAsImV4cCI6MjA4NzQ0MDc1MH0.0SYvMCPm8l4EkkhwCSxbX1oTGDxMpwmemJ1vxNurg0I"
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmc2lqY2xsYXd2aXN2dXJhdnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjQ3NTAsImV4cCI6MjA4NzQ0MDc1MH0.0SYvMCPm8l4EkkhwCSxbX1oTGDxMpwmemJ1vxNurg0I",
+    "NEXT_PUBLIC_APP_URL": "https://your-vercel-app.vercel.app"
   }
 }
