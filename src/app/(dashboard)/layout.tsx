@@ -39,7 +39,7 @@ const schoolPortalNavItems = [
   { label: 'Finance', href: '/school/finance', icon: '💰' },
   { label: 'Billing', href: '/school/billing', icon: '💳' },
   { label: 'Timetable', href: '/school/timetable', icon: '📅' },
-  { label: 'Exams', href: '/school/exams', icon: '📝' },
+  { label: 'Grading Scales', href: '/school/exams', icon: '📝' },
   { label: 'Reports', href: '/school/reports', icon: '📈' },
   { label: 'Settings', href: '/school/settings', icon: '⚙️' },
   { label: 'Bulk Import', href: '/sms/import', icon: '📤' },

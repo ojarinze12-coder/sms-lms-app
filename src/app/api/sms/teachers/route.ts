@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
+import { generateTeacherId } from '@/lib/generate-id';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,6 +12,13 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const action = searchParams.get('action');
+
+    if (action === 'generate-id') {
+      const nextId = await generateTeacherId(authUser.tenantId);
+      return NextResponse.json({ employeeId: nextId });
+    }
+
     const position = searchParams.get('position');
     const departmentId = searchParams.get('departmentId');
 

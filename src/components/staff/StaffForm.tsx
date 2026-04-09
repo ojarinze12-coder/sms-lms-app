@@ -12,6 +12,8 @@ import {
   banks,
   type StaffFormData 
 } from '@/types/staff';
+import { Loader2, Wand2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface StaffFormProps {
   formData: StaffFormData;
@@ -30,8 +32,23 @@ export default function StaffForm({
   isEditing,
   submitting,
 }: StaffFormProps) {
+  const [generating, setGenerating] = useState(false);
+
   const handleChange = (field: keyof StaffFormData, value: string) => {
     onChange({ ...formData, [field]: value });
+  };
+
+  const handleGenerateId = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/sms/staff?action=generate-id');
+      const data = await res.json();
+      handleChange('employeeId', data.employeeId);
+    } catch (err) {
+      console.error('Failed to generate ID:', err);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -40,12 +57,26 @@ export default function StaffForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="employeeId">Employee ID *</Label>
-            <Input
-              id="employeeId"
-              value={formData.employeeId}
-              onChange={(e) => handleChange('employeeId', e.target.value)}
-              required
-            />
+            <div className="flex gap-2">
+              <Input
+                id="employeeId"
+                value={formData.employeeId}
+                onChange={(e) => handleChange('employeeId', e.target.value)}
+                required
+                className="flex-1"
+                disabled={isEditing}
+              />
+              {!isEditing && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleGenerateId}
+                  disabled={generating}
+                >
+                  {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                </Button>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>

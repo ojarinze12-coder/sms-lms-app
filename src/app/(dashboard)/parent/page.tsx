@@ -159,11 +159,11 @@ export default function ParentPortalPage() {
   const pendingChildren = data.children.filter(c => c.approvalStatus === 'PENDING');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 p-2 md:p-0">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold">Welcome, {data.parent.firstName} {data.parent.lastName}</h1>
-        <p className="text-blue-100">Parent Portal - Monitor your child&apos;s progress</p>
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-4 md:p-6 text-white">
+        <h1 className="text-xl md:text-2xl font-bold">Welcome, {data.parent.firstName} {data.parent.lastName}</h1>
+        <p className="text-blue-100 text-sm">Parent Portal - Monitor your child&apos;s progress</p>
       </div>
 
       {/* Pending Approvals */}
@@ -194,8 +194,8 @@ export default function ParentPortalPage() {
 
       {/* Child Selector */}
       {approvedChildren.length > 0 && (
-        <div className="bg-white rounded-xl border p-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-xl border p-3 md:p-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Viewing Profile For:
@@ -203,7 +203,7 @@ export default function ParentPortalPage() {
               <select
                 value={selectedChildId}
                 onChange={(e) => setSelectedChildId(e.target.value)}
-                className="w-full max-w-md px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border rounded-lg text-sm"
               >
                 {approvedChildren.map((child) => (
                   <option key={child.id} value={child.id}>
@@ -212,9 +212,9 @@ export default function ParentPortalPage() {
                 ))}
               </select>
             </div>
-            <Button variant="outline" className="ml-4 mt-6" onClick={() => setLinkModalOpen(true)}>
+            <Button variant="outline" className="w-full md:w-auto whitespace-nowrap" onClick={() => setLinkModalOpen(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
-              Link Another Child
+              Link Child
             </Button>
           </div>
         </div>
@@ -275,34 +275,36 @@ export default function ParentPortalPage() {
             {data.results.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No exam results found</p>
             ) : (
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr>
-                    <th className="text-left py-3">Exam</th>
-                    <th className="text-left py-3">Subject</th>
-                    <th className="text-left py-3">Term</th>
-                    <th className="text-left py-3">Score</th>
-                    <th className="text-left py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.results.map((result) => (
-                    <tr key={result.id} className="border-b">
-                      <td className="py-3 font-medium">{result.exam?.title}</td>
-                      <td className="py-3">{result.exam?.subject?.name}</td>
-                      <td className="py-3 text-sm">{result.exam?.term?.name}</td>
-                      <td className="py-3">
-                        <span className="font-bold">{result.percentage?.toFixed(1)}%</span>
-                      </td>
-                      <td className="py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs ${result.status === 'GRADED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                          {result.status}
-                        </span>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[500px]">
+                  <thead className="border-b">
+                    <tr>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Exam</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Subject</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Term</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Score</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.results.map((result) => (
+                      <tr key={result.id} className="border-b">
+                        <td className="py-3 px-2 font-medium whitespace-nowrap">{result.exam?.title}</td>
+                        <td className="py-3 px-2 whitespace-nowrap">{result.exam?.subject?.name}</td>
+                        <td className="py-3 px-2 text-sm whitespace-nowrap">{result.exam?.term?.name}</td>
+                        <td className="py-3 px-2 whitespace-nowrap">
+                          <span className="font-bold">{result.percentage?.toFixed(1)}%</span>
+                        </td>
+                        <td className="py-3 px-2 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${result.status === 'GRADED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                            {result.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -317,32 +319,34 @@ export default function ParentPortalPage() {
             {data.reportCards.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No report cards found</p>
             ) : (
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr>
-                    <th className="text-left py-3">Term</th>
-                    <th className="text-left py-3">Academic Year</th>
-                    <th className="text-left py-3">Total Score</th>
-                    <th className="text-left py-3">Average</th>
-                    <th className="text-left py-3">Grade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.reportCards.map((card) => (
-                    <tr key={card.id} className="border-b">
-                      <td className="py-3">{card.term?.name}</td>
-                      <td className="py-3 text-sm">{card.term?.academic_years?.name}</td>
-                      <td className="py-3">{card.totalScore?.toFixed(1)}</td>
-                      <td className="py-3">{card.average?.toFixed(1)}%</td>
-                      <td className="py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getGradeColor(card.grade)}`}>
-                          {card.grade}
-                        </span>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[400px]">
+                  <thead className="border-b">
+                    <tr>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Term</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Academic Year</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Total Score</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Average</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Grade</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.reportCards.map((card) => (
+                      <tr key={card.id} className="border-b">
+                        <td className="py-3 px-2 whitespace-nowrap">{card.term?.name}</td>
+                        <td className="py-3 px-2 text-sm whitespace-nowrap">{card.term?.academic_years?.name}</td>
+                        <td className="py-3 px-2 whitespace-nowrap">{card.totalScore?.toFixed(1)}</td>
+                        <td className="py-3 px-2 whitespace-nowrap">{card.average?.toFixed(1)}%</td>
+                        <td className="py-3 px-2 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getGradeColor(card.grade)}`}>
+                            {card.grade}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>

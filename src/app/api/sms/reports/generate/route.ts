@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         parameters: parameters || {},
         format: format || 'PDF',
         status: scheduledFor ? 'PENDING' : 'GENERATING',
-        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+        scheduledAt: scheduledFor ? new Date(scheduledFor) : null,
         tenantId: user.tenantId,
         generatedById: user.id
       }

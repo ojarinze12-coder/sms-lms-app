@@ -134,28 +134,28 @@ export default function StudentDetailPage() {
         <div className="flex items-center gap-2">
           <Link
             href={`/sms/students/${student.id}/medical`}
-            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-200"
           >
             <Heart className="w-4 h-4" />
             Medical
           </Link>
           <Link
             href={`/sms/students/${student.id}/behavior`}
-            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-200"
           >
             <AlertTriangle className="w-4 h-4" />
             Behavior
           </Link>
           <Link
             href={`/sms/students/${student.id}/academic-history`}
-            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-200"
           >
             <FileText className="w-4 h-4" />
             Academic
           </Link>
           <Link
             href={`/sms/students/${student.id}/edit`}
-            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-200"
           >
             <Edit className="w-4 h-4" />
             Edit

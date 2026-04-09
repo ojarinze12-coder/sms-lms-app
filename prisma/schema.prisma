@@ -56,6 +56,7 @@ model User {
   createdAt           DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt           DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
   tenant              Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reportGenerations  ReportGeneration[]
 
   @@index([tenantId])
   @@map("users")
@@ -111,6 +112,7 @@ model Student {
   hostelAllocations  HostelAllocation[]
   vaccinations       StudentVaccination[]
   transportSubscriptions TransportSubscription[]
+  documents           Document[]
 
   @@unique([tenantId, studentId], map: "students_tenantId_studentId_unique")
   @@index([tenantId], map: "idx_students_tenant")
@@ -325,6 +327,7 @@ model AcademicYear {
   certificateIssuances CertificateIssuance[]
   applications    Application[]
   transportSubscriptions TransportSubscription[]
+  hostelAllocations HostelAllocation[]
 
   @@unique([tenantId, name], map: "academic_years_tenantId_name_unique")
   @@index([tenantId], map: "idx_academic_years_tenant")
@@ -2362,8 +2365,12 @@ model ReportTemplate {
   name        String
   description String?
   type        String   @default("GENERIC")
+  category    String?
   content     Json     @default("{}")
   isDefault   Boolean  @default(false)
+  isGlobal    Boolean  @default(false)
+  isRegulatory Boolean @default(false)
+  usageCount  Int      @default(0)
   tenantId    String   @db.Uuid
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -2377,15 +2384,20 @@ model ReportTemplate {
 model ReportGeneration {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   templateId  String   @db.Uuid
+  parameters  Json     @default("{}")
+  format      String   @default("PDF")
   status      String   @default("PENDING")
+  scheduledAt DateTime? @db.Timestamptz(6)
   startedAt   DateTime? @db.Timestamptz(6)
   completedAt DateTime? @db.Timestamptz(6)
   error       String?
   tenantId    String   @db.Uuid
+  generatedById String? @db.Uuid
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   
   template    ReportTemplate @relation(fields: [templateId], references: [id])
+  generatedBy User? @relation(fields: [generatedById], references: [id])
   
   @@index([tenantId])
   @@map("report_generations")
@@ -2460,9 +2472,12 @@ model Hostel {
   name        String
   type        String
   address     String?
+  description String?
   status      String   @default("ACTIVE")
   totalBeds   Int      @default(0)
   occupiedBeds Int     @default(0)
+  wardenName  String?
+  wardenPhone String?
   tenantId    String   @db.Uuid
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -2480,7 +2495,9 @@ model HostelRoom {
   floor     Int?
   capacity  Int      @default(4)
   status    String   @default("ACTIVE")
-  hostelId String   @db.Uuid
+  roomType  String?
+  amenities String?
+  hostelId  String   @db.Uuid
   tenantId  String   @db.Uuid
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -2509,12 +2526,14 @@ model HostelBed {
 model HostelAllocation {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   studentId   String   @db.Uuid
-  hostelId   String   @db.Uuid
-  roomId     String   @db.Uuid
-  bedId      String   @db.Uuid
-  status     String   @default("ACTIVE")
+  hostelId    String   @db.Uuid
+  roomId      String   @db.Uuid
+  bedId       String   @db.Uuid
+  academicYearId String? @db.Uuid
+  status      String   @default("ACTIVE")
   startDate   DateTime @db.Date
   endDate     DateTime? @db.Date
+  checkOutDate DateTime? @db.Date
   tenantId    String   @db.Uuid
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -2522,36 +2541,48 @@ model HostelAllocation {
   room        HostelRoom @relation(fields: [roomId], references: [id])
   bed         HostelBed @relation(fields: [bedId], references: [id])
   student     Student @relation(fields: [studentId], references: [id])
+  academicYear AcademicYear? @relation(fields: [academicYearId], references: [id])
 
   @@index([tenantId])
   @@index([studentId])
+  @@index([academicYearId])
   @@map("hostel_allocations")
 }
 
 model Document {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  url       String
-  type      String
-  categoryId String? @db.Uuid
-  tenantId  String   @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  category  DocumentCategory? @relation(fields: [categoryId], references: [id])
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  url          String
+  type         String
+  status       String   @default("ACTIVE")
+  categoryId   String?  @db.Uuid
+  studentId    String?  @db.Uuid
+  expiryDate   DateTime? @db.Date
+  tenantId     String   @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  category     DocumentCategory? @relation(fields: [categoryId], references: [id])
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  student      Student? @relation(fields: [studentId], references: [id])
 
   @@index([tenantId])
+  @@index([studentId])
   @@map("documents")
 }
 
 model DocumentCategory {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  tenantId  String   @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  documents Document[]
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  displayName String?
+  description String?
+  requiredFor String[]
+  isRequired  Boolean  @default(false)
+  expiryMonths Int?
+  tenantId    String   @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  documents   Document[]
 
   @@index([tenantId])
   @@map("document_categories")

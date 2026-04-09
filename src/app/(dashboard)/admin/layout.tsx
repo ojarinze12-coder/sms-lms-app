@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import AIChatWidget from '@/components/AIChatWidget';
 
 const navItems = [
@@ -98,7 +99,22 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [themeLoaded, setThemeLoaded] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    fetch('/api/admin/platform-settings')
+      .then(res => res.json())
+      .then(data => {
+        setThemeLoaded(true);
+      })
+      .catch(() => {
+        setThemeLoaded(true);
+      });
+  }, []);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -116,28 +132,34 @@ export default function AdminLayout({
   }, [router]);
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     window.location.href = '/login';
   };
 
+  const isDark = mounted && themeLoaded && resolvedTheme === 'dark';
+  
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex">
-        <aside className="w-64 bg-slate-900 text-white min-h-screen fixed dark:bg-slate-900">
-          <div className="p-6">
+    <div className={`min-h-screen flex ${isDark ? 'dark' : ''}`}>
+      <div className="flex w-full">
+        <aside className="w-64 bg-slate-900 text-white fixed top-0 bottom-0 left-0 overflow-y-auto">
+          <div className="p-6 sticky top-0 bg-slate-900 z-10">
             <h1 className="text-2xl font-bold text-blue-400">EduNext</h1>
             <p className="text-xs text-gray-400 mt-1">Platform Control Center</p>
           </div>
           
-          <nav className="mt-6 px-3">
+          <nav className="mt-2 px-3 pb-4">
             {navItems.map((item) => {
               const isActive = pathname === item.href || 
                 (item.href !== '/admin' && pathname.startsWith(item.href));
@@ -158,7 +180,7 @@ export default function AdminLayout({
             })}
           </nav>
 
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
+          <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-slate-700 bg-slate-900">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
                 <span className="text-sm font-medium">
@@ -182,7 +204,7 @@ export default function AdminLayout({
           </div>
         </aside>
 
-        <main className="flex-1 ml-64 p-8">
+        <main className={`flex-1 ml-64 p-8 min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
           {children}
           <AIChatWidget userRole="ADMIN" />
         </main>

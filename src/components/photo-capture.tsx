@@ -84,7 +84,7 @@ export function WebcamCapture({ onCapture, onCancel }: WebcamCaptureProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
           {error}
         </div>
       )}
@@ -163,10 +163,10 @@ export function FileUpload({ onUpload, accept = 'image/*' }: FileUploadProps) {
 
   return (
     <div className="space-y-2">
-      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600">
         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-          <Upload className="h-8 w-8 text-gray-400 mb-2" />
-          <p className="text-sm text-gray-500">Click to upload photo</p>
+          <Upload className="h-8 w-8 text-gray-400 dark:text-gray-500 mb-2" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">Click to upload photo</p>
         </div>
         <input type="file" accept={accept} onChange={handleFileChange} className="hidden" />
       </label>
@@ -192,7 +192,7 @@ export function PhotoCapture({ value, onChange }: PhotoCaptureProps) {
     <div className="space-y-3">
       {value ? (
         <div className="relative w-32 h-32 mx-auto">
-          <img src={value} alt="Current photo" className="w-full h-full object-cover rounded-full border-4 border-gray-200" />
+          <img src={value} alt="Current photo" className="w-full h-full object-cover rounded-full border-4 border-gray-200 dark:border-gray-600" />
           <button
             type="button"
             onClick={() => onChange('')}
@@ -202,8 +202,8 @@ export function PhotoCapture({ value, onChange }: PhotoCaptureProps) {
           </button>
         </div>
       ) : (
-        <div className="w-32 h-32 mx-auto bg-gray-100 rounded-full flex items-center justify-center border-4 border-dashed border-gray-300">
-          <Camera className="h-8 w-8 text-gray-400" />
+        <div className="w-32 h-32 mx-auto bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center border-4 border-dashed border-gray-300 dark:border-gray-600">
+          <Camera className="h-8 w-8 text-gray-400 dark:text-gray-500" />
         </div>
       )}
 
@@ -219,7 +219,7 @@ export function PhotoCapture({ value, onChange }: PhotoCaptureProps) {
       </div>
 
       {showWebcam && (
-        <div className="border rounded-lg p-4">
+        <div className="border rounded-lg p-4 dark:border-gray-600">
           <WebcamCapture 
             onCapture={(img) => { onChange(img); setShowWebcam(false); }} 
             onCancel={() => setShowWebcam(false)}
@@ -228,7 +228,7 @@ export function PhotoCapture({ value, onChange }: PhotoCaptureProps) {
       )}
 
       {showUpload && (
-        <div className="border rounded-lg p-4">
+        <div className="border rounded-lg p-4 dark:border-gray-600">
           <FileUpload onUpload={(img) => { onChange(img); setShowUpload(false); }} />
         </div>
       )}

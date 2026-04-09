@@ -328,15 +328,15 @@ export default function ExamDetailPage() {
                         <div
                           key={option.id}
                           className={`flex items-center gap-2 p-2 rounded ${
-                            option.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
+                            option.isCorrect ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-700'
                           }`}
                         >
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
-                            option.isCorrect ? 'bg-green-500 text-white' : 'bg-gray-200'
+                            option.isCorrect ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-600'
                           }`}>
                             {String.fromCharCode(65 + oIndex)}
                           </div>
-                          <span className={option.isCorrect ? 'text-green-700 font-medium' : ''}>
+                          <span className={option.isCorrect ? 'text-green-700 dark:text-green-300 font-medium' : ''}>
                             {option.content}
                           </span>
                           {option.isCorrect && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { NIGERIAN_STATES, NIGERIAN_LGAS } from '@/lib/nigeria';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Wand2 } from 'lucide-react';
 import { PhotoCapture } from '@/components/photo-capture';
 
 export default function NewStudentPage() {
@@ -23,6 +23,7 @@ export default function NewStudentPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
   const [formData, setFormData] = useState({
     studentId: '',
     firstName: '',
@@ -116,16 +117,38 @@ export default function NewStudentPage() {
             <CardTitle>Basic Information</CardTitle>
             <CardDescription>Student identification and personal details</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+            <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Student ID *</label>
-                <Input 
-                  placeholder="e.g., STU/2024/001"
-                  value={formData.studentId}
-                  onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="e.g., STU/2024/001"
+                    value={formData.studentId}
+                    onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                    required
+                    className="flex-1"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={async () => {
+                      setGenerating(true);
+                      try {
+                        const res = await fetch('/api/sms/students?action=generate-id');
+                        const data = await res.json();
+                        setFormData({ ...formData, studentId: data.studentId });
+                      } catch (err) {
+                        toast({ variant: 'destructive', description: 'Failed to generate ID' });
+                      } finally {
+                        setGenerating(false);
+                      }
+                    }}
+                    disabled={generating}
+                  >
+                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Gender *</label>

@@ -118,11 +118,11 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Header - Dashboard Style */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 rounded-2xl p-8 text-white">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold">{getGreeting()}, Super Admin!</h1>
-            <p className="text-blue-100 mt-2 text-lg">Welcome to Platform Control Center</p>
+            <p className="text-blue-100 dark:text-blue-200 mt-2 text-lg">Welcome to Platform Control Center</p>
             <p className="text-blue-200 text-sm mt-1">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>

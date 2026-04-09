@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface Plan {
   id: string;
@@ -51,10 +51,31 @@ export default function PlansPage() {
     maxAICalls: 0,
   });
   const [features, setFeatures] = useState<Record<string, boolean>>({});
+  const [saving, setSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Track changes
+  const originalDataRef = React.useRef<any>(null);
 
   useEffect(() => {
     fetchPlans();
   }, []);
+
+  useEffect(() => {
+    // Check if form data has changed from original
+    if (originalDataRef.current && editingPlan) {
+      const changed = 
+        formData.displayName !== originalDataRef.current.displayName ||
+        formData.description !== originalDataRef.current.description ||
+        formData.monthlyPrice !== originalDataRef.current.monthlyPrice ||
+        formData.yearlyPrice !== originalDataRef.current.yearlyPrice ||
+        formData.maxStudents !== originalDataRef.current.maxStudents ||
+        formData.maxTeachers !== originalDataRef.current.maxTeachers ||
+        formData.maxStorageGB !== originalDataRef.current.maxStorageGB ||
+        formData.maxAICalls !== originalDataRef.current.maxAICalls;
+      setHasChanges(changed);
+    }
+  }, [formData, editingPlan]);
 
   const fetchPlans = async () => {
     try {
@@ -99,27 +120,52 @@ export default function PlansPage() {
       maxAICalls: plan.maxAICalls,
     });
     setFeatures(plan.features || {});
+    setHasChanges(false);
+    originalDataRef.current = {
+      displayName: plan.displayName,
+      description: plan.description || '',
+      monthlyPrice: plan.monthlyPrice,
+      yearlyPrice: plan.yearlyPrice,
+      maxStudents: plan.maxStudents,
+      maxTeachers: plan.maxTeachers,
+      maxStorageGB: plan.maxStorageGB,
+      maxAICalls: plan.maxAICalls,
+    };
     setShowModal(true);
   };
 
   const handleSavePlan = async () => {
     if (!editingPlan) return;
+    setSaving(true);
     try {
-      await fetch(`/api/admin/plans/${editingPlan.id}`, {
+      const res1 = await fetch(`/api/admin/plans/${editingPlan.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      
+      if (!res1.ok) {
+        const errorData = await res1.json();
+        alert(`Failed to save plan: ${errorData.error || 'Unknown error'}`);
+        setSaving(false);
+        return;
+      }
+      
       await fetch(`/api/admin/plans/${editingPlan.id}/features`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ features }),
       });
+      
       setShowModal(false);
       setEditingPlan(null);
+      setHasChanges(false);
+      setSaving(false);
       fetchPlans();
     } catch (err) {
       console.error(err);
+      setSaving(false);
+      alert('Failed to save plan. Check console for details.');
     }
   };
 
@@ -384,9 +430,14 @@ export default function PlansPage() {
               </button>
               <button
                 onClick={handleSavePlan}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={saving || !hasChanges}
+                className={`flex-1 px-4 py-2 rounded-lg ${
+                  saving || !hasChanges 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
               >
-                Save Changes
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

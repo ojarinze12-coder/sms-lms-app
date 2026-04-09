@@ -411,22 +411,28 @@ async function main() {
     createdClasses[tier.code] = [];
     
     for (const classData of tierData) {
-      const academicClass = await prisma.academicClass.upsert({
+      // Check if class already exists
+      const existing = await prisma.academicClass.findFirst({
         where: {
-          academicYearId_name: {
-            academicYearId: academicYear.id,
-            name: classData.name,
-          }
-        },
-        update: {},
-        create: {
-          name: classData.name,
-          level: classData.level,
-          capacity: tier.code === 'SSS' ? 35 : 40,
           academicYearId: academicYear.id,
-          tierId: createdTiers[tier.code].id,
-        },
+          name: classData.name,
+        }
       });
+      
+      let academicClass;
+      if (existing) {
+        academicClass = existing;
+      } else {
+        academicClass = await prisma.academicClass.create({
+          data: {
+            name: classData.name,
+            level: classData.level,
+            capacity: tier.code === 'SSS' ? 35 : 40,
+            academicYearId: academicYear.id,
+            tierId: createdTiers[tier.code].id,
+          },
+        });
+      }
       createdClasses[tier.code].push(academicClass);
     }
   }

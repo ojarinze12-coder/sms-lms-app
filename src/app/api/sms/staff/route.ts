@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 import { z } from 'zod';
+import { generateStaffId } from '@/lib/generate-id';
 
 const createStaffSchema = z.object({
   employeeId: z.string().min(1, 'Employee ID is required'),
@@ -38,6 +39,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action');
+
+    if (action === 'generate-id') {
+      const nextId = await generateStaffId(authUser.tenantId);
+      return NextResponse.json({ employeeId: nextId });
+    }
+
     const search = searchParams.get('search');
     const category = searchParams.get('category');
     const status = searchParams.get('status');

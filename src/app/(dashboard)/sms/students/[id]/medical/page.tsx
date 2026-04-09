@@ -102,16 +102,19 @@ export default function StudentMedicalPage() {
 
   async function fetchData() {
     try {
-      const [recordsRes, vaccinationsRes] = await Promise.all([
+      const [recordsRes, vaccinationsRes, conditionsRes] = await Promise.all([
         fetch(`/api/sms/students/${params.id}/medical`),
         fetch(`/api/sms/students/${params.id}/vaccinations`),
+        fetch(`/api/sms/students/${params.id}/conditions`),
       ]);
       
       const recordsData = await recordsRes.json();
       const vaccinationsData = await vaccinationsRes.json();
+      const conditionsData = await conditionsRes.json();
       
       setMedicalRecords(recordsData.records || []);
       setVaccinations(vaccinationsData.vaccinations || []);
+      setConditions(conditionsData.conditions || []);
     } catch (err) {
       console.error('Failed to fetch medical data:', err);
     } finally {
@@ -177,6 +180,35 @@ export default function StudentMedicalPage() {
     }
   }
 
+  async function handleAddCondition(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const res = await fetch(`/api/sms/students/${params.id}/conditions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(conditionForm),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setConditions([data.condition, ...conditions]);
+        setShowConditionForm(false);
+        setConditionForm({
+          condition: '',
+          diagnosedDate: '',
+          status: 'ACTIVE',
+          severity: '',
+          treatment: '',
+          medication: '',
+          nextCheckup: '',
+          notes: '',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to add chronic condition:', err);
+    }
+  }
+
   const getVisitTypeBadge = (type: string) => {
     const colors: Record<string, string> = {
       CHECKUP: 'bg-blue-100 text-blue-800',
@@ -235,7 +267,7 @@ export default function StudentMedicalPage() {
                     <Plus className="h-4 w-4" /> Add Visit
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add Medical Record</DialogTitle>
                   </DialogHeader>
@@ -350,7 +382,7 @@ export default function StudentMedicalPage() {
                     <Plus className="h-4 w-4" /> Add Vaccination
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add Vaccination Record</DialogTitle>
                   </DialogHeader>
@@ -441,15 +473,89 @@ export default function StudentMedicalPage() {
 
         <TabsContent value="conditions">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Chronic Conditions</CardTitle>
+              <Dialog open={showConditionForm} onOpenChange={setShowConditionForm}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" /> Add Condition
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Add Chronic Condition</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleAddCondition} className="space-y-4">
+                    <div>
+                      <Label>Condition Name</Label>
+                      <Input value={conditionForm.condition} onChange={e => setConditionForm({...conditionForm, condition: e.target.value})} placeholder="e.g., Asthma, Diabetes" required />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Diagnosed Date</Label>
+                        <Input type="date" value={conditionForm.diagnosedDate} onChange={e => setConditionForm({...conditionForm, diagnosedDate: e.target.value})} />
+                      </div>
+                      <div>
+                        <Label>Severity</Label>
+                        <Select value={conditionForm.severity} onValueChange={val => setConditionForm({...conditionForm, severity: val})}>
+                          <SelectTrigger><SelectValue placeholder="Select severity" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="MILD">Mild</SelectItem>
+                            <SelectItem value="MODERATE">Moderate</SelectItem>
+                            <SelectItem value="SEVERE">Severe</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Treatment</Label>
+                      <Textarea value={conditionForm.treatment} onChange={e => setConditionForm({...conditionForm, treatment: e.target.value})} placeholder="Current treatment..." />
+                    </div>
+                    <div>
+                      <Label>Medication</Label>
+                      <Input value={conditionForm.medication} onChange={e => setConditionForm({...conditionForm, medication: e.target.value})} placeholder="Medications" />
+                    </div>
+                    <div>
+                      <Label>Next Checkup</Label>
+                      <Input type="date" value={conditionForm.nextCheckup} onChange={e => setConditionForm({...conditionForm, nextCheckup: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>Notes</Label>
+                      <Textarea value={conditionForm.notes} onChange={e => setConditionForm({...conditionForm, notes: e.target.value})} placeholder="Additional notes..." />
+                    </div>
+                    <Button type="submit" className="w-full">Save Condition</Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p>No chronic conditions recorded</p>
-                <Button className="mt-4">Add Condition</Button>
-              </div>
+              {conditions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p>No chronic conditions recorded</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {conditions.map(condition => (
+                    <div key={condition.id} className="border rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-medium">{condition.condition}</h4>
+                          <p className="text-sm text-gray-500">
+                            Diagnosed: {condition.diagnosedDate ? new Date(condition.diagnosedDate).toLocaleDateString() : 'N/A'}
+                            {condition.severity && ` | Severity: ${condition.severity}`}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-xs ${condition.status === 'ACTIVE' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                          {condition.status}
+                        </span>
+                      </div>
+                      {condition.treatment && <p className="text-sm mt-2">Treatment: {condition.treatment}</p>}
+                      {condition.medication && <p className="text-sm mt-1">Medication: {condition.medication}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -193,7 +193,7 @@ export default function EditStudentPage() {
               <div>
                 <label className="block text-sm font-medium mb-1">Gender</label>
                 <Select
-                  value={student.gender || ''}
+                  value={student.gender}
                   onValueChange={(v) => setStudent({ ...student, gender: v })}
                 >
                   <SelectTrigger>

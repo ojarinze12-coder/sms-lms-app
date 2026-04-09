@@ -24,7 +24,7 @@ const schoolNavItems = [
     items: [
       { label: 'Overview', href: '/school/academics', icon: 'book' },
       { label: 'Timetable', href: '/school/timetable', icon: 'calendar' },
-      { label: 'Exams', href: '/school/exams', icon: 'clipboard' },
+      { label: 'Grading Scales', href: '/school/exams', icon: 'clipboard' },
       { label: 'Leaderboard', href: '/sms/leaderboard', icon: 'trophy' },
     ]
   },

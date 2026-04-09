@@ -6,15 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   GraduationCap, 
-  Calendar, 
-  Bell, 
-  FileText,
-  BookOpen,
   Clock,
   CheckCircle,
   TrendingUp,
   AlertCircle,
-  Table
+  Table,
+  FileText,
+  BookOpen,
+  Bell,
+  Calendar
 } from 'lucide-react';
 
 interface Enrollment {
@@ -212,89 +212,60 @@ export default function StudentPortalPage() {
   const pendingAssignments = data.assignments.filter(a => a.status !== 'GRADED' && new Date(a.assignment.dueDate || '') > new Date());
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
-        <p className="text-orange-100">
+    <div className="space-y-4 md:space-y-6 p-2 md:p-0">
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-4 md:p-6 text-white">
+        <h1 className="text-xl md:text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
+        <p className="text-orange-100 text-sm md:text-base">
           {data.student.class ? `${data.student.class.name}` : 'Student Portal'}
-          {' | '}Student ID: {data.student.studentId}
+          {' | '}ID: {data.student.studentId}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <button onClick={() => setViewMode('overview')} className={`p-4 rounded-xl text-left transition-all ${viewMode === 'overview' ? 'bg-orange-50 border-2 border-orange-500' : 'bg-white border hover:border-gray-300'}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 rounded-lg"><TrendingUp className="h-5 w-5 text-orange-600" /></div>
-            <div><p className="text-sm text-gray-500">Overview</p></div>
-          </div>
-        </button>
-        <button onClick={() => setViewMode('timetable')} className={`p-4 rounded-xl text-left transition-all ${viewMode === 'timetable' ? 'bg-indigo-50 border-2 border-indigo-500' : 'bg-white border hover:border-gray-300'}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-100 rounded-lg"><Table className="h-5 w-5 text-indigo-600" /></div>
-            <div>
-              <p className="text-sm text-gray-500">Timetable</p>
-            </div>
-          </div>
-        </button>
-        <button onClick={() => setViewMode('courses')} className={`p-4 rounded-xl text-left transition-all ${viewMode === 'courses' ? 'bg-purple-50 border-2 border-purple-500' : 'bg-white border hover:border-gray-300'}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg"><BookOpen className="h-5 w-5 text-purple-600" /></div>
-            <div>
-              <p className="text-sm text-gray-500">My Courses</p>
-              <p className="font-bold text-purple-600">{data.enrollments.length}</p>
-            </div>
-          </div>
-        </button>
-        <button onClick={() => setViewMode('assignments')} className={`p-4 rounded-xl text-left transition-all ${viewMode === 'assignments' ? 'bg-blue-50 border-2 border-blue-500' : 'bg-white border hover:border-gray-300'}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg"><FileText className="h-5 w-5 text-blue-600" /></div>
-            <div>
-              <p className="text-sm text-gray-500">Assignments</p>
-              <p className="font-bold text-blue-600">{pendingAssignments.length}</p>
-            </div>
-          </div>
-        </button>
-        <button onClick={() => setViewMode('attendance')} className={`p-4 rounded-xl text-left transition-all ${viewMode === 'attendance' ? 'bg-green-50 border-2 border-green-500' : 'bg-white border hover:border-gray-300'}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg"><Calendar className="h-5 w-5 text-green-600" /></div>
-            <div>
-              <p className="text-sm text-gray-500">Attendance</p>
-              <p className="font-bold text-green-600">{attendanceStats.percentage}%</p>
-            </div>
-          </div>
-        </button>
-        <button onClick={() => setViewMode('announcements')} className={`p-4 rounded-xl text-left transition-all ${viewMode === 'announcements' ? 'bg-red-50 border-2 border-red-500' : 'bg-white border hover:border-gray-300'}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg"><Bell className="h-5 w-5 text-red-600" /></div>
-            <div>
-              <p className="text-sm text-gray-500">Notices</p>
-              <p className="font-bold text-red-600">{data.announcements.length}</p>
-            </div>
-          </div>
-        </button>
+      {/* Navigation - Scrollable on mobile */}
+      <div className="overflow-x-auto pb-2 -mx-2 px-2">
+        <div className="flex gap-2 min-w-max">
+          <button onClick={() => setViewMode('overview')} className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${viewMode === 'overview' ? 'bg-orange-500 text-white' : 'bg-white border text-gray-600 hover:border-gray-400'}`}>
+            Overview
+          </button>
+          <button onClick={() => setViewMode('timetable')} className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${viewMode === 'timetable' ? 'bg-indigo-500 text-white' : 'bg-white border text-gray-600 hover:border-gray-400'}`}>
+            Timetable
+          </button>
+          <button onClick={() => setViewMode('courses')} className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${viewMode === 'courses' ? 'bg-purple-500 text-white' : 'bg-white border text-gray-600 hover:border-gray-400'}`}>
+            My Courses ({data.enrollments.length})
+          </button>
+          <button onClick={() => setViewMode('assignments')} className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${viewMode === 'assignments' ? 'bg-blue-500 text-white' : 'bg-white border text-gray-600 hover:border-gray-400'}`}>
+            Assignments ({pendingAssignments.length})
+          </button>
+          <button onClick={() => setViewMode('attendance')} className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${viewMode === 'attendance' ? 'bg-green-500 text-white' : 'bg-white border text-gray-600 hover:border-gray-400'}`}>
+            Attendance ({attendanceStats.percentage}%)
+          </button>
+          <button onClick={() => setViewMode('announcements')} className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${viewMode === 'announcements' ? 'bg-red-500 text-white' : 'bg-white border text-gray-600 hover:border-gray-400'}`}>
+            Notices ({data.announcements.length})
+          </button>
+        </div>
       </div>
 
       {viewMode === 'overview' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">Attendance Rate</CardTitle></CardHeader>
+        <div className="space-y-4 md:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+            <Card className="p-3 md:p-4">
+              <CardHeader className="pb-2"><CardTitle className="text-xs md:text-sm font-medium text-gray-500">Attendance Rate</CardTitle></CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600">{attendanceStats.percentage}%</div>
+                <div className="text-2xl md:text-3xl font-bold text-green-600">{attendanceStats.percentage}%</div>
                 <p className="text-xs text-gray-500 mt-1">{attendanceStats.present} of {attendanceStats.total} days present</p>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">Pending Assignments</CardTitle></CardHeader>
+            <Card className="p-3 md:p-4">
+              <CardHeader className="pb-2"><CardTitle className="text-xs md:text-sm font-medium text-gray-500">Pending Assignments</CardTitle></CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-blue-600">{pendingAssignments.length}</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">{pendingAssignments.length}</div>
                 <p className="text-xs text-gray-500 mt-1">Awaiting submission</p>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-gray-500">Enrolled Courses</CardTitle></CardHeader>
+            <Card className="p-3 md:p-4">
+              <CardHeader className="pb-2"><CardTitle className="text-xs md:text-sm font-medium text-gray-500">Enrolled Courses</CardTitle></CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-purple-600">{data.enrollments.length}</div>
+                <div className="text-2xl md:text-3xl font-bold text-purple-600">{data.enrollments.length}</div>
                 <p className="text-xs text-gray-500 mt-1">Active enrollments</p>
               </CardContent>
             </Card>
@@ -414,39 +385,41 @@ export default function StudentPortalPage() {
             {data.assignments.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No assignments found</p>
             ) : (
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr>
-                    <th className="text-left py-3">Assignment</th>
-                    <th className="text-left py-3">Course</th>
-                    <th className="text-left py-3">Due Date</th>
-                    <th className="text-left py-3">Status</th>
-                    <th className="text-left py-3">Grade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.assignments.map((assign) => (
-                    <tr key={assign.id} className="border-b">
-                      <td className="py-3 font-medium">{assign.assignment.title}</td>
-                      <td className="py-3 text-sm">{assign.assignment.course?.name || assign.assignment.subject?.name || '-'}</td>
-                      <td className="py-3 text-sm">{assign.assignment.dueDate ? formatDate(assign.assignment.dueDate) : '-'}</td>
-                      <td className="py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          assign.status === 'GRADED' ? 'bg-green-100 text-green-700' :
-                          assign.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-700' :
-                          assign.status === 'LATE' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>{assign.status}</span>
-                      </td>
-                      <td className="py-3">
-                        {assign.grade !== null && assign.grade !== undefined ? (
-                          <span className="font-bold">{assign.grade}%</span>
-                        ) : '-'}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[600px]">
+                  <thead className="border-b">
+                    <tr>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Assignment</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Course</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Due Date</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Status</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Grade</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.assignments.map((assign) => (
+                      <tr key={assign.id} className="border-b">
+                        <td className="py-3 px-2 font-medium whitespace-nowrap">{assign.assignment.title}</td>
+                        <td className="py-3 px-2 text-sm whitespace-nowrap">{assign.assignment.course?.name || assign.assignment.subject?.name || '-'}</td>
+                        <td className="py-3 px-2 text-sm whitespace-nowrap">{assign.assignment.dueDate ? formatDate(assign.assignment.dueDate) : '-'}</td>
+                        <td className="py-3 px-2">
+                          <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                            assign.status === 'GRADED' ? 'bg-green-100 text-green-700' :
+                            assign.status === 'SUBMITTED' ? 'bg-blue-100 text-blue-700' :
+                            assign.status === 'LATE' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>{assign.status}</span>
+                        </td>
+                        <td className="py-3 px-2 whitespace-nowrap">
+                          {assign.grade !== null && assign.grade !== undefined ? (
+                            <span className="font-bold">{assign.grade}%</span>
+                          ) : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -481,26 +454,28 @@ export default function StudentPortalPage() {
             {data.attendances.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No attendance records found</p>
             ) : (
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr>
-                    <th className="text-left py-3">Date</th>
-                    <th className="text-left py-3">Status</th>
-                    <th className="text-left py-3">Remarks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.attendances.map((att) => (
-                    <tr key={att.id} className="border-b">
-                      <td className="py-3">{formatDate(att.date)}</td>
-                      <td className="py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs ${getAttendanceColor(att.status)}`}>{att.status}</span>
-                      </td>
-                      <td className="py-3 text-sm text-gray-600">{att.remarks || '-'}</td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[400px]">
+                  <thead className="border-b">
+                    <tr>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Date</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Status</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Remarks</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.attendances.map((att) => (
+                      <tr key={att.id} className="border-b">
+                        <td className="py-3 px-2 whitespace-nowrap">{formatDate(att.date)}</td>
+                        <td className="py-3 px-2">
+                          <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${getAttendanceColor(att.status)}`}>{att.status}</span>
+                        </td>
+                        <td className="py-3 px-2 text-sm text-gray-600 whitespace-nowrap">{att.remarks || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -517,28 +492,29 @@ export default function StudentPortalPage() {
             {data.results.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No exam results found</p>
             ) : (
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr>
-                    <th className="text-left py-3">Exam</th>
-                    <th className="text-left py-3">Subject</th>
-                    <th className="text-left py-3">Term</th>
-                    <th className="text-left py-3">Score</th>
-                    <th className="text-left py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.results.map((result) => (
-                    <tr key={result.id} className="border-b">
-                      <td className="py-3 font-medium">{result.exam?.title}</td>
-                      <td className="py-3">{result.exam?.subject?.name}</td>
-                      <td className="py-3 text-sm">{result.exam?.term?.name}</td>
-                      <td className="py-3">
-                        <span className="font-bold">{result.percentage?.toFixed(1)}%</span>
-                      </td>
-                      <td className="py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs ${result.status === 'GRADED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{result.status}</span>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[500px]">
+                  <thead className="border-b">
+                    <tr>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Exam</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Subject</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Term</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Score</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.results.map((result) => (
+                      <tr key={result.id} className="border-b">
+                        <td className="py-3 px-2 font-medium whitespace-nowrap">{result.exam?.title}</td>
+                        <td className="py-3 px-2 whitespace-nowrap">{result.exam?.subject?.name}</td>
+                        <td className="py-3 px-2 text-sm whitespace-nowrap">{result.exam?.term?.name}</td>
+                        <td className="py-3 px-2 whitespace-nowrap">
+                          <span className="font-bold">{result.percentage?.toFixed(1)}%</span>
+                        </td>
+                        <td className="py-3 px-2 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${result.status === 'GRADED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{result.status}</span>
+                        </td>
                     </tr>
                   ))}
                 </tbody>
@@ -591,15 +567,15 @@ export default function StudentPortalPage() {
               <p className="text-gray-500 text-center py-8">No timetable available</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[600px]">
                   <thead>
                     <tr className="border-b">
-                      <th className="py-2 px-3 text-left font-medium text-gray-600">Period</th>
-                      <th className="py-2 px-3 text-left font-medium text-gray-600">Monday</th>
-                      <th className="py-2 px-3 text-left font-medium text-gray-600">Tuesday</th>
-                      <th className="py-2 px-3 text-left font-medium text-gray-600">Wednesday</th>
-                      <th className="py-2 px-3 text-left font-medium text-gray-600">Thursday</th>
-                      <th className="py-2 px-3 text-left font-medium text-gray-600">Friday</th>
+                      <th className="py-2 px-3 text-left font-medium text-gray-600 whitespace-nowrap">Period</th>
+                      <th className="py-2 px-3 text-left font-medium text-gray-600 whitespace-nowrap">Mon</th>
+                      <th className="py-2 px-3 text-left font-medium text-gray-600 whitespace-nowrap">Tue</th>
+                      <th className="py-2 px-3 text-left font-medium text-gray-600 whitespace-nowrap">Wed</th>
+                      <th className="py-2 px-3 text-left font-medium text-gray-600 whitespace-nowrap">Thu</th>
+                      <th className="py-2 px-3 text-left font-medium text-gray-600 whitespace-nowrap">Fri</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -607,18 +583,15 @@ export default function StudentPortalPage() {
                       const periodSlots = data.timetable?.filter(t => t.period === period) || [];
                       return (
                         <tr key={period} className="border-b hover:bg-gray-50">
-                          <td className="py-3 px-3 font-medium">Period {period}</td>
+                          <td className="py-3 px-3 font-medium whitespace-nowrap">P{period}</td>
                           {[1, 2, 3, 4, 5].map((day) => {
                             const slot = periodSlots.find(s => s.dayOfWeek === day);
                             return (
-                              <td key={day} className="py-3 px-3">
+                              <td key={day} className="py-3 px-2 min-w-[100px]">
                                 {slot ? (
                                   <div className="text-sm">
                                     <p className="font-medium">{slot.subject.name}</p>
                                     <p className="text-gray-500 text-xs">{slot.subject.code}</p>
-                                    {slot.teacher && (
-                                      <p className="text-gray-400 text-xs">{slot.teacher.firstName} {slot.teacher.lastName}</p>
-                                    )}
                                   </div>
                                 ) : (
                                   <span className="text-gray-300">-</span>

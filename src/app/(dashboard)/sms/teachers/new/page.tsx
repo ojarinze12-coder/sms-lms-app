@@ -15,11 +15,13 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { NIGERIAN_STATES, NIGERIAN_LGAS } from '@/lib/nigeria';
+import { Loader2, Wand2 } from 'lucide-react';
 
 export default function NewTeacherPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [formData, setFormData] = useState({
     employeeId: '',
     firstName: '',
@@ -103,12 +105,34 @@ export default function NewTeacherPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Employee ID *</label>
-                <Input 
-                  placeholder="e.g., TED/2024/001"
-                  value={formData.employeeId}
-                  onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="e.g., TCH/2024/001"
+                    value={formData.employeeId}
+                    onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+                    required
+                    className="flex-1"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={async () => {
+                      setGenerating(true);
+                      try {
+                        const res = await fetch('/api/sms/teachers?action=generate-id');
+                        const data = await res.json();
+                        setFormData({ ...formData, employeeId: data.employeeId });
+                      } catch (err) {
+                        toast({ variant: 'destructive', description: 'Failed to generate ID' });
+                      } finally {
+                        setGenerating(false);
+                      }
+                    }}
+                    disabled={generating}
+                  >
+                    {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Gender *</label>

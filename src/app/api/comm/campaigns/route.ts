@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
           channels: channels || ['SMS'],
           targetType: targetType || 'ALL',
           targetIds: targetIds || [],
-          scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+          scheduledAt: scheduledFor ? new Date(scheduledFor) : null,
           totalRecipients,
           status: scheduledFor ? 'SCHEDULED' : 'DRAFT',
           tenantId: user.tenantId,
