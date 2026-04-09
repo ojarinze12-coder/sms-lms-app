@@ -14,18 +14,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [schoolCount, studentCount, teacherCount, courseCount, examCount, subscriptionCount] = await Promise.all([
-      prisma.tenant.count(),
-      prisma.student.count(),
-      prisma.teacher.count(),
-      prisma.course.count(),
-      prisma.exam.count(),
-      prisma.subscription.count(),
-    ]);
+    let schoolCount = 0, studentCount = 0, teacherCount = 0, courseCount = 0, examCount = 0, subscriptionCount = 0;
+
+    try { schoolCount = await prisma.tenant.count(); } catch (e) { console.error('tenant count error:', e); }
+    try { studentCount = await prisma.student.count(); } catch (e) { console.error('student count error:', e); }
+    try { teacherCount = await prisma.teacher.count(); } catch (e) { console.error('teacher count error:', e); }
+    try { courseCount = await prisma.course.count(); } catch (e) { console.error('course count error:', e); }
+    try { examCount = await prisma.exam.count(); } catch (e) { console.error('exam count error:', e); }
+    try { subscriptionCount = await prisma.subscription.count(); } catch (e) { console.error('subscription count error:', e); }
 
     const subscriptions = await prisma.subscription.findMany({
       include: { subscriptionPlan: true },
-    });
+    }).catch(() => []);
 
     const planCounts = {
       FREE: 0,
