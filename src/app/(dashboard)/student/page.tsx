@@ -188,6 +188,11 @@ export default function StudentPortalPage() {
     );
   }
 
+  const attendanceStats = calculateAttendanceStats();
+  const pendingAssignments = data?.assignments 
+    ? data.assignments.filter(a => a.status !== 'GRADED' && new Date(a.assignment.dueDate || '') > new Date())
+    : [];
+
   if (error) {
     return (
       <div className="max-w-2xl mx-auto mt-8">
@@ -207,9 +212,6 @@ export default function StudentPortalPage() {
       </div>
     );
   }
-
-  const attendanceStats = calculateAttendanceStats();
-  const pendingAssignments = data.assignments.filter(a => a.status !== 'GRADED' && new Date(a.assignment.dueDate || '') > new Date());
 
   return (
     <div className="space-y-4 md:space-y-6 p-2 md:p-0">
