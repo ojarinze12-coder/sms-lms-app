@@ -1,19 +1,72 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { getAuthUser } from '@/lib/auth-server';
-import { prisma } from '@/lib/prisma';
 
-export default async function TeachersPage() {
-  const authUser = await getAuthUser();
+interface Teacher {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  employeeId?: string;
+  specialty?: string;
+}
 
-  if (!authUser) {
-    redirect('/login');
+export default function TeachersPage() {
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/sms/teachers', { credentials: 'include' })
+      .then(res => {
+        if (res.status === 401) {
+          setError('Session expired. Please login again.');
+          return { teachers: [] };
+        }
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then(data => {
+        setTeachers(data.teachers || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        setError('Failed to load teachers');
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  const teachers = await prisma.teacher.findMany({
-    where: { tenantId: authUser.tenantId },
-    orderBy: { createdAt: 'desc' }
-  });
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold dark:text-white">Teachers</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage teacher records</p>
+          </div>
+        </div>
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+          <p className="text-yellow-800">{error}</p>
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -24,7 +77,7 @@ export default async function TeachersPage() {
         </div>
         <Link
           href="/sms/teachers/new"
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 dark:bg-primary"
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
         >
           Add Teacher
         </Link>
@@ -42,7 +95,7 @@ export default async function TeachersPage() {
             </tr>
           </thead>
           <tbody className="divide-y dark:divide-gray-700">
-            {!teachers || teachers.length === 0 ? (
+            {teachers.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                   No teachers yet. Add your first teacher to get started.
@@ -51,17 +104,16 @@ export default async function TeachersPage() {
             ) : (
               teachers.map((teacher) => (
                 <tr key={teacher.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-6 py-4 text-sm dark:text-white">{teacher.employeeId}</td>
-                  <td className="px-6 py-4 text-sm font-medium dark:text-white">
-                    {teacher.firstName} {teacher.lastName}
+                  <td className="px-6 py-3 text-gray-600 dark:text-gray-300">{teacher.employeeId || '-'}</td>
+                  <td className="px-6 py-3">
+                    <Link href={`/sms/teachers/${teacher.id}`} className="text-blue-600 hover:underline">
+                      {teacher.firstName} {teacher.lastName}
+                    </Link>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{teacher.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{teacher.specialty || '-'}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <Link
-                      href={`/sms/teachers/${teacher.id}`}
-                      className="text-primary hover:underline"
-                    >
+                  <td className="px-6 py-3 text-gray-600 dark:text-gray-300">{teacher.email || '-'}</td>
+                  <td className="px-6 py-3 text-gray-600 dark:text-gray-300">{teacher.specialty || '-'}</td>
+                  <td className="px-6 py-3">
+                    <Link href={`/sms/teachers/${teacher.id}`} className="text-blue-600 hover:underline">
                       View
                     </Link>
                   </td>
