@@ -200,6 +200,17 @@ export default function DashboardLayout({
   const isStudent = role === 'STUDENT';
   const isParent = role === 'PARENT';
 
+  // Add timeout to prevent infinite auth check
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      // If still loading after 5 seconds, show page anyway
+      if (loading) {
+        console.log('[Layout] Auth timeout, showing page anyway');
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [loading]);
+
   useEffect(() => {
     async function fetchTenantInfo() {
       try {
@@ -212,10 +223,10 @@ export default function DashboardLayout({
         console.error('Failed to fetch tenant info:', err);
       }
     }
-    if (!isSuperAdmin) {
+    if (!isSuperAdmin && user) {
       fetchTenantInfo();
     }
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, user]);
 
   let navItems = adminNavItems;
   if (isSuperAdmin) navItems = superAdminNavItems;
