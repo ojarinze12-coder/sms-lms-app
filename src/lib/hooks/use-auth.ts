@@ -32,11 +32,16 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    let timeoutId: NodeJS.Timeout;
+    
     async function checkAuth() {
       try {
         const res = await fetch('/api/auth/me', {
           credentials: 'include',
         });
+        
+        if (!mounted) return;
         
         if (res.ok) {
           const data = await res.json();
@@ -46,12 +51,30 @@ export function useAuth(): UseAuthReturn {
         }
       } catch (error) {
         console.error('Auth check failed:', error);
-        setUser(null);
+        if (mounted) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
+    
+    // Set a timeout - if auth doesn't complete in 5 seconds, show the page anyway
+    timeoutId = setTimeout(() => {
+      if (mounted && loading) {
+        console.log('[useAuth] Timeout - auth check taking too long, showing page anyway');
+        setLoading(false);
+      }
+    }, 5000);
+    
     checkAuth();
+    
+    return () => {
+      mounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   const role = user?.role || null;

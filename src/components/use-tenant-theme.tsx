@@ -1,13 +1,17 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export function useTenantTheme() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    
     async function fetchAndApplyTheme() {
       try {
         const res = await fetch('/api/school/settings');
@@ -32,10 +36,8 @@ export function useTenantTheme() {
       }
     }
 
-    if (loading) {
-      fetchAndApplyTheme();
-    }
-  }, [theme, setTheme, loading]);
+    fetchAndApplyTheme();
+  }, [theme, setTheme]);
 
   return { theme, resolvedTheme, setTheme, loading };
 }

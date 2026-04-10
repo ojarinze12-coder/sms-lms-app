@@ -46,8 +46,19 @@ export default function AdminDashboard() {
   const [revenue, setRevenue] = useState<RevenueData['overview'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<{firstName?: string; lastName?: string; role?: string} | null>(null);
 
   useEffect(() => {
+    // First get user info
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setUser(data.user);
+        }
+      })
+      .catch(console.error);
+      
     Promise.all([
       fetch('/api/admin/analytics').then(async (r) => {
         if (!r.ok) {
@@ -88,6 +99,16 @@ export default function AdminDashboard() {
     return 'Good evening';
   };
 
+  const getUserName = () => {
+    if (user?.firstName) return user.firstName;
+    if (user?.lastName) return user.lastName;
+    return user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin';
+  };
+
+  const getRoleLabel = () => {
+    return user?.role === 'SUPER_ADMIN' ? 'Platform Control Center' : 'School Dashboard';
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -121,8 +142,8 @@ export default function AdminDashboard() {
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 rounded-2xl p-8 text-white">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold">{getGreeting()}, Super Admin!</h1>
-            <p className="text-blue-100 dark:text-blue-200 mt-2 text-lg">Welcome to Platform Control Center</p>
+            <h1 className="text-3xl font-bold">{getGreeting()}, {getUserName()}!</h1>
+            <p className="text-blue-100 dark:text-blue-200 mt-2 text-lg">Welcome to {getRoleLabel()}</p>
             <p className="text-blue-200 text-sm mt-1">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>

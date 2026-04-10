@@ -43,19 +43,32 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [tenant, setTenant] = useState<TenantInfo | null>(null);
+  const [showContent, setShowContent] = useState(false);
+
+  // Timeout to prevent infinite loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('[Dashboard] Loading timeout - showing content anyway');
+      setShowContent(true);
+      setLoading(false);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading || showContent) {
       loadStats();
       if (!isSuperAdmin) {
         loadTenant();
       }
     }
-  }, [authLoading, isSuperAdmin]);
+  }, [authLoading, isSuperAdmin, showContent]);
 
   const loadTenant = async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
       if (!res.ok) {
         console.error('Failed to load tenant:', res.status);
         return;
@@ -71,7 +84,9 @@ export default function DashboardPage() {
 
   const loadStats = async () => {
     try {
-      const res = await fetch('/api/sms/analytics');
+      const res = await fetch('/api/sms/analytics', {
+        credentials: 'include',
+      });
       if (!res.ok) {
         const errorData = await res.json();
         setError(errorData.error || 'Failed to load dashboard stats');

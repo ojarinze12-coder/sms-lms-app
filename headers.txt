@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch
+content-type: application/json
+set-cookie: pcc-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmZDQ3ODdjLWYyNGItNDRmMS05YThiLTEzZjgyNTI4M2RhMCIsInVzZXJJZCI6ImZmZDQ3ODdjLWYyNGItNDRmMS05YThiLTEzZjgyNTI4M2RhMCIsImVtYWlsIjoiZGVidWdAdGVzdC5jb20iLCJyb2xlIjoiU1VQRVJfQURNSU4iLCJ0b2tlblZlcnNpb24iOjYsImlhdCI6MTc3NTc2NjQ2MCwiZXhwIjoxNzc2MzcxMjYwfQ.j6YXZrGrQiwkI0Tp6ehjDSNCgrSN1AN2tqOcbZADj04; Path=/; Expires=Thu, 16 Apr 2026 20:27:40 GMT; Max-Age=604800; HttpOnly; SameSite=lax
+x-middleware-set-cookie: pcc-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmZDQ3ODdjLWYyNGItNDRmMS05YThiLTEzZjgyNTI4M2RhMCIsInVzZXJJZCI6ImZmZDQ3ODdjLWYyNGItNDRmMS05YThiLTEzZjgyNTI4M2RhMCIsImVtYWlsIjoiZGVidWdAdGVzdC5jb20iLCJyb2xlIjoiU1VQRVJfQURNSU4iLCJ0b2tlblZlcnNpb24iOjYsImlhdCI6MTc3NTc2NjQ2MCwiZXhwIjoxNzc2MzcxMjYwfQ.j6YXZrGrQiwkI0Tp6ehjDSNCgrSN1AN2tqOcbZADj04; Path=/; Expires=Thu, 16 Apr 2026 20:27:40 GMT; Max-Age=604800; HttpOnly; SameSite=lax
+Date: Thu, 09 Apr 2026 20:27:40 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, createContext, useContext } from 'react';
+import { useEffect, useState, createContext, useContext, useRef } from 'react';
 
 interface TenantBranding {
   name?: string;
@@ -71,8 +71,12 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } {
 export function BrandThemeProvider({ children }: { children: React.ReactNode }) {
   const [branding, setBranding] = useState<TenantBranding>({});
   const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    
     async function fetchBranding() {
       try {
         const res = await fetch('/api/auth/me');

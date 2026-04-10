@@ -1,0 +1,1 @@
+{"user":{"id":"ffd4787c-f24b-44f1-9a8b-13f825283da0","email":"debug@test.com","firstName":"Debug","lastName":"User","role":"SUPER_ADMIN","tenant":null}}

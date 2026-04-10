@@ -36,8 +36,8 @@ export default function NotFound() {
             Go Back
           </Button>
           <Button asChild>
-            <Link href="/">
-              Go to Home
+            <Link href="/login">
+              Go to Login
             </Link>
           </Button>
         </div>
