@@ -14,7 +14,7 @@ export function useTenantTheme() {
     
     async function fetchAndApplyTheme() {
       try {
-        const res = await fetch('/api/school/settings');
+        const res = await fetch('/api/school/settings', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           const tenantTheme = data.settings?.themeMode?.toLowerCase() || 'system';

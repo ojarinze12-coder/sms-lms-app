@@ -203,7 +203,7 @@ export default function DashboardLayout({
   useEffect(() => {
     async function fetchTenantInfo() {
       try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
         const data = await res.json();
         if (data.user?.tenant) {
           setTenantInfo(data.user.tenant);
