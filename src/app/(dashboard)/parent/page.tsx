@@ -59,8 +59,14 @@ export default function ParentPortalPage() {
 
   const loadPortalData = async () => {
     try {
-      const res = await fetch('/api/sms/parents');
+      const res = await fetch('/api/sms/parents', { credentials: 'include' });
       const data = await res.json();
+      
+      if (res.status === 401) {
+        setError('Session expired. Please login again.');
+        setLoading(false);
+        return;
+      }
       
       if (!res.ok) {
         setError(data.error || 'Failed to load portal data');
@@ -122,9 +128,15 @@ export default function ParentPortalPage() {
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto mt-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          {error}
+      <div className="max-w-2xl mx-auto mt-8 p-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
