@@ -1,29 +1,75 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { getAuthUser } from '@/lib/auth-server';
-import { prisma } from '@/lib/prisma';
-import { Badge } from '@/components/ui/badge';
 
-export default async function CoursesPage() {
-  const authUser = await getAuthUser();
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  thumbnail?: string;
+  teacher?: { firstName: string; lastName: string };
+}
 
-  if (!authUser) {
-    redirect('/login');
+export default function CoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isTeacher, setIsTeacher] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/lms/courses', { credentials: 'include' })
+      .then(res => {
+        if (res.status === 401) {
+          setError('Session expired. Please login again.');
+          return { courses: [] };
+        }
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then(data => {
+        setCourses(data.courses || []);
+        // Check if user is teacher from the response
+        setIsTeacher(data.isTeacher || false);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        setError('Failed to load courses');
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  const isTeacher = authUser.role === 'TEACHER';
-  
-  let courses;
-  if (isTeacher) {
-    courses = await prisma.course.findMany({
-      where: { teacherId: authUser.userId },
-      orderBy: { createdAt: 'desc' }
-    });
-  } else {
-    courses = await prisma.course.findMany({
-      where: { tenantId: authUser.tenantId },
-      orderBy: { createdAt: 'desc' }
-    });
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold dark:text-white">
+              {isTeacher ? 'My Courses' : 'Courses'}
+            </h1>
+          </div>
+        </div>
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+          <p className="text-yellow-800">{error}</p>
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -37,49 +83,38 @@ export default async function CoursesPage() {
             {isTeacher ? 'Your assigned courses' : 'Manage all courses'}
           </p>
         </div>
-        {!isTeacher && (
-            <Link
-              href="/lms/courses/new"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-            >
-              Add Course
-            </Link>
-        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {!courses || courses.length === 0 ? (
-          <div className="col-span-full text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl border dark:border-gray-700">
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              {isTeacher ? 'No courses assigned to you yet.' : 'No courses yet.'}
-            </p>
-            {!isTeacher && (
-              <Link
-                href="/lms/courses/new"
-                className="text-blue-600 hover:underline"
-              >
-                Create your first course
-              </Link>
-            )}
-          </div>
-        ) : (
-          courses.map((course) => (
-            <Link
-              key={course.id}
+      {courses.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No courses found</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.map((course) => (
+            <Link 
+              key={course.id} 
               href={`/lms/courses/${course.id}`}
-              className="bg-white dark:bg-gray-800 p-6 rounded-xl border dark:border-gray-700 hover:shadow-md transition"
+              className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-lg dark:text-white">{course.name}</h3>
-                <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">{course.code}</Badge>
+              {course.thumbnail && (
+                <div className="h-40 bg-gray-200 dark:bg-gray-700">
+                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="p-4">
+                <h3 className="font-semibold dark:text-white">{course.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{course.description}</p>
+                {course.teacher && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Teacher: {course.teacher.firstName} {course.teacher.lastName}
+                  </p>
+                )}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                {course.creditHours} credit hours
-              </p>
             </Link>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

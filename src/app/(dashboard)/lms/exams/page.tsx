@@ -57,8 +57,14 @@ export default function ExamsPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/lms/exams');
+      const res = await fetch('/api/lms/exams', { credentials: 'include' });
       const data = await res.json();
+      
+      if (res.status === 401) {
+        setError('Session expired. Please login again.');
+        setLoading(false);
+        return;
+      }
       
       if (!res.ok) {
         setError(data.error || 'Failed to load exams');
