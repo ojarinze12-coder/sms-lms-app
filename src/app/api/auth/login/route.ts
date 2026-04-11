@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
-    console.log('[LOGIN] Attempt for:', email);
 
     if (!email || !password) {
       return NextResponse.json(
@@ -19,14 +18,7 @@ export async function POST(request: NextRequest) {
       include: { tenant: true },
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    if (!user.password) {
+    if (!user || !user.password) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -73,20 +65,15 @@ export async function POST(request: NextRequest) {
 
     const cookieName = isSuperAdmin ? 'pcc-token' : 'scc-token';
     const isProduction = process.env.NODE_ENV === 'production';
-    console.log('[LOGIN] Setting cookie, isProduction:', isProduction, 'cookieName:', cookieName);
     
-    const cookieOptions = {
+    response.cookies.set(cookieName, token, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax' as const,
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
-    };
+    });
 
-    response.cookies.set(cookieName, token, cookieOptions);
-    console.log('[LOGIN] Cookie set with options:', JSON.stringify(cookieOptions));
-
-    // Clear the opposite cookie to prevent conflicts when switching between PCC/SCC
     const otherCookieName = isSuperAdmin ? 'scc-token' : 'pcc-token';
     response.cookies.set(otherCookieName, '', { maxAge: 0, path: '/' });
 

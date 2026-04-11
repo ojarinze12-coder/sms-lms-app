@@ -2,13 +2,10 @@ import { cookies } from 'next/headers';
 import { verifyToken, type JWTPayload } from './auth';
 
 async function validateToken(token: string): Promise<JWTPayload | null> {
-  console.log('[AUTH] Validating token...');
   const decoded = verifyToken(token);
   if (!decoded) {
-    console.log('[AUTH] Token validation FAILED');
     return null;
   }
-  console.log('[AUTH] Token valid for user:', decoded.userId, 'role:', decoded.role);
   return decoded;
 }
 
@@ -16,14 +13,9 @@ export async function getAuthUser(): Promise<JWTPayload | null> {
   try {
     const cookieStore = await cookies();
     
-    const allCookies = cookieStore.getAll();
-    console.log('[AUTH] All cookies:', allCookies.map(c => c.name));
-    
     const pccToken = cookieStore.get('pcc-token')?.value;
     const sccToken = cookieStore.get('scc-token')?.value;
     const legacyToken = cookieStore.get('auth-token')?.value;
-
-    console.log('[AUTH] Cookie check - pcc:', !!pccToken, 'scc:', !!sccToken, 'legacy:', !!legacyToken);
 
     if (pccToken) {
       return await validateToken(pccToken);
@@ -37,10 +29,9 @@ export async function getAuthUser(): Promise<JWTPayload | null> {
       return await validateToken(legacyToken);
     }
     
-    console.log('[AUTH] No tokens found');
     return null;
   } catch (error) {
-    console.error('[AUTH] Error:', error);
+    console.error('Auth check error:', error);
     return null;
   }
 }
@@ -48,11 +39,7 @@ export async function getAuthUser(): Promise<JWTPayload | null> {
 export async function requireSuperAdmin(): Promise<JWTPayload | null> {
   const user = await getAuthUser();
   
-  if (!user) {
-    return null;
-  }
-  
-  if (user.role !== 'SUPER_ADMIN') {
+  if (!user || user.role !== 'SUPER_ADMIN') {
     return null;
   }
   
