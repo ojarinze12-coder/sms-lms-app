@@ -15,6 +15,7 @@ function isPublicPath(pathname: string): boolean {
     '/login',
     '/register',
     '/apply',
+    '/welcome',
     '/api/auth/login',
     '/api/auth/register',
     '/_next',
@@ -24,6 +25,7 @@ function isPublicPath(pathname: string): boolean {
   if (publicPaths.includes(pathname)) return true;
   if (pathname.startsWith('/api/auth/')) return true;
   if (pathname.startsWith('/_next/')) return true;
+  if (pathname.startsWith('/static/')) return true;
 
   return false;
 }

@@ -43,8 +43,6 @@ export async function POST(request: NextRequest) {
 
     const isSuperAdmin = user.role === 'SUPER_ADMIN';
 
-    console.log('[LOGIN] User tenantId:', user.tenantId, 'role:', user.role);
-
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: { tokenVersion: { increment: 1 } },
@@ -60,8 +58,6 @@ export async function POST(request: NextRequest) {
       lastName: user.lastName || undefined,
       tokenVersion: updatedUser.tokenVersion,
     });
-
-    console.log('[LOGIN] Token created with tenantId:', user.tenantId || undefined);
 
     const response = NextResponse.json({
       user: {
