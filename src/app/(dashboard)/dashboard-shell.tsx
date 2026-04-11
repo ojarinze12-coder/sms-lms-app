@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/lib/hooks/use-auth';
 import { Toaster } from '@/components/ui/toaster';
 import { Logo, LogoIcon } from '@/components/logo';
 import { cn } from '@/lib/utils';
@@ -12,6 +11,17 @@ import { useTenantTheme } from '@/components/use-tenant-theme';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useBrand } from '@/components/brand-theme-provider';
+
+type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'PRINCIPAL' | 'VICE_PRINCIPAL' | 'ACADEMIC_ADMIN' | 'FINANCE_ADMIN' | 'BURSAR' | 'TEACHER' | 'STUDENT' | 'PARENT';
+
+interface JWTPayload {
+  userId: string;
+  email: string;
+  tenantId?: string;
+  role: string;
+  firstName?: string;
+  lastName?: string;
+}
 
 const superAdminNavItems = [
   { label: 'Dashboard', href: '/admin' },
@@ -181,12 +191,12 @@ function DropdownMenu({
   );
 }
 
-export default function DashboardLayout({
-  children,
-}: {
+interface DashboardShellProps {
+  user: JWTPayload;
   children: React.ReactNode;
-}) {
-  const { user, role, loading } = useAuth();
+}
+
+export default function DashboardShell({ user, children }: DashboardShellProps) {
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [tenantInfo, setTenantInfo] = useState<{ name: string; brandColor: string; logo?: string | null } | null>(null);
@@ -194,22 +204,12 @@ export default function DashboardLayout({
   const { theme, setTheme } = useTheme();
   const { branding, primaryColor } = useBrand();
 
+  const role = user.role as UserRole;
   const isSuperAdmin = role === 'SUPER_ADMIN';
   const isAdmin = role === 'ADMIN';
   const isTeacher = role === 'TEACHER';
   const isStudent = role === 'STUDENT';
   const isParent = role === 'PARENT';
-
-  // Add timeout to prevent infinite auth check
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      // If still loading after 5 seconds, show page anyway
-      if (loading) {
-        console.log('[Layout] Auth timeout, showing page anyway');
-      }
-    }, 5000);
-    return () => clearTimeout(timeout);
-  }, [loading]);
 
   useEffect(() => {
     async function fetchTenantInfo() {
@@ -241,27 +241,6 @@ export default function DashboardLayout({
   const isSchoolPortalActive = pathname.startsWith('/school');
   const isSmsActive = pathname.startsWith('/sms');
   const isLmsActive = pathname.startsWith('/lms');
-
-  if (loading || themeLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Login</h2>
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Go to Login
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -298,7 +277,6 @@ export default function DashboardLayout({
               )}
               
               <nav className="hidden md:flex gap-1 ml-4 items-center">
-                {/* LMS Menu - For Admin */}
                 {isAdmin && (
                   <DropdownMenu 
                     label="LMS" 
@@ -310,7 +288,6 @@ export default function DashboardLayout({
                   />
                 )}
 
-                {/* School Admin Portal - New organized structure */}
                 {isAdmin && (
                   <DropdownMenu 
                     label="School" 
@@ -322,7 +299,6 @@ export default function DashboardLayout({
                   />
                 )}
 
-                {/* SMS Menu - Academic Management */}
                 {isAdmin && (
                   <DropdownMenu 
                     label="SMS" 
@@ -334,7 +310,6 @@ export default function DashboardLayout({
                   />
                 )}
 
-                {/* Admin Tools */}
                 {isAdmin && (
                   <Link
                     href="/analytics"
@@ -350,7 +325,6 @@ export default function DashboardLayout({
                   </Link>
                 )}
 
-                {/* Regular Nav Items */}
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
