@@ -73,13 +73,18 @@ export async function POST(request: NextRequest) {
 
     const cookieName = isSuperAdmin ? 'pcc-token' : 'scc-token';
     const isProduction = process.env.NODE_ENV === 'production';
-    response.cookies.set(cookieName, token, {
+    console.log('[LOGIN] Setting cookie, isProduction:', isProduction, 'cookieName:', cookieName);
+    
+    const cookieOptions = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
-    });
+    };
+
+    response.cookies.set(cookieName, token, cookieOptions);
+    console.log('[LOGIN] Cookie set with options:', JSON.stringify(cookieOptions));
 
     // Clear the opposite cookie to prevent conflicts when switching between PCC/SCC
     const otherCookieName = isSuperAdmin ? 'scc-token' : 'pcc-token';

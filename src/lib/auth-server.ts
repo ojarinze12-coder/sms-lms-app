@@ -16,6 +16,9 @@ export async function getAuthUser(): Promise<JWTPayload | null> {
   try {
     const cookieStore = await cookies();
     
+    const allCookies = cookieStore.getAll();
+    console.log('[AUTH] All cookies:', allCookies.map(c => c.name));
+    
     const pccToken = cookieStore.get('pcc-token')?.value;
     const sccToken = cookieStore.get('scc-token')?.value;
     const legacyToken = cookieStore.get('auth-token')?.value;
