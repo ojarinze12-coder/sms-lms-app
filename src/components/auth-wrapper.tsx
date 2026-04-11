@@ -23,7 +23,14 @@ export function AuthWrapper({ children, fallback }: AuthWrapperProps) {
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    fetch('/api/auth/me', { 
+      credentials: 'include',
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
+    })
       .then(res => {
         if (res.status === 401) {
           setUser(null);

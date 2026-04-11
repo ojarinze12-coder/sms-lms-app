@@ -36,7 +36,14 @@ export default function SecuritySettings() {
 
   const fetchSecurityStatus = async () => {
     try {
-      const res = await fetch('/api/auth/2fa', { credentials: 'include' });
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const res = await fetch('/api/auth/2fa', { 
+        credentials: 'include',
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
+      });
       if (res.ok) {
         const data = await res.json();
         setSecurity(data);
@@ -50,7 +57,14 @@ export default function SecuritySettings() {
 
   const fetchIpConfig = async () => {
     try {
-      const res = await fetch('/api/auth/ip', { credentials: 'include' });
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const res = await fetch('/api/auth/ip', { 
+        credentials: 'include',
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
+      });
       if (res.ok) {
         const data = await res.json();
         setIpConfig(data);

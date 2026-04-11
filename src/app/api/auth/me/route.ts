@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth-server';
+import { verifyToken } from '@/lib/auth';
 
 export async function GET() {
   try {
-    console.log('[Auth Me] Checking auth...');
-    const authUser = await getAuthUser();
-    console.log('[Auth Me] User:', authUser ? { userId: authUser.userId, role: authUser.role } : 'null');
+    // First try cookies
+    let authUser = await getAuthUser();
+    
+    // If no cookie auth, try Authorization header
+    if (!authUser) {
+      const authHeader = request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        authUser = verifyToken(token);
+        console.log('[Auth Me] Token from header, result:', !!authUser);
+      }
+    }
     
     if (!authUser) {
       return NextResponse.json(

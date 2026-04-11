@@ -212,7 +212,14 @@ export default function DashboardLayout({
   useEffect(() => {
     async function fetchTenantInfo() {
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const res = await fetch('/api/auth/me', { 
+          credentials: 'include',
+          headers: Object.keys(headers).length > 0 ? headers : undefined,
+        });
         const data = await res.json();
         if (data.user?.tenant) {
           setTenantInfo(data.user.tenant);

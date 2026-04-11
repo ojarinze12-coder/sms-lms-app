@@ -52,7 +52,10 @@ export async function POST(request: NextRequest) {
       tokenVersion: updatedUser.tokenVersion,
     });
 
-    const response = NextResponse.json({
+    const cookieName = isSuperAdmin ? 'pcc-token' : 'scc-token';
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    const responseBody = {
       user: {
         id: user.id,
         email: user.email,
@@ -61,11 +64,10 @@ export async function POST(request: NextRequest) {
         role: user.role,
         tenant: user.tenant,
       },
-    });
+      token: token,
+    };
 
-    const cookieName = isSuperAdmin ? 'pcc-token' : 'scc-token';
-    const isProduction = process.env.NODE_ENV === 'production';
-    
+    const response = NextResponse.json(responseBody);
     response.cookies.set(cookieName, token, {
       httpOnly: true,
       secure: isProduction,

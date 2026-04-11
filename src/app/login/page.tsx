@@ -71,6 +71,12 @@ export default function LoginPage() {
         return;
       }
 
+      // Store token in localStorage as backup (for Authorization header fallback)
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+        console.log('[Login] Token stored in localStorage');
+      }
+
       // Redirect based on role
       const role = data.user?.role;
       if (role === 'SUPER_ADMIN') {

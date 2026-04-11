@@ -19,7 +19,14 @@ export default function CoursesPage() {
   const [isTeacher, setIsTeacher] = useState(false);
 
   useEffect(() => {
-    fetch('/api/lms/courses', { credentials: 'include' })
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    fetch('/api/lms/courses', { 
+      credentials: 'include',
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
+    })
       .then(res => {
         if (res.status === 401) {
           setError('Session expired. Please login again.');

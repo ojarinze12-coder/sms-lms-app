@@ -37,8 +37,17 @@ export function useAuth(): UseAuthReturn {
     
     async function checkAuth() {
       try {
+        // Get token from localStorage as fallback
+        const localToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        
+        const headers: Record<string, string> = {};
+        if (localToken) {
+          headers['Authorization'] = `Bearer ${localToken}`;
+        }
+        
         const res = await fetch('/api/auth/me', {
           credentials: 'include',
+          headers: Object.keys(headers).length > 0 ? headers : undefined,
         });
         
         if (!mounted) return;
@@ -47,6 +56,24 @@ export function useAuth(): UseAuthReturn {
           const data = await res.json();
           if (data.user) {
             setUser(data.user as AuthUser);
+            // If token in response, store it
+            if (data.token) {
+              localStorage.setItem('auth_token', data.token);
+            }
+          }
+        } else {
+          // Try to use localStorage token as last resort
+          if (localToken) {
+            const authRes = await fetch('/api/auth/verify', {
+              headers: { 'Authorization': `Bearer ${localToken}` },
+              credentials: 'include',
+            });
+            if (authRes.ok) {
+              const authData = await authRes.json();
+              if (authData.user) {
+                setUser(authData.user as AuthUser);
+              }
+            }
           }
         }
       } catch (error) {
@@ -61,7 +88,6 @@ export function useAuth(): UseAuthReturn {
       }
     }
     
-    // Set a timeout - if auth doesn't complete in 5 seconds, show the page anyway
     timeoutId = setTimeout(() => {
       if (mounted && loading) {
         console.log('[useAuth] Timeout - auth check taking too long, showing page anyway');

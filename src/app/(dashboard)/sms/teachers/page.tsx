@@ -18,7 +18,14 @@ export default function TeachersPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/sms/teachers', { credentials: 'include' })
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    fetch('/api/sms/teachers', { 
+      credentials: 'include',
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
+    })
       .then(res => {
         if (res.status === 401) {
           setError('Session expired. Please login again.');

@@ -49,8 +49,15 @@ export default function AdminDashboard() {
   const [user, setUser] = useState<{firstName?: string; lastName?: string; role?: string} | null>(null);
 
   useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
     // First get user info
-    fetch('/api/auth/me', { credentials: 'include' })
+    fetch('/api/auth/me', { 
+      credentials: 'include',
+      headers: Object.keys(headers).length > 0 ? headers : undefined,
+    })
       .then(res => res.json())
       .then(data => {
         if (data.user) {
@@ -60,20 +67,34 @@ export default function AdminDashboard() {
       .catch(console.error);
       
     Promise.all([
-      fetch('/api/admin/analytics').then(async (r) => {
+      (async () => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const r = await fetch('/api/admin/analytics', { 
+          headers: Object.keys(headers).length > 0 ? headers : undefined,
+        });
         if (!r.ok) {
           const err = await r.json();
           throw new Error(err.error || 'Analytics failed');
         }
         return r.json();
-      }),
-      fetch('/api/admin/analytics/revenue').then(async (r) => {
+      })(),
+      (async () => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const r = await fetch('/api/admin/analytics/revenue', { 
+          headers: Object.keys(headers).length > 0 ? headers : undefined,
+        });
         if (!r.ok) {
           const err = await r.json();
           throw new Error(err.error || 'Revenue failed');
         }
         return r.json();
-      }),
+      })(),
     ])
       .then(([analyticsData, revenueData]) => {
         if (analyticsData.error) {

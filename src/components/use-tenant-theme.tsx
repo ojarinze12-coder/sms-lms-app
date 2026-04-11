@@ -14,7 +14,14 @@ export function useTenantTheme() {
     
     async function fetchAndApplyTheme() {
       try {
-        const res = await fetch('/api/school/settings', { credentials: 'include' });
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const res = await fetch('/api/school/settings', { 
+          credentials: 'include',
+          headers: Object.keys(headers).length > 0 ? headers : undefined,
+        });
         if (res.ok) {
           const data = await res.json();
           const tenantTheme = data.settings?.themeMode?.toLowerCase() || 'system';

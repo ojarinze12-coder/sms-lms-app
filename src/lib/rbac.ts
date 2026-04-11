@@ -125,6 +125,18 @@ export async function checkPermission(
 }
 
 export async function requireAuth(request: NextRequest): Promise<JWTPayload | null> {
+  // First check Authorization header (Bearer token)
+  const authHeader = request.headers.get('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const result = verifyToken(token);
+    if (result) {
+      console.log('[requireAuth] Found in Authorization header');
+      return result;
+    }
+  }
+
+  // Fallback to cookies
   const pccToken = request.cookies.get('pcc-token')?.value;
   const sccToken = request.cookies.get('scc-token')?.value;
   const legacyToken = request.cookies.get('auth-token')?.value;

@@ -57,7 +57,14 @@ export default function ExamsPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/lms/exams', { credentials: 'include' });
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const res = await fetch('/api/lms/exams', { 
+        credentials: 'include',
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
+      });
       const data = await res.json();
       
       if (res.status === 401) {
