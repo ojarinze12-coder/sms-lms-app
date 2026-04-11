@@ -129,10 +129,25 @@ export async function requireAuth(request: NextRequest): Promise<JWTPayload | nu
   const sccToken = request.cookies.get('scc-token')?.value;
   const legacyToken = request.cookies.get('auth-token')?.value;
   
-  if (pccToken) return verifyToken(pccToken);
-  if (sccToken) return verifyToken(sccToken);
-  if (legacyToken) return verifyToken(legacyToken);
+  console.log('[requireAuth] pcc:', !!pccToken, 'scc:', !!sccToken, 'legacy:', !!legacyToken);
   
+  if (pccToken) {
+    const result = verifyToken(pccToken);
+    console.log('[requireAuth] pccToken result:', !!result);
+    return result;
+  }
+  if (sccToken) {
+    const result = verifyToken(sccToken);
+    console.log('[requireAuth] sccToken result:', !!result);
+    return result;
+  }
+  if (legacyToken) {
+    const result = verifyToken(legacyToken);
+    console.log('[requireAuth] legacyToken result:', !!result);
+    return result;
+  }
+  
+  console.log('[requireAuth] No token found');
   return null;
 }
 
