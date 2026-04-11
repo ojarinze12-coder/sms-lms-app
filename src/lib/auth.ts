@@ -5,6 +5,8 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-in-production-min-32-chars';
 
+console.log('[AUTH] JWT_SECRET loaded, is production env:', process.env.NODE_ENV === 'production', 'has secret:', !!process.env.JWT_SECRET);
+
 export interface JWTPayload {
   id: string;
   userId: string;

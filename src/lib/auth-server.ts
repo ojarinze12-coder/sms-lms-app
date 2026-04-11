@@ -2,10 +2,13 @@ import { cookies } from 'next/headers';
 import { verifyToken, type JWTPayload } from './auth';
 
 async function validateToken(token: string): Promise<JWTPayload | null> {
+  console.log('[AUTH] Validating token...');
   const decoded = verifyToken(token);
   if (!decoded) {
+    console.log('[AUTH] Token validation FAILED');
     return null;
   }
+  console.log('[AUTH] Token valid for user:', decoded.userId, 'role:', decoded.role);
   return decoded;
 }
 
@@ -16,6 +19,8 @@ export async function getAuthUser(): Promise<JWTPayload | null> {
     const pccToken = cookieStore.get('pcc-token')?.value;
     const sccToken = cookieStore.get('scc-token')?.value;
     const legacyToken = cookieStore.get('auth-token')?.value;
+
+    console.log('[AUTH] Cookie check - pcc:', !!pccToken, 'scc:', !!sccToken, 'legacy:', !!legacyToken);
 
     if (pccToken) {
       return await validateToken(pccToken);
@@ -29,9 +34,10 @@ export async function getAuthUser(): Promise<JWTPayload | null> {
       return await validateToken(legacyToken);
     }
     
+    console.log('[AUTH] No tokens found');
     return null;
   } catch (error) {
-    console.error('Auth check error:', error);
+    console.error('[AUTH] Error:', error);
     return null;
   }
 }
