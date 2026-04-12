@@ -31,7 +31,9 @@ export default function TeachersPage() {
           return;
         }
         const data = await res.json();
-        setTeachers(data.teachers || []);
+        // API returns array directly in 'teachers' or root array
+        const teacherList = data.teachers || data;
+        setTeachers(Array.isArray(teacherList) ? teacherList : []);
       } catch (err) {
         console.error('Error:', err);
         setError('Failed to load teachers');

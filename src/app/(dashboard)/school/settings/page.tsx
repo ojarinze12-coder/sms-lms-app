@@ -95,9 +95,10 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     try {
+      const timestamp = Date.now();
       const [settingsRes, paymentRes] = await Promise.all([
-        authFetch('/api/school/settings'),
-        authFetch('/api/school/payment-gateways')
+        authFetch(`/api/school/settings?_t=${timestamp}`),
+        authFetch(`/api/school/payment-gateways?_t=${timestamp}`)
       ]);
       
       if (settingsRes.ok) {

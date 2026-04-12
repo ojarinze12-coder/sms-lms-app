@@ -32,7 +32,9 @@ export default function StudentsPage() {
           return;
         }
         const data = await res.json();
-        setStudents(data.students || []);
+        // API returns array directly in 'students' or root array
+        const studentList = data.students || data;
+        setStudents(Array.isArray(studentList) ? studentList : []);
       } catch (err) {
         console.error('Error:', err);
         setError('Failed to load students');

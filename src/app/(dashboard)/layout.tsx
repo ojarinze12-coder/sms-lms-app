@@ -392,6 +392,9 @@ export default function DashboardLayout({
               <Link
                 href="/api/auth/logout"
                 className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-1 border rounded hover:bg-gray-50 dark:hover:bg-gray-800"
+                onClick={() => {
+                  localStorage.removeItem('auth_token');
+                }}
               >
                 Sign out
               </Link>

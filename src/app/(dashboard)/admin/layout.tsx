@@ -132,6 +132,7 @@ export default function AdminLayout({
   }, [router]);
 
   const handleLogout = async () => {
+    localStorage.removeItem('auth_token');
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (err) {
