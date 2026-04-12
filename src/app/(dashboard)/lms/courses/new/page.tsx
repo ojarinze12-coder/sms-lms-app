@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -25,7 +26,7 @@ export default function NewCoursePage() {
   });
 
   useEffect(() => {
-    fetch('/api/sms/teachers')
+    authFetch('/api/sms/teachers')
       .then(res => res.json())
       .then(data => setTeachers(data))
       .catch(console.error);
@@ -37,7 +38,7 @@ export default function NewCoursePage() {
     setError('');
 
     try {
-      const res = await fetch('/api/lms/courses', {
+      const res = await authFetch('/api/lms/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -143,7 +143,7 @@ export default function TransportPage() {
 
   async function handleUpdateSubscriptionStatus(id: string, status: string) {
     try {
-      await fetch(`/api/sms/transport/subscriptions/${id}`, {
+      await authFetch(`/api/sms/transport/subscriptions/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentStatus: status })

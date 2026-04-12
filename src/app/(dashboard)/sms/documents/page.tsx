@@ -156,7 +156,7 @@ export default function DocumentsPage() {
     if (!confirm('Are you sure you want to delete this category?')) return;
     
     try {
-      const res = await fetch(`/api/sms/documents/categories/${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/sms/documents/categories/${id}`, { method: 'DELETE' });
       if (res.ok) fetchData();
     } catch (err) {
       console.error('Failed to delete category:', err);
@@ -197,7 +197,7 @@ export default function DocumentsPage() {
     if (!confirm('Are you sure you want to delete this document?')) return;
     
     try {
-      const res = await fetch(`/api/sms/documents/${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/sms/documents/${id}`, { method: 'DELETE' });
       if (res.ok) fetchData();
     } catch (err) {
       console.error('Failed to delete document:', err);
@@ -206,7 +206,7 @@ export default function DocumentsPage() {
 
   async function handleUpdateStatus(id: string, status: string) {
     try {
-      const res = await fetch(`/api/sms/documents/${id}`, {
+      const res = await authFetch(`/api/sms/documents/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })

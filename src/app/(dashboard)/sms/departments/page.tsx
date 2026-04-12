@@ -75,7 +75,7 @@ export default function DepartmentsPage() {
 
   const loadDepartments = async (tierId: string) => {
     try {
-      const res = await fetch(`/api/sms/departments?tierId=${tierId}`);
+      const res = await authFetch(`/api/sms/departments?tierId=${tierId}`);
       const data = await res.json();
       setDepartments(data.data || []);
     } catch (err) {
@@ -101,7 +101,7 @@ export default function DepartmentsPage() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch(`/api/sms/departments/${editingDept.id}`, {
+      const res = await authFetch(`/api/sms/departments/${editingDept.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -189,7 +189,7 @@ export default function DepartmentsPage() {
     }
 
     try {
-      const res = await fetch(`/api/sms/departments/${dept.id}`, {
+      const res = await authFetch(`/api/sms/departments/${dept.id}`, {
         method: 'DELETE',
       });
 

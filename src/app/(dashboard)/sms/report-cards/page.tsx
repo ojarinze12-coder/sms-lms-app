@@ -83,7 +83,7 @@ export default function ReportCardsPage() {
 
   const loadTerms = async (yearId: string) => {
     try {
-      const res = await fetch(`/api/sms/terms?academicYearId=${yearId}`);
+      const res = await authFetch(`/api/sms/terms?academicYearId=${yearId}`);
       const data = await res.json();
       setTerms(data);
     } catch (err) {
@@ -103,7 +103,7 @@ export default function ReportCardsPage() {
 
   const loadReportCards = async () => {
     try {
-      const res = await fetch(`/api/sms/report-cards?termId=${selectedTermId}`);
+      const res = await authFetch(`/api/sms/report-cards?termId=${selectedTermId}`);
       const data = await res.json();
       setReportCards(Array.isArray(data) ? data : []);
     } catch (err) {

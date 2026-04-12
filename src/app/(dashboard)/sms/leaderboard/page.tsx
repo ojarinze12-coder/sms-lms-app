@@ -61,7 +61,7 @@ export default function LeaderboardPage() {
 
   const loadTerms = async (yearId: string) => {
     try {
-      const res = await fetch(`/api/sms/terms?academicYearId=${yearId}`);
+      const res = await authFetch(`/api/sms/terms?academicYearId=${yearId}`);
       const data = await res.json();
       setTerms(data);
       if (data.length > 0) {
@@ -79,7 +79,7 @@ export default function LeaderboardPage() {
       if (selectedClassId) params.append('classId', selectedClassId);
       params.append('limit', '20');
 
-      const res = await fetch(`/api/sms/leaderboard?${params}`);
+      const res = await authFetch(`/api/sms/leaderboard?${params}`);
       const data = await res.json();
       setLeaderboard(data.leaderboard || []);
     } catch (err) {

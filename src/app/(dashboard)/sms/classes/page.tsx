@@ -220,7 +220,7 @@ export default function ClassesPage() {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await fetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
       if (!res.ok) {
         console.error('Failed to load classes:', res.status);
         return;
@@ -348,7 +348,7 @@ export default function ClassesPage() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch(`/api/sms/academic-classes/${editingClass.id}`, {
+      const res = await authFetch(`/api/sms/academic-classes/${editingClass.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

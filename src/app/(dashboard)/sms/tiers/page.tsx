@@ -68,7 +68,7 @@ export default function TiersPage() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch(`/api/sms/tiers/${editingTier.id}`, {
+      const res = await authFetch(`/api/sms/tiers/${editingTier.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,7 +156,7 @@ export default function TiersPage() {
     }
 
     try {
-      const res = await fetch(`/api/sms/tiers/${tier.id}`, {
+      const res = await authFetch(`/api/sms/tiers/${tier.id}`, {
         method: 'DELETE',
       });
 

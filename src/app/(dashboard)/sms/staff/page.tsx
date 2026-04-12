@@ -118,7 +118,7 @@ export default function StaffPage() {
     if (!confirm('Are you sure you want to delete this staff member?')) return;
     
     try {
-      const res = await fetch(`/api/sms/staff?id=${id}`, {
+      const res = await authFetch(`/api/sms/staff?id=${id}`, {
         method: 'DELETE',
       });
 

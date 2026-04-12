@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -55,7 +56,7 @@ export default function LMSReportsPage() {
 
   const fetchReportData = async () => {
     try {
-      const res = await fetch(`/api/lms/reports?range=${dateRange}`);
+      const res = await authFetch(`/api/lms/reports?range=${dateRange}`);
       if (res.ok) {
         const data = await res.json();
         setStats(data.stats);

@@ -137,7 +137,7 @@ export default function IDCardsPage() {
 
   async function viewCard(id: string, type: 'student' | 'teacher' | 'staff') {
     try {
-      const res = await fetch(`/api/sms/id-cards/${id}?type=${type}`);
+      const res = await authFetch(`/api/sms/id-cards/${id}?type=${type}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedCard(data);

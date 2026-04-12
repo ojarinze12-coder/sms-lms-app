@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,19 +60,19 @@ export default function CourseDetailPage() {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const res = await fetch(`/api/lms/courses/${params.id}`);
+        const res = await authFetch(`/api/lms/courses/${params.id}`);
         if (res.ok) {
           const data = await res.json();
           setCourse(data.course || data);
         }
         
-        const lessonsRes = await fetch(`/api/lms/lessons?courseId=${params.id}`);
+        const lessonsRes = await authFetch(`/api/lms/lessons?courseId=${params.id}`);
         if (lessonsRes.ok) {
           const lessonsData = await lessonsRes.json();
           setLessons(Array.isArray(lessonsData) ? lessonsData : lessonsData.lessons || []);
         }
         
-        const enrollRes = await fetch(`/api/lms/enrollments?courseId=${params.id}`);
+        const enrollRes = await authFetch(`/api/lms/enrollments?courseId=${params.id}`);
         if (enrollRes.ok) {
           const enrollData = await enrollRes.json();
           setEnrollments(Array.isArray(enrollData) ? enrollData : enrollData.enrollments || []);

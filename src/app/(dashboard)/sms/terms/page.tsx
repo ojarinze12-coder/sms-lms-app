@@ -68,7 +68,7 @@ export default function TermsPage() {
 
   const loadTerms = async (yearId: string) => {
     try {
-      const res = await fetch(`/api/sms/terms?academicYearId=${yearId}`);
+      const res = await authFetch(`/api/sms/terms?academicYearId=${yearId}`);
       if (!res.ok) {
         console.error('Failed to load terms:', res.status);
         return;
@@ -126,7 +126,7 @@ export default function TermsPage() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch(`/api/sms/terms/${editingTerm.id}`, {
+      const res = await authFetch(`/api/sms/terms/${editingTerm.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

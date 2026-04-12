@@ -67,7 +67,7 @@ export default function ImportPage() {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await fetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
       if (res.ok) {
         const data = await res.json();
         setClasses(data.data || []);

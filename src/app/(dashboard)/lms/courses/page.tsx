@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import Link from 'next/link';
 
 interface Course {
@@ -23,7 +24,7 @@ export default function CoursesPage() {
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
     
-    fetch('/api/lms/courses', { 
+    authFetch('/api/lms/courses', { 
       credentials: 'include',
       headers: Object.keys(headers).length > 0 ? headers : undefined,
     })

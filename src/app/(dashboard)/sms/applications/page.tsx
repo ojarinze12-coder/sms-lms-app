@@ -105,7 +105,7 @@ export default function ApplicationsPage() {
 
   async function fetchApplications() {
     try {
-      const res = await fetch(`/api/sms/applications?status=${filterStatus === 'all' ? '' : filterStatus}`);
+      const res = await authFetch(`/api/sms/applications?status=${filterStatus === 'all' ? '' : filterStatus}`);
       const data = await res.json();
       setApplications(data);
     } catch (err) {
@@ -196,7 +196,7 @@ export default function ApplicationsPage() {
 
   async function handleEnroll(applicationId: string, classId: string) {
     try {
-      const res = await fetch(`/api/sms/applications/${applicationId}/enroll`, {
+      const res = await authFetch(`/api/sms/applications/${applicationId}/enroll`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enrollmentClassId: classId }),

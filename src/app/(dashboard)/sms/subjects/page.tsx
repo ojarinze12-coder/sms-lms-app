@@ -117,7 +117,7 @@ export default function SubjectsPage() {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await fetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
       if (!res.ok) {
         console.error('Failed to load classes:', res.status);
         return;
@@ -145,7 +145,7 @@ export default function SubjectsPage() {
 
   const loadSubjects = async (classId: string) => {
     try {
-      const res = await fetch(`/api/sms/subjects?academicYearId=${classId}`);
+      const res = await authFetch(`/api/sms/subjects?academicYearId=${classId}`);
       if (!res.ok) {
         console.error('Failed to load subjects:', res.status);
         return;
@@ -178,7 +178,7 @@ export default function SubjectsPage() {
     
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/sms/subjects/${editingSubject.id}`, {
+      const res = await authFetch(`/api/sms/subjects/${editingSubject.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

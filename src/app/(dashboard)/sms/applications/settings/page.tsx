@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -62,8 +63,8 @@ export default function ApplicationSettingsPage() {
   async function fetchSettings() {
     try {
       const [settingsRes, tiersRes] = await Promise.all([
-        fetch('/api/sms/applications/settings'),
-        fetch('/api/sms/tiers')
+        authFetch('/api/sms/applications/settings'),
+        authFetch('/api/sms/tiers')
       ]);
       
       const settingsData = settingsRes.ok ? await settingsRes.json() : {};
@@ -104,7 +105,7 @@ export default function ApplicationSettingsPage() {
       
       console.log('Saving:', payload);
       
-      const res = await fetch('/api/sms/applications/settings', {
+      const res = await authFetch('/api/sms/applications/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

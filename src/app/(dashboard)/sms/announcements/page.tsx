@@ -125,7 +125,7 @@ export default function AnnouncementsPage() {
     if (!confirm('Are you sure you want to delete this announcement?')) return;
 
     try {
-      const res = await fetch(`/api/sms/announcements?id=${id}`, {
+      const res = await authFetch(`/api/sms/announcements?id=${id}`, {
         method: 'DELETE',
       });
 

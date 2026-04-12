@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +31,7 @@ export default function DocumentSettingsPage() {
 
   async function fetchSettings() {
     try {
-      const res = await fetch('/api/tenant/settings');
+      const res = await authFetch('/api/tenant/settings');
       const data = await res.json();
       setSettings({
         documentsEnabled: data.documentsEnabled ?? true,
@@ -47,7 +48,7 @@ export default function DocumentSettingsPage() {
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch('/api/tenant/settings', {
+      const res = await authFetch('/api/tenant/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
