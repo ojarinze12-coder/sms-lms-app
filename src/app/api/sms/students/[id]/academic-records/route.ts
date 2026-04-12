@@ -7,7 +7,7 @@ import { getAuthUser } from '@/lib/auth-server';
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const authUser = await getAuthUser();
-    if (!authUser) {
+    if (!authUser || !authUser.tenantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -16,6 +16,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const { searchParams } = new URL(req.url);
     const academicYearId = searchParams.get('academicYearId');
     const termId = searchParams.get('termId');
+
+    // First verify student belongs to tenant
+    const student = await prisma.student.findFirst({
+      where: { id: studentId, tenantId },
+    });
+    
+    if (!student) {
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    }
 
     const where: any = {
       studentId,
@@ -31,11 +40,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         term: true,
         academicClass: true,
         subject: true,
-        teacher: true,
       },
       orderBy: [
-        { academicYear: { name: 'desc' } },
-        { term: { name: 'asc' } },
+        { createdAt: 'desc' },
       ],
     });
 
