@@ -57,6 +57,7 @@ export default function StudentAcademicHistoryPage() {
 
 async function fetchData() {
       try {
+        const yearQuery = selectedYear ? `?academicYearId=${selectedYear}` : '';
         const [
           recordsRes,
           transcriptsRes,
