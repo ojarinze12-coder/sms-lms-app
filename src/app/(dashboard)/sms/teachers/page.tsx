@@ -19,31 +19,27 @@ export default function TeachersPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    const headers: Record<string, string> = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    
-    authFetch('/api/sms/teachers', { 
-      credentials: 'include',
-      headers: Object.keys(headers).length > 0 ? headers : undefined,
-    })
-      .then(res => {
-        if (res.status === 401) {
-          setError('Session expired. Please login again.');
-          return { teachers: [] };
+    async function loadTeachers() {
+      try {
+        const res = await authFetch('/api/sms/teachers');
+        if (!res.ok) {
+          if (res.status === 401) {
+            setError('Session expired. Please login again.');
+          } else {
+            setError('Failed to load teachers');
+          }
+          return;
         }
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
-      })
-      .then(data => {
+        const data = await res.json();
         setTeachers(data.teachers || []);
-        setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Error:', err);
         setError('Failed to load teachers');
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+    loadTeachers();
   }, []);
 
   if (loading) {

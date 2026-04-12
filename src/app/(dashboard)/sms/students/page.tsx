@@ -20,34 +20,27 @@ export default function StudentsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get token from localStorage as fallback
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    authFetch('/api/sms/students', {
-      credentials: 'include',
-      headers: Object.keys(headers).length > 0 ? headers : undefined,
-    })
-      .then(res => {
-        if (res.status === 401) {
-          setError('Session expired. Please login again.');
-          return { students: [] };
+    async function loadStudents() {
+      try {
+        const res = await authFetch('/api/sms/students');
+        if (!res.ok) {
+          if (res.status === 401) {
+            setError('Session expired. Please login again.');
+          } else {
+            setError('Failed to load students');
+          }
+          return;
         }
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
-      })
-      .then(data => {
+        const data = await res.json();
         setStudents(data.students || []);
-        setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Error:', err);
         setError('Failed to load students');
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+    loadStudents();
   }, []);
 
   if (loading) {

@@ -2,19 +2,30 @@ import { Exam, Question, Result } from '@/types/exam';
 
 const API_BASE = '/api/lms';
 
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  const token = localStorage.getItem('auth_token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
 async function fetchApi<T>(
   url: string,
   options?: RequestInit
 ): Promise<T> {
   const response = await fetch(url, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
       ...options?.headers,
     },
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
     const error = await response.json().catch(() => ({ error: 'An error occurred' }));
     throw new Error(error.error || 'An error occurred');
   }
