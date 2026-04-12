@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -55,7 +56,7 @@ export default function TeacherDetailPage() {
   useEffect(() => {
     const fetchTeacher = async () => {
       try {
-        const res = await fetch(`/api/sms/teachers/${params.id}`);
+        const res = await authFetch(`/api/sms/teachers/${params.id}`);
         if (res.ok) {
           const data = await res.json();
           setTeacher(data.teacher);

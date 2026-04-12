@@ -83,28 +83,20 @@ export function BrandThemeProvider({ children }: { children: React.ReactNode }) 
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
         
-        const res = await fetch('/api/auth/me', { 
+        // Fetch from school settings for proper branding
+        const res = await fetch('/api/school/settings', { 
           credentials: 'include',
           headers: Object.keys(headers).length > 0 ? headers : undefined,
         });
         if (res.ok) {
           const data = await res.json();
+          const settings = data.settings || {};
           
-          let tenantBranding: TenantBranding = {};
-          
-          if (data.user?.tenant) {
-            tenantBranding = {
-              name: data.user.tenant.name,
-              logo: data.user.tenant.logo,
-              brandColor: data.user.tenant.brandColor || '#1a56db'
-            };
-          } else if (data.user?.role === 'SUPER_ADMIN') {
-            tenantBranding = {
-              name: 'Platform Control',
-              logo: null,
-              brandColor: '#1a56db'
-            };
-          }
+          let tenantBranding: TenantBranding = {
+            name: settings.schoolName || '',
+            logo: settings.logo,
+            brandColor: settings.brandColor || '#1a56db'
+          };
           
           setBranding(tenantBranding);
         }
