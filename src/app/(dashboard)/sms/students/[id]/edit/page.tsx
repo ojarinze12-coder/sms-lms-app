@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,7 +55,7 @@ export default function EditStudentPage() {
 
   const fetchStudent = async () => {
     try {
-      const res = await fetch(`/api/sms/students/${studentId}`);
+      const res = await authFetch(`/api/sms/students/${studentId}`);
       if (res.ok) {
         const data = await res.json();
         setStudent(data.student || data);
@@ -71,7 +72,7 @@ export default function EditStudentPage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/sms/students/${studentId}`, {
+      const res = await authFetch(`/api/sms/students/${studentId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(student),
