@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { authFetch } from '@/lib/auth-authFetch';
+import { authFetch } from '@/lib/auth-fetch';
 import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Button } from '@/components/ui/button';

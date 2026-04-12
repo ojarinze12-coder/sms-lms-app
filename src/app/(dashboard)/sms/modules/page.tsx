@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authFetch } from '@/lib/auth-authFetch';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Module {
   key: string;
