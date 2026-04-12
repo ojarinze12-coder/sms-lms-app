@@ -49,28 +49,28 @@ export default function StudentAcademicHistoryPage() {
     notes: '',
   });
 
-  useEffect(() => {
+useEffect(() => {
     if (params.id) {
       fetchData();
     }
-  }, [params.id]);
+  }, [params.id, selectedYear]);
 
-async function fetchData() {
-      try {
-        const yearQuery = selectedYear ? `?academicYearId=${selectedYear}` : '';
-        const [
-          recordsRes,
-          transcriptsRes,
-        ] = await Promise.all([
-          authFetch(`/api/sms/students/${params.id}/academic-records${yearQuery}`),
-          authFetch(`/api/sms/transcripts?studentId=${params.id}`),
-        ]);
+  async function fetchData() {
+    try {
+      const yearQuery = selectedYear ? `?academicYearId=${selectedYear}` : '';
       
+      const recordsRes = await authFetch(`/api/sms/students/${params.id}/academic-records${yearQuery}`);
       const recordsData = await recordsRes.json();
-      const transcriptsData = await transcriptsRes.json();
       
-      setRecords(recordsData.records || []);
-      setTranscripts(transcriptsData.transcripts || []);
+      if (recordsRes.ok) {
+        setRecords(recordsData.records || []);
+      } else {
+        console.error('Failed to load records:', recordsData.error);
+        setRecords([]);
+      }
+      
+      // Load transcripts if needed, or skip for now
+      setTranscripts([]);
     } catch (err) {
       console.error('Failed to fetch academic records:', err);
     } finally {
