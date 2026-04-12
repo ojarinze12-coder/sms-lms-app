@@ -6,7 +6,6 @@ import { getSubjectsByCurriculum } from '@/lib/nigeria';
 import { Loader2, Plus, Pencil, Trash2, BookOpen, ChevronDown } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { CURRICULUM_INFO } from '@/types';
-import { Loader2, Plus, Pencil, Trash2, BookOpen, ChevronDown } from 'lucide-react';
 
 interface AcademicYear {
   id: string;
