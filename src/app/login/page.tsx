@@ -77,6 +77,9 @@ export default function LoginPage() {
         console.log('[Login] Token stored in localStorage');
       }
 
+      // Wait a moment to ensure cookies are set before redirecting
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Redirect based on role
       const role = data.user?.role;
       if (role === 'SUPER_ADMIN') {
@@ -94,7 +97,6 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
-    } finally {
       setSubmitting(false);
     }
   };

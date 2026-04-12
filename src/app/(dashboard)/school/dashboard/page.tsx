@@ -34,7 +34,16 @@ export default function SchoolDashboardPage() {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        const res = await fetch('/api/school/dashboard');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const res = await fetch('/api/school/dashboard', {
+          credentials: 'include',
+          headers: Object.keys(headers).length > 0 ? headers : undefined,
+        });
         if (!res.ok) {
           const errorData = await res.json();
           setError(errorData.error || 'Failed to fetch dashboard data');

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth-server';
 import { verifyToken } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 export async function GET() {
   try {
@@ -9,7 +10,8 @@ export async function GET() {
     
     // If no cookie auth, try Authorization header
     if (!authUser) {
-      const authHeader = request.headers.get('authorization');
+      const headersList = await headers();
+      const authHeader = headersList.get('authorization');
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
         authUser = verifyToken(token);

@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { verifyToken, JWTPayload } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 export async function POST() {
   try {
     // Get Authorization header
-    const authHeader = request.headers.get('authorization');
+    const headersList = await headers();
+    const authHeader = headersList.get('authorization');
     const token = authHeader && authHeader.startsWith('Bearer ')
       ? authHeader.substring(7)
       : null;

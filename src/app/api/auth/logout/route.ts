@@ -6,7 +6,7 @@ function getBaseUrl(request: NextRequest): string {
     const proto = request.headers.get('x-forwarded-proto') || 'https';
     return `${proto}://${host}`;
   }
-  return 'https://sms-lms-app.vercel.app';
+  return 'http://localhost:3000';
 }
 
 function clearAllAuthCookies(response: NextResponse) {

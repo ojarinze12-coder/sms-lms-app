@@ -65,8 +65,15 @@ export default function DashboardPage() {
 
   const loadTenant = async () => {
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const res = await fetch('/api/auth/me', {
         credentials: 'include',
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
       });
       if (!res.ok) {
         console.error('Failed to load tenant:', res.status);
@@ -83,8 +90,15 @@ export default function DashboardPage() {
 
   const loadStats = async () => {
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const res = await fetch('/api/sms/analytics', {
         credentials: 'include',
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
       });
       
       // If unauthorized, use fallback data
