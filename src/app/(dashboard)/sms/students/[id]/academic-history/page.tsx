@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,13 +55,15 @@ export default function StudentAcademicHistoryPage() {
     }
   }, [params.id]);
 
-  async function fetchData() {
-    try {
-      const yearQuery = selectedYear ? `?academicYearId=${selectedYear}` : '';
-      const [recordsRes, transcriptsRes] = await Promise.all([
-        fetch(`/api/sms/students/${params.id}/academic-records${yearQuery}`),
-        fetch(`/api/sms/transcripts?studentId=${params.id}`),
-      ]);
+async function fetchData() {
+      try {
+        const [
+          recordsRes,
+          transcriptsRes,
+        ] = await Promise.all([
+          authFetch(`/api/sms/students/${params.id}/academic-records${yearQuery}`),
+          authFetch(`/api/sms/transcripts?studentId=${params.id}`),
+        ]);
       
       const recordsData = await recordsRes.json();
       const transcriptsData = await transcriptsRes.json();
@@ -83,7 +86,7 @@ export default function StudentAcademicHistoryPage() {
   async function handleGenerateTranscript(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/sms/transcripts', {
+      const res = await authFetch('/api/sms/transcripts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
