@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface AcademicYear {
   id: string;
@@ -34,7 +35,7 @@ export default function AcademicYearsPage() {
 
   const loadYears = async () => {
     try {
-      const res = await fetch('/api/sms/academic-years');
+      const res = await authFetch('/api/sms/academic-years');
       const data = await res.json();
       if (Array.isArray(data)) {
         setYears(data);
@@ -58,7 +59,7 @@ export default function AcademicYearsPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/sms/academic-years', {
+      const res = await authFetch('/api/sms/academic-years', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -98,7 +99,7 @@ export default function AcademicYearsPage() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch(`/api/sms/academic-years/${editingYear.id}`, {
+      const res = await authFetch(`/api/sms/academic-years/${editingYear.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

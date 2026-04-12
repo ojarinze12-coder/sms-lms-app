@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import Link from 'next/link';
 import { 
   Users, 
@@ -64,16 +65,16 @@ export default function HRDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
+    authFetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const authFetchDashboardData = async () => {
     try {
       const [teachersRes, staffRes, leavesRes, payrollRes] = await Promise.all([
-        fetch('/api/sms/teachers'),
-        fetch('/api/sms/staff'),
-        fetch('/api/sms/leaves'),
-        fetch('/api/sms/payroll')
+        authFetch('/api/sms/teachers'),
+        authFetch('/api/sms/staff'),
+        authFetch('/api/sms/leaves'),
+        authFetch('/api/sms/payroll')
       ]);
 
       // Teachers
@@ -119,7 +120,7 @@ export default function HRDashboard() {
       setLeaves(pendingLeaves.slice(0, 5));
       setPayrollSummary({ totalEarnings, totalDeductions, netPay, paidCount, pendingCount });
     } catch (err) {
-      console.error('Failed to fetch HR data:', err);
+      console.error('Failed to authFetch HR data:', err);
     } finally {
       setLoading(false);
     }
@@ -148,12 +149,12 @@ export default function HRDashboard() {
 
   const handleLeaveAction = async (leaveId: string, action: 'approve' | 'reject') => {
     try {
-      await fetch('/api/sms/leaves', {
+      await authFetch('/api/sms/leaves', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leaveId, action }),
       });
-      fetchDashboardData();
+      authFetchDashboardData();
     } catch (err) {
       console.error('Failed to update leave:', err);
     }

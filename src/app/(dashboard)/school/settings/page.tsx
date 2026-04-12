@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { Upload, X, Loader2, Sun, Moon, Monitor, CreditCard, Wallet, AlertCircle, CheckCircle } from 'lucide-react';
 import { useBrand } from '@/components/brand-theme-provider';
 import { useTheme } from 'next-themes';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface SchoolSettings {
   schoolName: string;
@@ -95,8 +96,8 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       const [settingsRes, paymentRes] = await Promise.all([
-        fetch('/api/school/settings'),
-        fetch('/api/school/payment-gateways')
+        authFetch('/api/school/settings'),
+        authFetch('/api/school/payment-gateways')
       ]);
       
       if (settingsRes.ok) {
@@ -124,7 +125,7 @@ export default function SettingsPage() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch('/api/school/payment-gateways', {
+      const res = await authFetch('/api/school/payment-gateways', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentSettings),
@@ -150,7 +151,7 @@ export default function SettingsPage() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch('/api/school/settings', {
+      const res = await authFetch('/api/school/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { UserPlus } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
@@ -39,7 +40,7 @@ export default function StaffPage() {
 
   const fetchStaff = async () => {
     try {
-      const res = await fetch('/api/sms/staff');
+      const res = await authFetch('/api/sms/staff');
       if (res.ok) {
         const data = await res.json();
         setStaff(data || []);

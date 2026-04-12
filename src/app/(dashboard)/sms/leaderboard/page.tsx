@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, Medal, Search, Filter } from 'lucide-react';
 
@@ -44,7 +45,7 @@ export default function LeaderboardPage() {
 
   const loadYears = async () => {
     try {
-      const res = await fetch('/api/sms/academic-years');
+      const res = await authFetch('/api/sms/academic-years');
       const data = await res.json();
       setYears(data);
       if (data.length > 0) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getSubjectsByCurriculum } from '@/lib/nigeria';
+import { authFetch } from '@/lib/auth-fetch';
 import { CURRICULUM_INFO } from '@/types';
 
 interface AcademicYear {
@@ -82,7 +83,7 @@ export default function SubjectsPage() {
 
   const loadYears = async () => {
     try {
-      const res = await fetch('/api/sms/academic-years');
+      const res = await authFetch('/api/sms/academic-years');
       if (!res.ok) {
         console.error('Failed to load years:', res.status);
         return;
@@ -102,7 +103,7 @@ export default function SubjectsPage() {
 
   const loadCurriculum = async () => {
     try {
-      const res = await fetch('/api/tenant/curriculum');
+      const res = await authFetch('/api/tenant/curriculum');
       if (res.ok) {
         const data = await res.json();
         if (data.data?.settings?.curriculumType) {
@@ -130,7 +131,7 @@ export default function SubjectsPage() {
 
   const loadTeachers = async () => {
     try {
-      const res = await fetch('/api/sms/teachers');
+      const res = await authFetch('/api/sms/teachers');
       if (!res.ok) {
         console.error('Failed to load teachers:', res.status);
         return;
@@ -208,7 +209,7 @@ export default function SubjectsPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/sms/subjects', {
+      const res = await authFetch('/api/sms/subjects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

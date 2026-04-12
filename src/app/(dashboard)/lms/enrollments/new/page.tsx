@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -35,7 +36,7 @@ export default function NewEnrollmentPage() {
 
   useEffect(() => {
     // Load academic years first
-    fetch('/api/sms/academic-years')
+    authFetch('/api/sms/academic-years')
       .then(res => res.json())
       .then(data => {
         const yearsList = Array.isArray(data) ? data : (data.data || []);
@@ -53,7 +54,7 @@ export default function NewEnrollmentPage() {
 
   useEffect(() => {
     // Load students
-    fetch('/api/sms/students')
+    authFetch('/api/sms/students')
       .then(res => res.json())
       .then(data => {
         const studentsList = Array.isArray(data) ? data : (data.data || []);
@@ -65,7 +66,7 @@ export default function NewEnrollmentPage() {
   useEffect(() => {
     // Load classes when academic year is selected
     if (selectedYear) {
-      fetch(`/api/sms/academic-classes?academicYearId=${selectedYear}`)
+      authFetch(`/api/sms/academic-classes?academicYearId=${selectedYear}`)
         .then(res => res.json())
         .then(data => {
           console.log('Classes data:', data);
@@ -82,7 +83,7 @@ export default function NewEnrollmentPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/lms/enrollments', {
+      const res = await authFetch('/api/lms/enrollments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,15 +42,15 @@ export default function TranscriptsPage() {
   });
 
   useEffect(() => {
-    fetchData();
+    authFetchData();
   }, []);
 
-  async function fetchData() {
+  async function authFetchData() {
     try {
       const [transcriptsRes, studentsRes, yearsRes] = await Promise.all([
-        fetch('/api/sms/transcripts'),
-        fetch('/api/sms/students'),
-        fetch('/api/sms/terms'),
+        authFetch('/api/sms/transcripts'),
+        authFetch('/api/sms/students'),
+        authFetch('/api/sms/terms'),
       ]);
       
       const transcriptsData = await transcriptsRes.json();
@@ -64,7 +65,7 @@ export default function TranscriptsPage() {
       ) || [];
       setAcademicYears(uniqueYears);
     } catch (err) {
-      console.error('Failed to fetch transcripts:', err);
+      console.error('Failed to authFetch transcripts:', err);
     } finally {
       setLoading(false);
     }
@@ -73,7 +74,7 @@ export default function TranscriptsPage() {
   async function handleGenerateTranscript(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/sms/transcripts', {
+      const res = await authFetch('/api/sms/transcripts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -92,11 +93,11 @@ export default function TranscriptsPage() {
 
   async function handleSendTranscript(id: string) {
     try {
-      const res = await fetch(`/api/sms/transcripts/${id}/send`, {
+      const res = await authFetch(`/api/sms/transcripts/${id}/send`, {
         method: 'POST',
       });
       if (res.ok) {
-        fetchData();
+        authFetchData();
       }
     } catch (err) {
       console.error('Failed to send transcript:', err);
@@ -105,12 +106,12 @@ export default function TranscriptsPage() {
 
   async function handleGeneratePDF(id: string) {
     try {
-      const res = await fetch(`/api/sms/transcripts/${id}/generate-pdf`, {
+      const res = await authFetch(`/api/sms/transcripts/${id}/generate-pdf`, {
         method: 'POST',
       });
       if (res.ok) {
         const data = await res.json();
-        fetchData();
+        authFetchData();
         
         if (data.pdfBase64) {
           const link = document.createElement('a');

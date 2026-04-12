@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Eye, FileText, Printer } from 'lucide-react';
@@ -66,7 +67,7 @@ export default function ReportCardsPage() {
 
   const loadYears = async () => {
     try {
-      const res = await fetch('/api/sms/academic-years');
+      const res = await authFetch('/api/sms/academic-years');
       const data = await res.json();
       setYears(data);
       if (data.length > 0) {
@@ -92,7 +93,7 @@ export default function ReportCardsPage() {
 
   const loadStudents = async () => {
     try {
-      const res = await fetch('/api/sms/students');
+      const res = await authFetch('/api/sms/students');
       const data = await res.json();
       setStudents(data);
     } catch (err) {
@@ -125,7 +126,7 @@ export default function ReportCardsPage() {
     
     setGenerating(true);
     try {
-      const res = await fetch('/api/sms/report-cards', {
+      const res = await authFetch('/api/sms/report-cards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

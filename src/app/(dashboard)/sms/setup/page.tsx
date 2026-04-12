@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Loader2, ArrowLeft } from 'lucide-react';
@@ -55,10 +56,10 @@ export default function SchoolSetupPage() {
   const loadExistingData = async () => {
     try {
       const [tiersRes, deptsRes, settingsRes, badgeRes] = await Promise.all([
-        fetch('/api/sms/tiers'),
-        fetch('/api/sms/departments'),
-        fetch('/api/tenant/curriculum'),
-        fetch('/api/tenant/badge-settings').catch(() => ({ ok: false, json: () => ({}) }))
+        authFetch('/api/sms/tiers'),
+        authFetch('/api/sms/departments'),
+        authFetch('/api/tenant/curriculum'),
+        authFetch('/api/tenant/badge-settings').catch(() => ({ ok: false, json: () => ({}) }))
       ]);
 
       const [tiersData, deptsData, settingsData, badgeData] = await Promise.all([
@@ -110,7 +111,7 @@ export default function SchoolSetupPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/sms/tiers', {
+      const res = await authFetch('/api/sms/tiers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ template: selectedTemplate, curriculum }),
@@ -136,7 +137,7 @@ export default function SchoolSetupPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/tenant/curriculum', {
+      const res = await authFetch('/api/tenant/curriculum', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -191,7 +192,7 @@ export default function SchoolSetupPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/sms/departments', {
+      const res = await authFetch('/api/sms/departments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -222,7 +223,7 @@ export default function SchoolSetupPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/sms/subjects/bulk', {
+      const res = await authFetch('/api/sms/subjects/bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tierLevels }),
@@ -262,7 +263,7 @@ export default function SchoolSetupPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/tenant/badge-settings', {
+      const res = await authFetch('/api/tenant/badge-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -75,7 +76,7 @@ export default function AnnouncementsPage() {
 
   async function fetchAnnouncements() {
     try {
-      const res = await fetch('/api/sms/announcements');
+      const res = await authFetch('/api/sms/announcements');
       const data = await res.json();
       setAnnouncements(data.announcements || []);
     } catch (err) {
@@ -91,7 +92,7 @@ export default function AnnouncementsPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/sms/announcements', {
+      const res = await authFetch('/api/sms/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newAnnouncement),

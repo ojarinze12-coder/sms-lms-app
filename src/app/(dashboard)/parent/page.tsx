@@ -39,6 +39,7 @@ import OverviewTab from '@/components/parent/OverviewTab';
 import FeesTab from '@/components/parent/FeesTab';
 import AttendanceTab from '@/components/parent/AttendanceTab';
 import AnnouncementsTab from '@/components/parent/AnnouncementsTab';
+import { authFetch } from '@/lib/auth-fetch';
 
 export default function ParentPortalPage() {
   const [loading, setLoading] = useState(true);
@@ -59,14 +60,7 @@ export default function ParentPortalPage() {
 
   const loadPortalData = async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      
-      const res = await fetch('/api/sms/parents', { 
-        credentials: 'include',
-        headers: Object.keys(headers).length > 0 ? headers : undefined,
-      });
+      const res = await authFetch('/api/sms/parents');
       const data = await res.json();
       
       if (res.status === 401) {
@@ -98,7 +92,7 @@ export default function ParentPortalPage() {
     setLinkSuccess('');
 
     try {
-      const res = await fetch('/api/sms/parents/link-student', {
+      const res = await authFetch('/api/sms/parents/link-student', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId, relationship })

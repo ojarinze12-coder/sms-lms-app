@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,11 +103,11 @@ export default function DocumentsPage() {
   async function fetchData() {
     try {
       const [catRes, docRes, studentsRes, teachersRes, staffRes] = await Promise.all([
-        fetch('/api/sms/documents/categories'),
-        fetch('/api/sms/documents'),
-        fetch('/api/sms/students'),
-        fetch('/api/sms/teachers'),
-        fetch('/api/sms/staff')
+        authFetch('/api/sms/documents/categories'),
+        authFetch('/api/sms/documents'),
+        authFetch('/api/sms/students'),
+        authFetch('/api/sms/teachers'),
+        authFetch('/api/sms/staff')
       ]);
       
       const catData = await catRes.json();
@@ -132,7 +133,7 @@ export default function DocumentsPage() {
   async function handleAddCategory(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/sms/documents/categories', {
+      const res = await authFetch('/api/sms/documents/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,7 +166,7 @@ export default function DocumentsPage() {
   async function handleAddDocument(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/sms/documents', {
+      const res = await authFetch('/api/sms/documents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

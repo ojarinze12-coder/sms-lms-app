@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,7 @@ export default function NewStudentPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/sms/students', {
+      const res = await authFetch('/api/sms/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -135,7 +136,7 @@ export default function NewStudentPage() {
                     onClick={async () => {
                       setGenerating(true);
                       try {
-                        const res = await fetch('/api/sms/students?action=generate-id');
+                        const res = await authFetch('/api/sms/students?action=generate-id');
                         const data = await res.json();
                         setFormData({ ...formData, studentId: data.studentId });
                       } catch (err) {

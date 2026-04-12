@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Plus, AlertTriangle, TrendingUp, FileText, Search, User, Shield } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Student {
   id: string;
@@ -87,9 +88,9 @@ export default function BehavioralRecordsPage() {
   async function fetchData() {
     try {
       const [studentsRes, incidentsRes, logsRes] = await Promise.all([
-        fetch('/api/sms/students'),
-        fetch('/api/sms/behavior-incidents'),
-        fetch('/api/sms/behavior-logs'),
+        authFetch('/api/sms/students'),
+        authFetch('/api/sms/behavior-incidents'),
+        authFetch('/api/sms/behavior-logs'),
       ]);
       
       const studentsData = await studentsRes.json();
@@ -109,7 +110,7 @@ export default function BehavioralRecordsPage() {
   async function handleAddIncident(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/sms/behavior-incidents', {
+      const res = await authFetch('/api/sms/behavior-incidents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(incidentForm),
@@ -140,7 +141,7 @@ export default function BehavioralRecordsPage() {
   async function handleAddLog(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/sms/behavior-logs', {
+      const res = await authFetch('/api/sms/behavior-logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(logForm),

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Exam } from '@/types/exam';
@@ -61,7 +62,7 @@ export default function ExamsPage() {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
       
-      const res = await fetch('/api/lms/exams', { 
+      const res = await authFetch('/api/lms/exams', { 
         credentials: 'include',
         headers: Object.keys(headers).length > 0 ? headers : undefined,
       });

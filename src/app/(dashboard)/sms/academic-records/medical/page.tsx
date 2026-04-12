@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Plus, Syringe, FileText, Calendar, AlertTriangle, Search, User, Heart, Activity } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Student {
   id: string;
@@ -91,9 +92,9 @@ export default function MedicalRecordsPage() {
   async function fetchData() {
     try {
       const [studentsRes, recordsRes, vaccinationsRes] = await Promise.all([
-        fetch('/api/sms/students'),
-        fetch('/api/sms/medical-records'),
-        fetch('/api/sms/vaccinations'),
+        authFetch('/api/sms/students'),
+        authFetch('/api/sms/medical-records'),
+        authFetch('/api/sms/vaccinations'),
       ]);
       
       const studentsData = await studentsRes.json();
@@ -113,7 +114,7 @@ export default function MedicalRecordsPage() {
   async function handleAddRecord(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/sms/medical-records', {
+      const res = await authFetch('/api/sms/medical-records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(recordForm),
@@ -144,7 +145,7 @@ export default function MedicalRecordsPage() {
   async function handleAddVaccination(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/sms/vaccinations', {
+      const res = await authFetch('/api/sms/vaccinations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(vaccinationForm),

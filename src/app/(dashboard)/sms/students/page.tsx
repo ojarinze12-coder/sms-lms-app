@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Student {
   id: string;
@@ -26,7 +27,7 @@ export default function StudentsPage() {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    fetch('/api/sms/students', {
+    authFetch('/api/sms/students', {
       credentials: 'include',
       headers: Object.keys(headers).length > 0 ? headers : undefined,
     })

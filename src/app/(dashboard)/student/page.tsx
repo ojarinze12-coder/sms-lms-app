@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface StudentData {
   student: { id: string; studentId: string; firstName: string; lastName: string; class: { id: string; name: string; level: number } | null };
@@ -26,14 +27,7 @@ export default function StudentPortalPage() {
 
   const loadPortalData = async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      
-      const res = await fetch('/api/sms/students/portal', { 
-        credentials: 'include',
-        headers: Object.keys(headers).length > 0 ? headers : undefined,
-      });
+      const res = await authFetch('/api/sms/students/portal');
       const result = await res.json();
       if (res.status === 401) {
         setError('Session expired. Please login again.');

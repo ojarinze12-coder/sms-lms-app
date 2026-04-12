@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,19 +41,19 @@ export default function LibraryPage() {
   const [circulationForm, setCirculationForm] = useState({ bookId: '', borrowerName: '', borrowerType: 'STUDENT', dueDate: '' });
 
   useEffect(() => {
-    fetchData();
+    authFetchData();
   }, []);
 
-  async function fetchData() {
+  async function authFetchData() {
     try {
       const [booksRes, circRes] = await Promise.all([
-        fetch('/api/sms/library/books'),
-        fetch('/api/sms/library/circulations'),
+        authFetch('/api/sms/library/books'),
+        authFetch('/api/sms/library/circulations'),
       ]);
       setBooks(await booksRes.json());
       setCirculations(await circRes.json());
     } catch (err) {
-      console.error('Failed to fetch library data:', err);
+      console.error('Failed to authFetch library data:', err);
     } finally {
       setLoading(false);
     }
@@ -61,14 +62,14 @@ export default function LibraryPage() {
   async function handleAddBook(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch('/api/sms/library/books', {
+      await authFetch('/api/sms/library/books', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...bookForm, totalCopies: parseInt(bookForm.totalCopies), availableCopies: parseInt(bookForm.totalCopies) }),
       });
       setShowBookForm(false);
       setBookForm({ isbn: '', title: '', author: '', publisher: '', category: '', totalCopies: '', shelfLocation: '' });
-      fetchData();
+      authFetchData();
     } catch (err) {
       console.error('Failed to add book:', err);
     }
@@ -77,14 +78,14 @@ export default function LibraryPage() {
   async function handleBorrow(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch('/api/sms/library/circulations', {
+      await authFetch('/api/sms/library/circulations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...circulationForm, status: 'BORROWED' }),
       });
       setShowCirculationForm(false);
       setCirculationForm({ bookId: '', borrowerName: '', borrowerType: 'STUDENT', dueDate: '' });
-      fetchData();
+      authFetchData();
     } catch (err) {
       console.error('Failed to borrow book:', err);
     }
@@ -92,12 +93,12 @@ export default function LibraryPage() {
 
   async function returnBook(id: string) {
     try {
-      await fetch(`/api/sms/library/circulations/${id}`, {
+      await authFetch(`/api/sms/library/circulations/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'RETURNED', returnDate: new Date().toISOString().split('T')[0] }),
       });
-      fetchData();
+      authFetchData();
     } catch (err) {
       console.error('Failed to return book:', err);
     }

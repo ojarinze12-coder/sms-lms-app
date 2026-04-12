@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 
 type ImportType = 'students' | 'teachers' | 'staff' | 'parents' | 'legacy';
 
@@ -52,7 +53,7 @@ export default function ImportPage() {
 
   const loadAcademicYears = async () => {
     try {
-      const res = await fetch('/api/sms/academic-years');
+      const res = await authFetch('/api/sms/academic-years');
       if (res.ok) {
         const data = await res.json();
         setAcademicYears(data);
@@ -190,7 +191,7 @@ export default function ImportPage() {
       formData.append('classId', selectedClassId);
       formData.append('autoEnroll', autoEnroll.toString());
 
-      const res = await fetch('/api/sms/import', {
+      const res = await authFetch('/api/sms/import', {
         method: 'POST',
         body: formData,
       });

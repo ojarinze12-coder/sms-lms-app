@@ -17,6 +17,7 @@ import {
   Save
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { authFetch } from '@/lib/auth-fetch';
 
 export default function LMSSettingsPage() {
   const { toast } = useToast();
@@ -39,7 +40,7 @@ export default function LMSSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/lms/settings', {
+      const res = await authFetch('/api/lms/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),

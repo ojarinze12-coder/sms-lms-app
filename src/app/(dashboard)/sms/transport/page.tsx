@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,11 +62,11 @@ export default function TransportPage() {
   async function fetchData() {
     try {
       const [vehRes, routesRes, subsRes, studentsRes, yearsRes] = await Promise.all([
-        fetch('/api/sms/transport/vehicles'),
-        fetch('/api/sms/transport/routes'),
-        fetch('/api/sms/transport/subscriptions'),
-        fetch('/api/sms/students'),
-        fetch('/api/sms/academic-years')
+        authFetch('/api/sms/transport/vehicles'),
+        authFetch('/api/sms/transport/routes'),
+        authFetch('/api/sms/transport/subscriptions'),
+        authFetch('/api/sms/students'),
+        authFetch('/api/sms/academic-years')
       ]);
       setVehicles(await vehRes.json());
       setRoutes(await routesRes.json());
@@ -82,7 +83,7 @@ export default function TransportPage() {
   async function handleAddVehicle(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch('/api/sms/transport/vehicles', {
+      await authFetch('/api/sms/transport/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...vehicleForm, capacity: parseInt(vehicleForm.capacity), status: 'ACTIVE' }),
@@ -98,7 +99,7 @@ export default function TransportPage() {
   async function handleAddRoute(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch('/api/sms/transport/routes', {
+      await authFetch('/api/sms/transport/routes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -120,7 +121,7 @@ export default function TransportPage() {
     e.preventDefault();
     try {
       const route = routes.find(r => r.id === subscriptionForm.routeId);
-      await fetch('/api/sms/transport/subscriptions', {
+      await authFetch('/api/sms/transport/subscriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

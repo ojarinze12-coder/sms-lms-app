@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Forum {
   id: string;
@@ -28,7 +29,7 @@ export default function ForumsPage() {
 
   async function fetchForums() {
     try {
-      const res = await fetch('/api/lms/forums');
+      const res = await authFetch('/api/lms/forums');
       const data = await res.json();
       setForums(data);
     } catch (err) {
@@ -41,7 +42,7 @@ export default function ForumsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch('/api/lms/forums', {
+      await authFetch('/api/lms/forums', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, isLocked: false }),

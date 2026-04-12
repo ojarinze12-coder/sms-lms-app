@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -91,9 +92,9 @@ export default function IDCardsPage() {
   async function fetchData() {
     try {
       const [studentsRes, teachersRes, staffRes] = await Promise.all([
-        fetch('/api/sms/id-cards?type=student'),
-        fetch('/api/sms/id-cards?type=teacher'),
-        fetch('/api/sms/id-cards?type=staff'),
+        authFetch('/api/sms/id-cards?type=student'),
+        authFetch('/api/sms/id-cards?type=teacher'),
+        authFetch('/api/sms/id-cards?type=staff'),
       ]);
       
       const studentsData = await studentsRes.json();
@@ -115,7 +116,7 @@ export default function IDCardsPage() {
 
   async function handleIssueCard(type: 'student' | 'teacher' | 'staff') {
     try {
-      const res = await fetch('/api/sms/id-cards', {
+      const res = await authFetch('/api/sms/id-cards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -174,7 +175,7 @@ export default function IDCardsPage() {
 
   async function handleBiometricCapture(fingerprintData: string) {
     try {
-      await fetch('/api/sms/biometric', {
+      await authFetch('/api/sms/biometric', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

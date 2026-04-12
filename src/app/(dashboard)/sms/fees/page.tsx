@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -94,7 +95,7 @@ export default function FeesPage() {
 
   async function fetchFeeStructures() {
     try {
-      const res = await fetch('/api/sms/fees');
+      const res = await authFetch('/api/sms/fees');
       const data = await res.json();
       setFeeStructures(data.feeStructures || []);
     } catch (err) {
@@ -104,7 +105,7 @@ export default function FeesPage() {
 
   async function fetchPayments() {
     try {
-      const res = await fetch('/api/sms/fees/payments');
+      const res = await authFetch('/api/sms/fees/payments');
       const data = await res.json();
       setPayments(data.payments || []);
     } catch (err) {
@@ -114,7 +115,7 @@ export default function FeesPage() {
 
   async function fetchAcademicYears() {
     try {
-      const res = await fetch('/api/sms/academic-years');
+      const res = await authFetch('/api/sms/academic-years');
       const data = await res.json();
       setAcademicYears(data || []);
     } catch (err) {
@@ -130,7 +131,7 @@ export default function FeesPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/sms/fees', {
+      const res = await authFetch('/api/sms/fees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Plus, Award, FileText, Send, Download, Search } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface CertificateTemplate {
   id: string;
@@ -68,9 +69,9 @@ export default function CertificateCenterPage() {
   async function fetchData() {
     try {
       const [templatesRes, issuancesRes, studentsRes] = await Promise.all([
-        fetch('/api/lms/certificates/templates'),
-        fetch('/api/lms/certificates/issuances'),
-        fetch('/api/sms/students'),
+        authFetch('/api/lms/certificates/templates'),
+        authFetch('/api/lms/certificates/issuances'),
+        authFetch('/api/sms/students'),
       ]);
       
       const templatesData = await templatesRes.json();
@@ -90,7 +91,7 @@ export default function CertificateCenterPage() {
   async function handleCreateTemplate(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/lms/certificates/templates', {
+      const res = await authFetch('/api/lms/certificates/templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(templateForm),
@@ -110,7 +111,7 @@ export default function CertificateCenterPage() {
   async function handleIssueCertificate(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/lms/certificates/issuances', {
+      const res = await authFetch('/api/lms/certificates/issuances', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(issuanceForm),
@@ -129,7 +130,7 @@ export default function CertificateCenterPage() {
 
   async function handleGeneratePDF(id: string) {
     try {
-      const res = await fetch(`/api/lms/certificates/issuances/${id}/generate-pdf`, {
+      const res = await authFetch(`/api/lms/certificates/issuances/${id}/generate-pdf`, {
         method: 'POST',
       });
       if (res.ok) {
@@ -150,7 +151,7 @@ export default function CertificateCenterPage() {
 
   async function handleSendCertificate(id: string) {
     try {
-      const res = await fetch(`/api/lms/certificates/issuances/${id}/send`, {
+      const res = await authFetch(`/api/lms/certificates/issuances/${id}/send`, {
         method: 'POST',
       });
       if (res.ok) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -54,7 +55,7 @@ export default function NewTeacherPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/sms/teachers', {
+      const res = await authFetch('/api/sms/teachers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -119,7 +120,7 @@ export default function NewTeacherPage() {
                     onClick={async () => {
                       setGenerating(true);
                       try {
-                        const res = await fetch('/api/sms/teachers?action=generate-id');
+                        const res = await authFetch('/api/sms/teachers?action=generate-id');
                         const data = await res.json();
                         setFormData({ ...formData, employeeId: data.employeeId });
                       } catch (err) {

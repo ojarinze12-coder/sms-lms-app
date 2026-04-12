@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { TIER_TEMPLATE_OPTIONS } from '@/lib/constants/tiers';
 
 interface Tier {
@@ -39,7 +40,7 @@ export default function TiersPage() {
 
   const loadTiers = async () => {
     try {
-      const res = await fetch('/api/sms/tiers');
+      const res = await authFetch('/api/sms/tiers');
       const data = await res.json();
       setTiers(data.data || []);
     } catch (err) {
@@ -99,7 +100,7 @@ export default function TiersPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/sms/tiers', {
+      const res = await authFetch('/api/sms/tiers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -127,7 +128,7 @@ export default function TiersPage() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch('/api/sms/tiers', {
+      const res = await authFetch('/api/sms/tiers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ template: selectedTemplate }),

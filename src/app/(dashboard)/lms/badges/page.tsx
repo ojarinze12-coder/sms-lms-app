@@ -10,6 +10,7 @@ import { getInitialBadgeForm } from '@/types/badge';
 import BadgeForm from '@/components/badges/BadgeForm';
 import BadgeCard from '@/components/badges/BadgeCard';
 import AwardBadgeModal from '@/components/badges/AwardBadgeModal';
+import { authFetch } from '@/lib/auth-fetch';
 
 export default function BadgesPage() {
   const { toast } = useToast();
@@ -30,9 +31,9 @@ export default function BadgesPage() {
   async function loadData() {
     try {
       const [badgesRes, tiersRes, studentsRes] = await Promise.all([
-        fetch(`/api/lms/badges${filterTier !== 'all' ? `?tierId=${filterTier}` : ''}`),
-        fetch('/api/sms/tiers'),
-        fetch('/api/sms/students'),
+        authFetch(`/api/lms/badges${filterTier !== 'all' ? `?tierId=${filterTier}` : ''}`),
+        authFetch('/api/sms/tiers'),
+        authFetch('/api/sms/students'),
       ]);
 
       const badgesData = await badgesRes.json();
@@ -52,7 +53,7 @@ export default function BadgesPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const res = await fetch('/api/lms/badges', {
+      const res = await authFetch('/api/lms/badges', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -79,7 +80,7 @@ export default function BadgesPage() {
     if (!selectedBadge) return;
 
     try {
-      const res = await fetch(`/api/lms/badges/award/${studentId}`, {
+      const res = await authFetch(`/api/lms/badges/award/${studentId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ badgeId: selectedBadge.id }),

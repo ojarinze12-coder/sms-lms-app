@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 
 interface Module {
   key: string;
@@ -36,12 +37,12 @@ export default function ModulesPage() {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    fetchModules();
+    authFetchModules();
   }, []);
 
-  const fetchModules = async () => {
+  const authFetchModules = async () => {
     try {
-      const res = await fetch('/api/sms/modules');
+      const res = await authFetch('/api/sms/modules');
       if (res.ok) {
         const data = await res.json();
         setModules(data.modules || []);
@@ -63,7 +64,7 @@ export default function ModulesPage() {
 
     setSaving(true);
     try {
-      await fetch('/api/sms/modules', {
+      await authFetch('/api/sms/modules', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ moduleKey: key, enabled: !modules.find(m => m.key === key)?.enabled }),

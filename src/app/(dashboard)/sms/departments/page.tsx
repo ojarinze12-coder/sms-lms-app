@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { DEFAULT_SSS_DEPARTMENTS } from '@/lib/constants/departments';
 
 interface Tier {
@@ -53,7 +54,7 @@ export default function DepartmentsPage() {
 
   const loadTiers = async () => {
     try {
-      const res = await fetch('/api/sms/tiers');
+      const res = await authFetch('/api/sms/tiers');
       const data = await res.json();
       const allTiers = data.data || [];
       setTiers(allTiers);
@@ -132,7 +133,7 @@ export default function DepartmentsPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/sms/departments', {
+      const res = await authFetch('/api/sms/departments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -158,7 +159,7 @@ export default function DepartmentsPage() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch('/api/sms/departments', {
+      const res = await authFetch('/api/sms/departments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { NERDC_SUBJECTS } from '@/lib/nigeria';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Subject {
   id: string;
@@ -59,9 +60,9 @@ export default function ClassSubjectsPage() {
     try {
       // Load class details and subjects
       const [classRes, subjectsRes, teachersRes] = await Promise.all([
-        fetch(`/api/sms/academic-classes?academicYearId=${params.id}`),
-        fetch(`/api/sms/subjects?academicClassId=${params.id}`),
-        fetch('/api/sms/teachers'),
+        authFetch(`/api/sms/academic-classes?academicYearId=${params.id}`),
+        authFetch(`/api/sms/subjects?academicClassId=${params.id}`),
+        authFetch('/api/sms/teachers'),
       ]);
       
       const classData = await classRes.json();
@@ -91,7 +92,7 @@ export default function ClassSubjectsPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch('/api/sms/subjects', {
+      const res = await authFetch('/api/sms/subjects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -131,7 +132,7 @@ export default function ClassSubjectsPage() {
     
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/sms/subjects/${editingSubject.id}`, {
+      const res = await authFetch(`/api/sms/subjects/${editingSubject.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,7 +157,7 @@ export default function ClassSubjectsPage() {
 
   const handleToggleActive = async (subject: Subject) => {
     try {
-      const res = await fetch(`/api/sms/subjects/${subject.id}`, {
+      const res = await authFetch(`/api/sms/subjects/${subject.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

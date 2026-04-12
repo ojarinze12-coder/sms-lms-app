@@ -18,6 +18,7 @@ import PayrollForm from '@/components/payroll/PayrollForm';
 import PayrollStats from '@/components/payroll/PayrollStats';
 import PayrollTable from '@/components/payroll/PayrollTable';
 import PayrollDetails from '@/components/payroll/PayrollDetails';
+import { authFetch } from '@/lib/auth-fetch';
 
 export default function PayrollPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -37,8 +38,8 @@ export default function PayrollPage() {
   const fetchData = async () => {
     try {
       const [teachersRes, payrollRes] = await Promise.all([
-        fetch('/api/sms/teachers'),
-        fetch('/api/sms/payroll')
+        authFetch('/api/sms/teachers'),
+        authFetch('/api/sms/payroll')
       ]);
       
       if (!teachersRes.ok || !payrollRes.ok) {
@@ -88,7 +89,7 @@ export default function PayrollPage() {
     const calc = calculatePayroll();
     
     try {
-      const res = await fetch('/api/sms/payroll', {
+      const res = await authFetch('/api/sms/payroll', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -118,7 +119,7 @@ export default function PayrollPage() {
 
   const handleStatusChange = async (payrollId: string, action: string, reference?: string) => {
     try {
-      const res = await fetch('/api/sms/payroll', {
+      const res = await authFetch('/api/sms/payroll', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payrollId, action, paymentReference: reference }),
@@ -138,7 +139,7 @@ export default function PayrollPage() {
     
     setRemitaProcessing(true);
     try {
-      const res = await fetch('/api/sms/payroll/remita', {
+      const res = await authFetch('/api/sms/payroll/remita', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

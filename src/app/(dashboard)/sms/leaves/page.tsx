@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -95,9 +96,9 @@ export default function LeavesPage() {
   const fetchData = async () => {
     try {
       const [teachersRes, staffRes, leavesRes] = await Promise.all([
-        fetch('/api/sms/teachers'),
-        fetch('/api/sms/staff'),
-        fetch('/api/sms/leaves')
+        authFetch('/api/sms/teachers'),
+        authFetch('/api/sms/staff'),
+        authFetch('/api/sms/leaves')
       ]);
       
       let teachersData: Teacher[] = [];
@@ -128,7 +129,7 @@ export default function LeavesPage() {
     e.preventDefault();
     
     try {
-      const res = await fetch('/api/sms/leaves', {
+      const res = await authFetch('/api/sms/leaves', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -159,7 +160,7 @@ export default function LeavesPage() {
 
   const handleStatusChange = async (leaveId: string, action: 'approve' | 'reject') => {
     try {
-      const res = await fetch('/api/sms/leaves', {
+      const res = await authFetch('/api/sms/leaves', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leaveId, action }),

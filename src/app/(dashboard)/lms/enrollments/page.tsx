@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -81,46 +82,46 @@ export default function EnrollmentsPage() {
   });
 
   useEffect(() => {
-    fetchEnrollments();
-    fetchStudents();
-    fetchClasses();
+    authFetchEnrollments();
+    authFetchStudents();
+    authFetchClasses();
   }, []);
 
-  async function fetchEnrollments() {
+  async function authFetchEnrollments() {
     try {
-      const res = await fetch('/api/lms/enrollments');
+      const res = await authFetch('/api/lms/enrollments');
       if (res.ok) {
         const data = await res.json();
         setEnrollments(data.enrollments || []);
       }
     } catch (err) {
-      console.error('Failed to fetch enrollments:', err);
+      console.error('Failed to authFetch enrollments:', err);
     } finally {
       setLoading(false);
     }
   }
 
-  async function fetchStudents() {
+  async function authFetchStudents() {
     try {
-      const res = await fetch('/api/sms/students');
+      const res = await authFetch('/api/sms/students');
       if (res.ok) {
         const data = await res.json();
         setStudents(data || []);
       }
     } catch (err) {
-      console.error('Failed to fetch students:', err);
+      console.error('Failed to authFetch students:', err);
     }
   }
 
-  async function fetchClasses() {
+  async function authFetchClasses() {
     try {
-      const res = await fetch('/api/sms/academic-classes');
+      const res = await authFetch('/api/sms/academic-classes');
       if (res.ok) {
         const data = await res.json();
         setClasses(data.classes || []);
       }
     } catch (err) {
-      console.error('Failed to fetch classes:', err);
+      console.error('Failed to authFetch classes:', err);
     }
   }
 
@@ -131,7 +132,7 @@ export default function EnrollmentsPage() {
     }
 
     try {
-      const res = await fetch('/api/lms/enrollments', {
+      const res = await authFetch('/api/lms/enrollments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEnrollment),
@@ -141,7 +142,7 @@ export default function EnrollmentsPage() {
         toast({ variant: 'default', description: 'Enrollment created successfully' });
         setShowAddDialog(false);
         setNewEnrollment({ studentId: '', classId: '' });
-        fetchEnrollments();
+        authFetchEnrollments();
       } else {
         toast({ variant: 'destructive', description: 'Failed to create enrollment' });
       }

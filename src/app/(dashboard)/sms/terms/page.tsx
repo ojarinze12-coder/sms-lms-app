@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import Link from 'next/link';
 
 interface Term {
@@ -47,7 +48,7 @@ export default function TermsPage() {
 
   const loadYears = async () => {
     try {
-      const res = await fetch('/api/sms/academic-years');
+      const res = await authFetch('/api/sms/academic-years');
       if (!res.ok) {
         console.error('Failed to load years:', res.status);
         return;
@@ -85,7 +86,7 @@ export default function TermsPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/sms/terms', {
+      const res = await authFetch('/api/sms/terms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, academicYearId: selectedYearId }),

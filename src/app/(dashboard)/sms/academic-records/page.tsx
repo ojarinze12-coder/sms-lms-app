@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,15 +29,15 @@ export default function AcademicRecordsDashboard() {
   });
 
   useEffect(() => {
-    fetchStats();
+    authFetchStats();
   }, []);
 
-  async function fetchStats() {
+  async function authFetchStats() {
     try {
       const [medRes, transRes, certRes] = await Promise.all([
-        fetch('/api/sms/students').then(r => r.json()),
-        fetch('/api/sms/transcripts').then(r => r.json()),
-        fetch('/api/lms/certificates/issuances').then(r => r.json()),
+        authFetch('/api/sms/students').then(r => r.json()),
+        authFetch('/api/sms/transcripts').then(r => r.json()),
+        authFetch('/api/lms/certificates/issuances').then(r => r.json()),
       ]);
 
       setStats({
@@ -47,7 +48,7 @@ export default function AcademicRecordsDashboard() {
         certificates: Array.isArray(certRes.issuances) ? certRes.issuances.length : 0,
       });
     } catch (err) {
-      console.error('Failed to fetch stats:', err);
+      console.error('Failed to authFetch stats:', err);
     } finally {
       setLoading(false);
     }

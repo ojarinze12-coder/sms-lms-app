@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,7 +71,7 @@ export default function ParentsPage() {
 
   const fetchLinks = async () => {
     try {
-      const res = await fetch('/api/sms/parents/approve');
+      const res = await authFetch('/api/sms/parents/approve');
       if (res.ok) {
         const data = await res.json();
         setLinks(data.requests || []);
@@ -85,7 +86,7 @@ export default function ParentsPage() {
   const handleApprove = async (requestId: string) => {
     setActionLoading(requestId);
     try {
-      const res = await fetch('/api/sms/parents/approve', {
+      const res = await authFetch('/api/sms/parents/approve', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requestId, action: 'approve' })
@@ -108,7 +109,7 @@ export default function ParentsPage() {
   const handleReject = async (requestId: string) => {
     setActionLoading(requestId);
     try {
-      const res = await fetch('/api/sms/parents/approve', {
+      const res = await authFetch('/api/sms/parents/approve', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requestId, action: 'reject' })

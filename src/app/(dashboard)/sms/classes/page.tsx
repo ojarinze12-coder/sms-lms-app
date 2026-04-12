@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getSubjectsByCurriculum } from '@/lib/nigeria';
+import { Loader2, Plus, Pencil, Trash2, BookOpen, ChevronDown } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 import { CURRICULUM_INFO } from '@/types';
 import { Loader2, Plus, Pencil, Trash2, BookOpen, ChevronDown } from 'lucide-react';
 
@@ -161,7 +163,7 @@ export default function ClassesPage() {
 
   const loadYears = async () => {
     try {
-      const res = await fetch('/api/sms/academic-years');
+      const res = await authFetch('/api/sms/academic-years');
       if (!res.ok) {
         console.error('Failed to load years:', res.status);
         return;
@@ -181,7 +183,7 @@ export default function ClassesPage() {
 
   const loadTiers = async () => {
     try {
-      const res = await fetch('/api/sms/tiers');
+      const res = await authFetch('/api/sms/tiers');
       if (res.ok) {
         const data = await res.json();
         setTiers(data.data || []);
@@ -193,7 +195,7 @@ export default function ClassesPage() {
 
   const loadDepartments = async () => {
     try {
-      const res = await fetch('/api/sms/departments');
+      const res = await authFetch('/api/sms/departments');
       if (res.ok) {
         const data = await res.json();
         setDepartments(data.data || []);
@@ -205,7 +207,7 @@ export default function ClassesPage() {
 
   const loadCurriculum = async () => {
     try {
-      const res = await fetch('/api/tenant/curriculum');
+      const res = await authFetch('/api/tenant/curriculum');
       if (res.ok) {
         const data = await res.json();
         if (data.data?.settings?.curriculumType) {
@@ -233,7 +235,7 @@ export default function ClassesPage() {
 
   const loadTeachers = async () => {
     try {
-      const res = await fetch('/api/sms/teachers');
+      const res = await authFetch('/api/sms/teachers');
       if (res.ok) {
         const data = await res.json();
         setTeachers(Array.isArray(data) ? data : data.data || []);
@@ -245,7 +247,7 @@ export default function ClassesPage() {
 
   const loadStaff = async () => {
     try {
-      const res = await fetch('/api/sms/staff?category=CAREGIVER');
+      const res = await authFetch('/api/sms/staff?category=CAREGIVER');
       if (res.ok) {
         const data = await res.json();
         setStaff(Array.isArray(data) ? data : data.data || []);
@@ -276,7 +278,7 @@ export default function ClassesPage() {
     console.log('[CLASSES] Request body:', JSON.stringify(requestBody));
 
     try {
-      const res = await fetch('/api/sms/academic-classes', {
+      const res = await authFetch('/api/sms/academic-classes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
@@ -412,7 +414,7 @@ export default function ClassesPage() {
               if (!confirm('This will add missing subjects to all classes. Continue?')) return;
               setSubmitting(true);
               try {
-                const res = await fetch('/api/sms/subjects/add-missing', {
+                const res = await authFetch('/api/sms/subjects/add-missing', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ createMissingClasses: true }),

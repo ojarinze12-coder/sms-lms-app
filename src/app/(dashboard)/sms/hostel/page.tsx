@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-authFetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,15 +76,15 @@ export default function HostelPage() {
   const [academicYears, setAcademicYears] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchData();
+    authFetchData();
   }, []);
 
-  async function fetchData() {
+  async function authFetchData() {
     try {
       const [hostelsRes, roomsRes, allocationsRes] = await Promise.all([
-        fetch('/api/sms/hostels'),
-        fetch('/api/sms/hostels/rooms'),
-        fetch('/api/sms/hostels/allocations'),
+        authFetch('/api/sms/hostels'),
+        authFetch('/api/sms/hostels/rooms'),
+        authFetch('/api/sms/hostels/allocations'),
       ]);
       
       const hostelsData = await hostelsRes.json();
@@ -94,7 +95,7 @@ export default function HostelPage() {
       setRooms(Array.isArray(roomsData) ? roomsData : []);
       setAllocations(Array.isArray(allocationsData) ? allocationsData : []);
     } catch (err) {
-      console.error('Failed to fetch hostel data:', err);
+      console.error('Failed to authFetch hostel data:', err);
       setHostels([]);
       setRooms([]);
       setAllocations([]);
@@ -103,33 +104,33 @@ export default function HostelPage() {
     }
   }
 
-  async function fetchFormData() {
+  async function authFetchFormData() {
     try {
       const [bedsRes, studentsRes, yearsRes] = await Promise.all([
-        fetch('/api/sms/hostels/available-beds'),
-        fetch('/api/sms/students'),
-        fetch('/api/sms/academic-years'),
+        authFetch('/api/sms/hostels/available-beds'),
+        authFetch('/api/sms/students'),
+        authFetch('/api/sms/academic-years'),
       ]);
       
       setAvailableBeds(await bedsRes.json());
       setStudents((await studentsRes.json()).slice(0, 20));
       setAcademicYears(await yearsRes.json());
     } catch (err) {
-      console.error('Failed to fetch form data:', err);
+      console.error('Failed to authFetch form data:', err);
     }
   }
 
   async function handleCreateHostel(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch('/api/sms/hostels', {
+      await authFetch('/api/sms/hostels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(hostelForm),
       });
       setShowHostelForm(false);
       setHostelForm({ name: '', type: 'MALE', description: '', address: '', wardenName: '', wardenPhone: '' });
-      fetchData();
+      authFetchData();
     } catch (err) {
       console.error('Failed to create hostel:', err);
     }
@@ -138,7 +139,7 @@ export default function HostelPage() {
   async function handleCreateRoom(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch('/api/sms/hostels/rooms', {
+      await authFetch('/api/sms/hostels/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -149,7 +150,7 @@ export default function HostelPage() {
       });
       setShowRoomForm(false);
       setRoomForm({ hostelId: '', roomNumber: '', floor: '1', capacity: '4', roomType: 'DORMITORY' });
-      fetchData();
+      authFetchData();
     } catch (err) {
       console.error('Failed to create room:', err);
     }
@@ -158,14 +159,14 @@ export default function HostelPage() {
   async function handleCreateAllocation(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await fetch('/api/sms/hostels/allocations', {
+      await authFetch('/api/sms/hostels/allocations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(allocationForm),
       });
       setShowAllocationForm(false);
       setAllocationForm({ hostelId: '', roomId: '', bedId: '', studentId: '', academicYearId: '', checkInDate: '' });
-      fetchData();
+      authFetchData();
     } catch (err) {
       console.error('Failed to create allocation:', err);
     }
@@ -173,12 +174,12 @@ export default function HostelPage() {
 
   async function handleCheckout(allocationId: string) {
     try {
-      await fetch(`/api/sms/hostels/allocations/${allocationId}`, {
+      await authFetch(`/api/sms/hostels/allocations/${allocationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'checkout' }),
       });
-      fetchData();
+      authFetchData();
     } catch (err) {
       console.error('Failed to check out:', err);
     }
@@ -187,8 +188,8 @@ export default function HostelPage() {
   async function deleteHostel(id: string) {
     if (!confirm('Are you sure you want to delete this hostel?')) return;
     try {
-      await fetch(`/api/sms/hostels/${id}`, { method: 'DELETE' });
-      fetchData();
+      await authFetch(`/api/sms/hostels/${id}`, { method: 'DELETE' });
+      authFetchData();
     } catch (err) {
       console.error('Failed to delete hostel:', err);
     }
@@ -197,8 +198,8 @@ export default function HostelPage() {
   async function deleteRoom(id: string) {
     if (!confirm('Are you sure you want to delete this room?')) return;
     try {
-      await fetch(`/api/sms/hostels/rooms/${id}`, { method: 'DELETE' });
-      fetchData();
+      await authFetch(`/api/sms/hostels/rooms/${id}`, { method: 'DELETE' });
+      authFetchData();
     } catch (err) {
       console.error('Failed to delete room:', err);
     }
@@ -228,7 +229,7 @@ export default function HostelPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold dark:text-white">Hostel Management</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => { fetchData(); }}>
+          <Button variant="outline" onClick={() => { authFetchData(); }}>
             Refresh
           </Button>
         </div>
@@ -460,7 +461,7 @@ export default function HostelPage() {
             <h2 className="text-xl font-semibold dark:text-white">Allocations</h2>
             <Dialog open={showAllocationForm} onOpenChange={setShowAllocationForm}>
               <DialogTrigger asChild>
-                <Button onClick={fetchFormData}><Plus className="mr-2 h-4 w-4" />Allocate Bed</Button>
+                <Button onClick={authFetchFormData}><Plus className="mr-2 h-4 w-4" />Allocate Bed</Button>
               </DialogTrigger>
               <DialogContent className="dark:bg-gray-800">
                 <DialogHeader>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Teacher {
   id: string;
@@ -22,7 +23,7 @@ export default function TeachersPage() {
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
     
-    fetch('/api/sms/teachers', { 
+    authFetch('/api/sms/teachers', { 
       credentials: 'include',
       headers: Object.keys(headers).length > 0 ? headers : undefined,
     })

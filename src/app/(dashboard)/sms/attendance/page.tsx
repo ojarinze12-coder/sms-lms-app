@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,7 +92,7 @@ export default function AttendancePage() {
 
   async function fetchClasses() {
     try {
-      const res = await fetch('/api/sms/academic-classes');
+      const res = await authFetch('/api/sms/academic-classes');
       const data = await res.json();
       setClasses(data.data || data || []);
     } catch (err) {
@@ -144,7 +145,7 @@ export default function AttendancePage() {
         status,
       }));
 
-      const res = await fetch('/api/sms/attendance', {
+      const res = await authFetch('/api/sms/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

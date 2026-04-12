@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -92,7 +93,7 @@ export default function ApplicationsPage() {
 
   async function fetchClasses() {
     try {
-      const res = await fetch('/api/sms/academic-classes');
+      const res = await authFetch('/api/sms/academic-classes');
       const response = await res.json();
       const classesData = response.data || response || [];
       setClasses(Array.isArray(classesData) ? classesData : []);
@@ -122,7 +123,7 @@ export default function ApplicationsPage() {
         applyingClassId: formData.applyingClassId || undefined,
       };
       console.log('[APPLICATIONS] Submitting:', submitData);
-      const res = await fetch('/api/sms/applications', {
+      const res = await authFetch('/api/sms/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData),
@@ -170,7 +171,7 @@ export default function ApplicationsPage() {
 
     try {
       console.log('[UPDATE_STATUS] Action:', action, 'ID:', id, 'ExtraData:', extraData);
-      const res = await fetch('/api/sms/applications', {
+      const res = await authFetch('/api/sms/applications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicationId: id, action, ...extraData }),
@@ -217,7 +218,7 @@ export default function ApplicationsPage() {
 
   async function handleStartReview(id: string) {
     try {
-      await fetch('/api/sms/applications', {
+      await authFetch('/api/sms/applications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicationId: id, action: 'review' }),
