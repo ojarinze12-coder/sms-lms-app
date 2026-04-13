@@ -227,7 +227,7 @@ useEffect(() => {
                 <SelectItem value="all">All Years</SelectItem>
                 {academicYears.map((year) => (
                   <SelectItem key={year.id} value={year.id}>
-                    {year.session}
+                    {year.name}
                   </SelectItem>
                 ))}
               </SelectContent>
