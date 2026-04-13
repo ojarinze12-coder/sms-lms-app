@@ -6,22 +6,19 @@ import { getAuthUser } from '@/lib/auth-server';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const authUser = await getAuthUser();
-    console.log('[Academic Records] Auth user:', authUser?.userId, 'role:', authUser?.role);
-    
     const { id: studentId } = await params;
-    console.log('[Academic Records] Student ID:', studentId);
-    
-    // Verify student exists first
-    const student = await prisma.student.findUnique({
-      where: { id: studentId },
-      select: { id: true, firstName: true, lastName: true },
+
+    const records = await prisma.academicRecord.findMany({
+      where: { studentId },
+      orderBy: [{ createdAt: 'desc' }],
     });
-    
-    if (!student) {
-      console.log('[Academic Records] Student not found:', studentId);
-      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
-    }
+
+    return NextResponse.json({ records });
+  } catch (error: any) {
+    console.error('[Academic Records] Error:', error.message);
+    return NextResponse.json({ error: 'Failed to fetch academic records' }, { status: 500 });
+  }
+}
     
     console.log('[Academic Records] Student:', student.firstName, student.lastName);
     
