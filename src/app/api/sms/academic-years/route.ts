@@ -5,26 +5,24 @@ import { getAuthUser } from '@/lib/auth-server';
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    const { searchParams } = new URL(request.url);
+    const tenantId = searchParams.get('tenantId') || user?.tenantId;
+
+    const whereClause: any = {};
+    if (tenantId) {
+      whereClause.tenantId = tenantId;
     }
 
-    console.log('Fetching academic years for tenant:', user.tenantId);
-
-    const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get('tenantId') || user.tenantId;
-
     const academicYears = await prisma.academicYear.findMany({
-      where: { tenantId },
+      where: whereClause,
       orderBy: { startDate: 'desc' },
     });
 
-    console.log('Found academic years:', academicYears.length);
-
-    return NextResponse.json(academicYears);
+    return NextResponse.json({ years: academicYears });
   } catch (error: any) {
     console.error('Error fetching academic years:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, years: [] }, { status: 500 });
   }
 }
 

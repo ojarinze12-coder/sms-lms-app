@@ -65,7 +65,10 @@ useEffect(() => {
       const res = await authFetch('/api/sms/academic-years');
       if (res.ok) {
         const data = await res.json();
-        setAcademicYears(data.years || []);
+        const years = data.years || data || [];
+        if (years.length > 0) {
+          setAcademicYears(years);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch academic years:', err);
