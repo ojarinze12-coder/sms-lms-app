@@ -26,8 +26,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     console.log('[Academic Records] Student:', student.firstName, student.lastName);
     
     const { searchParams } = new URL(req.url);
-    const academicYearId = searchParams.get('academicYearId');
-    const termId = searchParams.get('termId');
+    let academicYearId = searchParams.get('academicYearId');
+    let termId = searchParams.get('termId');
+
+    // Validate UUIDs before using in filter
+    const isValidUUID = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    
+    if (academicYearId && !isValidUUID(academicYearId)) {
+      academicYearId = null;
+    }
+    if (termId && !isValidUUID(termId)) {
+      termId = null;
+    }
 
     const where: any = { studentId };
     if (academicYearId) where.academicYearId = academicYearId;
