@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +57,7 @@ export default function TenantDataManagementPage() {
 
   const loadData = async () => {
     try {
-      const res = await fetch(`/api/admin/tenants/${tenantId}/data`);
+      const res = await authFetch(`/api/admin/tenants/${tenantId}/data`);
       if (res.ok) {
         const result = await res.json();
         setData(result.data);
@@ -76,7 +77,7 @@ export default function TenantDataManagementPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/admin/tenants/${tenantId}/data`, {
+      const res = await authFetch(`/api/admin/tenants/${tenantId}/data`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'clear', dataTypes: selectedTypes }),

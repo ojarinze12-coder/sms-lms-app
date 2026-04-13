@@ -2,22 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: tenantId } = await params;
+  
+  const authUser = await requireSuperAdmin();
+  const isAuthenticated = !!authUser;
+
+  if (!isAuthenticated) {
+    return NextResponse.json({ error: 'Super Admin access required', isAuthenticated: false }, { status: 401 });
+  }
+
   try {
-    const user = await requireSuperAdmin();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const tenantId = params.id;
-
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
       select: { name: true, status: true, createdAt: true },
     });
 
     if (!tenant) {
-      return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Tenant not found', isAuthenticated: true }, { status: 404 });
     }
 
     const [

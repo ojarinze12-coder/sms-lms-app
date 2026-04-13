@@ -148,7 +148,7 @@ export default function PlansPage() {
     if (!editingPlan) return;
     setSaving(true);
     try {
-      const res1 = await fetch(`/api/admin/plans/${editingPlan.id}`, {
+      const res1 = await authFetch(`/api/admin/plans/${editingPlan.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -161,7 +161,7 @@ export default function PlansPage() {
         return;
       }
       
-      await fetch(`/api/admin/plans/${editingPlan.id}/features`, {
+      await authFetch(`/api/admin/plans/${editingPlan.id}/features`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ features }),
