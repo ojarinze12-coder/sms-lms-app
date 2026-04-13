@@ -58,25 +58,36 @@ useEffect(() => {
 
   async function fetchData() {
     setError(null);
+    setLoading(true);
     try {
       const yearQuery = selectedYear ? `?academicYearId=${selectedYear}` : '';
+      const url = `/api/sms/students/${params.id}/academic-records${yearQuery}`;
+      console.log('[Academic History] Fetching:', url);
       
-      const recordsRes = await authFetch(`/api/sms/students/${params.id}/academic-records${yearQuery}`);
+      const recordsRes = await authFetch(url);
+      console.log('[Academic History] Response status:', recordsRes.status);
+      
+      if (!recordsRes.ok) {
+        const errorText = await recordsRes.text();
+        console.error('[Academic History] Error response:', errorText);
+        setError(`Server error: ${recordsRes.status}`);
+        setRecords([]);
+        return;
+      }
+      
       const recordsData = await recordsRes.json();
+      console.log('[Academic History] Data keys:', Object.keys(recordsData));
       
-      if (recordsRes.ok) {
+      if (recordsData.records) {
         setRecords(recordsData.records || []);
       } else {
-        const errorMsg = recordsData.error || 'Failed to load academic records';
-        console.error('Failed to load records:', errorMsg);
-        setError(errorMsg);
         setRecords([]);
       }
       
       // Load transcripts if needed, or skip for now
       setTranscripts([]);
     } catch (err) {
-      console.error('Failed to fetch academic records:', err);
+      console.error('[Academic History] Fetch error:', err);
       setError('Unable to connect to server. Please try again.');
     } finally {
       setLoading(false);
