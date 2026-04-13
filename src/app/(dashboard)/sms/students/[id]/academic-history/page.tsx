@@ -51,10 +51,26 @@ export default function StudentAcademicHistoryPage() {
   });
 
 useEffect(() => {
+    fetchAcademicYears();
+  }, []);
+
+  useEffect(() => {
     if (params.id) {
       fetchData();
     }
   }, [params.id, selectedYear]);
+
+  async function fetchAcademicYears() {
+    try {
+      const res = await authFetch('/api/sms/academic-years');
+      if (res.ok) {
+        const data = await res.json();
+        setAcademicYears(data.years || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch academic years:', err);
+    }
+  }
 
   async function fetchData() {
     setError(null);
@@ -206,6 +222,11 @@ useEffect(() => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Years</SelectItem>
+                {academicYears.map((year) => (
+                  <SelectItem key={year.id} value={year.id}>
+                    {year.session}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </CardHeader>
