@@ -62,8 +62,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const authUser = await requireSuperAdmin();
-  if (!authUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const isAuthenticated = !!authUser;
+
+  if (!isAuthenticated) {
+    return NextResponse.json({ error: 'Super Admin access required', isAuthenticated: false }, { status: 401 });
   }
 
   try {

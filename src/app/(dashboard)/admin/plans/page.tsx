@@ -161,12 +161,6 @@ export default function PlansPage() {
         return;
       }
       
-      await authFetch(`/api/admin/plans/${editingPlan.id}/features`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ features }),
-      });
-      
       setShowModal(false);
       setEditingPlan(null);
       setHasChanges(false);

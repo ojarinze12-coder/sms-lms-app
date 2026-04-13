@@ -90,14 +90,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const user = await requireSuperAdmin();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authUser = await requireSuperAdmin();
+  const isAuthenticated = !!authUser;
 
-    const tenantId = params.id;
+  if (!isAuthenticated) {
+    return NextResponse.json({ error: 'Super Admin access required', isAuthenticated: false }, { status: 401 });
+  }
+
+  try {
+    const { id: tenantId } = await params;
     const body = await req.json();
     const { action, dataTypes } = body;
 
