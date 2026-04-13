@@ -128,9 +128,7 @@ const DEFAULT_PLANS = [
 
 export async function GET(request: NextRequest) {
   const authUser = await requireSuperAdmin();
-  if (!authUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const isAuthenticated = !!authUser;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -168,10 +166,14 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json({ plans: plansWithSubscribers });
+    return NextResponse.json({ plans: plansWithSubscribers, isAuthenticated });
   } catch (error) {
     console.error('Admin Plans GET error:', error);
-    return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
+    return NextResponse.json({ 
+      plans: [],
+      isAuthenticated,
+      error: 'Failed to fetch plans' 
+    });
   }
 }
 
@@ -228,7 +230,10 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const authUser = await requireSuperAdmin();
   if (!authUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ 
+      error: 'Unauthorized - Super Admin access required', 
+      isAuthenticated: false 
+    }, { status: 401 });
   }
 
   try {
@@ -252,6 +257,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({
         message: 'Default plans seeded',
         plans: createdPlans.length,
+        isAuthenticated: true,
       });
     }
 

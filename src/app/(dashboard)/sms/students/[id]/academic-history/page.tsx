@@ -38,6 +38,7 @@ interface Transcript {
 export default function StudentAcademicHistoryPage() {
   const params = useParams();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [records, setRecords] = useState<AcademicRecord[]>([]);
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
   const [academicYears, setAcademicYears] = useState<any[]>([]);
@@ -56,6 +57,7 @@ useEffect(() => {
   }, [params.id, selectedYear]);
 
   async function fetchData() {
+    setError(null);
     try {
       const yearQuery = selectedYear ? `?academicYearId=${selectedYear}` : '';
       
@@ -65,7 +67,9 @@ useEffect(() => {
       if (recordsRes.ok) {
         setRecords(recordsData.records || []);
       } else {
-        console.error('Failed to load records:', recordsData.error);
+        const errorMsg = recordsData.error || 'Failed to load academic records';
+        console.error('Failed to load records:', errorMsg);
+        setError(errorMsg);
         setRecords([]);
       }
       
@@ -73,6 +77,7 @@ useEffect(() => {
       setTranscripts([]);
     } catch (err) {
       console.error('Failed to fetch academic records:', err);
+      setError('Unable to connect to server. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -132,6 +137,21 @@ useEffect(() => {
 
   return (
     <div className="space-y-6">
+      {/* Error Display */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2 text-red-800">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01m-6.938 4h13.856c1.54 0 2.786-1.246 2.786-2.786 0-1.54-1.246-2.786-2.786-2.786H6.786C5.246 14.428 4 15.674 4 17.214c0 1.54 1.246 2.786 2.786 2.786z" />
+            </svg>
+            <span className="font-medium">{error}</span>
+            <Button variant="outline" size="sm" onClick={() => fetchData()}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Academic History</h1>

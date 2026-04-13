@@ -53,6 +53,7 @@ export default function PlansPage() {
   const [features, setFeatures] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Track changes
   const originalDataRef = React.useRef<any>(null);
@@ -81,6 +82,14 @@ export default function PlansPage() {
     try {
       const res = await fetch('/api/admin/plans?includeInactive=true');
       const data = await res.json();
+      
+      if (data.isAuthenticated === false) {
+        setAuthError('Please log in as Super Admin to manage plans');
+        setPlans([]);
+        return;
+      }
+      
+      setAuthError(null);
       setPlans(data.plans || []);
     } catch (err) {
       console.error(err);
@@ -191,12 +200,24 @@ export default function PlansPage() {
 
   return (
     <div>
+      {/* Auth Error Warning */}
+      {authError && (
+        <div className="p-4 mb-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-2 text-yellow-800">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.786-1.246 2.786-2.786 0-1.54-1.246-2.786-2.786-2.786H6.786C5.246 14.428 4 15.674 4 17.214c0 1.54 1.246 2.786 2.786 2.786z" />
+            </svg>
+            <span className="font-medium">{authError}</span>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Plans & Billing</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Manage subscription plans and pricing</p>
         </div>
-        {plans.length === 0 && (
+        {plans.length === 0 && !authError && (
           <button
             onClick={seedPlans}
             disabled={seeding}
@@ -207,7 +228,7 @@ export default function PlansPage() {
         )}
       </div>
 
-      {plans.length === 0 ? (
+      {plans.length === 0 && !authError ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
           <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

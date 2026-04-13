@@ -3,13 +3,12 @@ import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
-  // Simple auth check
   const authUser = await getAuthUser();
+  const isAuthenticated = !!authUser && authUser.role === 'SUPER_ADMIN';
   
   console.log('[Admin Analytics] Auth:', authUser);
   
-  if (!authUser || authUser.role !== 'SUPER_ADMIN') {
-    // Return mock data for testing
+  if (!isAuthenticated) {
     return NextResponse.json({
       overview: {
         schools: 0,
@@ -24,7 +23,7 @@ export async function GET(request: NextRequest) {
         statuses: { ACTIVE: 0, PAST_DUE: 0, CANCELLED: 0, EXPIRED: 0 },
       },
       recentSchools: [],
-      debug: { message: 'Using mock data' }
+      isAuthenticated: false,
     });
   }
 
@@ -111,9 +110,16 @@ export async function GET(request: NextRequest) {
         statuses: statusCounts,
       },
       recentSchools: recentSchools || [],
+      isAuthenticated: true,
     });
   } catch (error) {
     console.error('Admin Analytics error:', error);
-    return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
+    return NextResponse.json({ 
+      overview: { schools: 0, students: 0, teachers: 0, courses: 0, exams: 0, subscriptions: 0 },
+      subscriptions: { plans: { FREE: 0, STARTER: 0, PROFESSIONAL: 0, ENTERPRISE: 0 }, statuses: { ACTIVE: 0, PAST_DUE: 0, CANCELLED: 0, EXPIRED: 0 } },
+      recentSchools: [],
+      isAuthenticated: false,
+      error: 'Failed to fetch analytics' 
+    });
   }
 }

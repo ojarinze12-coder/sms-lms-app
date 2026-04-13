@@ -5,17 +5,20 @@ import { requireSuperAdmin } from '@/lib/auth-server';
 export async function GET() {
   try {
     const user = await requireSuperAdmin();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const isAuthenticated = !!user;
+
+    let settings: any = null;
+    let config: any = null;
+
+    if (user?.tenantId) {
+      settings = await prisma.tenantSettings.findUnique({
+        where: { tenantId: user.tenantId },
+      });
+
+      config = await prisma.tenantConfig.findUnique({
+        where: { tenantId: user.tenantId },
+      });
     }
-
-    const settings = await prisma.tenantSettings.findUnique({
-      where: { tenantId: user.tenantId! },
-    });
-
-    const config = await prisma.tenantConfig.findUnique({
-      where: { tenantId: user.tenantId! },
-    });
 
     return NextResponse.json({
       settings: {
@@ -27,10 +30,23 @@ export async function GET() {
         brandColor: config?.primaryColor || '#1a56db',
         logo: config?.logo || '',
       },
+      isAuthenticated,
     });
   } catch (error) {
     console.error('Error fetching platform settings:', error);
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+    return NextResponse.json({ 
+      settings: {
+        platformName: 'Edunext',
+        supportEmail: 'support@edunext.com',
+        allowRegistration: true,
+        aiFeaturesEnabled: true,
+        themeMode: 'system',
+        brandColor: '#1a56db',
+        logo: '',
+      },
+      isAuthenticated: false,
+      error: 'Using default settings' 
+    }, { status: 200 });
   }
 }
 
@@ -38,7 +54,10 @@ export async function PUT(req: NextRequest) {
   try {
     const user = await requireSuperAdmin();
     if (!user || !user.tenantId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ 
+        error: 'Unauthorized - Super Admin access required',
+        isAuthenticated: false 
+      }, { status: 401 });
     }
 
     const body = await req.json();
@@ -74,7 +93,7 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, isAuthenticated: true });
   } catch (error) {
     console.error('Error saving platform settings:', error);
     return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 });

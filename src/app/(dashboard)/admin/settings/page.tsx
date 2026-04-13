@@ -41,6 +41,7 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [settings, setSettings] = useState({
@@ -73,24 +74,29 @@ export default function AdminSettingsPage() {
     async function fetchSettings() {
       try {
         const res = await fetch('/api/admin/platform-settings');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.settings) {
-            setSettings(prev => ({
-              ...prev,
-              platformName: data.settings.platformName || 'Edunext',
-              supportEmail: data.settings.supportEmail || 'support@edunext.com',
-              defaultPlan: data.settings.defaultPlan || 'FREE',
-              allowRegistration: data.settings.allowRegistration ?? true,
-              aiFeaturesEnabled: data.settings.aiFeaturesEnabled ?? true,
-              brandColor: data.settings.brandColor || '#1a56db',
-              themeMode: data.settings.themeMode || 'system',
-              logo: data.settings.logo || '',
-            }));
-          }
+        const data = await res.json();
+        
+        if (!res.ok || data.isAuthenticated === false) {
+          setAuthError('Please log in as Super Admin to manage platform settings');
+          return;
+        }
+        
+        if (data.settings) {
+          setSettings(prev => ({
+            ...prev,
+            platformName: data.settings.platformName || 'Edunext',
+            supportEmail: data.settings.supportEmail || 'support@edunext.com',
+            defaultPlan: data.settings.defaultPlan || 'FREE',
+            allowRegistration: data.settings.allowRegistration ?? true,
+            aiFeaturesEnabled: data.settings.aiFeaturesEnabled ?? true,
+            brandColor: data.settings.brandColor || '#1a56db',
+            themeMode: data.settings.themeMode || 'system',
+            logo: data.settings.logo || '',
+          }));
         }
       } catch (err) {
         console.error('Failed to fetch platform settings:', err);
+        setError('Failed to connect to server');
       }
     }
     fetchSettings();
@@ -246,6 +252,16 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Auth Error Warning */}
+      {authError && (
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-2 text-yellow-800">
+            <AlertCircle className="h-5 w-5" />
+            <span className="font-medium">{authError}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Platform Settings</h1>

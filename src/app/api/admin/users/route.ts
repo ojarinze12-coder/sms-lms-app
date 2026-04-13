@@ -3,11 +3,16 @@ import { getAuthUser } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
+  const authUser = await getAuthUser();
+  const isAuthenticated = !!authUser && authUser.role === 'SUPER_ADMIN';
+  
   try {
-    const authUser = await getAuthUser();
-    
-    if (!authUser || authUser.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isAuthenticated) {
+      return NextResponse.json({ 
+        users: [],
+        isAuthenticated: false,
+        error: 'Super Admin access required' 
+      });
     }
 
     const users = await prisma.user.findMany({
@@ -22,10 +27,14 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ users });
+    return NextResponse.json({ users, isAuthenticated: true });
   } catch (error) {
     console.error('Failed to fetch users:', error);
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    return NextResponse.json({ 
+      users: [], 
+      isAuthenticated: false,
+      error: 'Failed to fetch users' 
+    });
   }
 }
 
