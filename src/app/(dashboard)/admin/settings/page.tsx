@@ -127,7 +127,7 @@ export default function AdminSettingsPage() {
         const formData = new FormData();
         formData.append('file', logoFile);
         
-        const uploadRes = await fetch('/api/upload', {
+        const uploadRes = await authFetch('/api/upload', {
           method: 'POST',
           body: formData,
         });
@@ -138,7 +138,7 @@ export default function AdminSettingsPage() {
         }
       }
       
-      const res = await fetch('/api/admin/platform-settings', {
+      const res = await authFetch('/api/admin/platform-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

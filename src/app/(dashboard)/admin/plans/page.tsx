@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Plan {
   id: string;
@@ -80,7 +81,7 @@ export default function PlansPage() {
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch('/api/admin/plans?includeInactive=true');
+      const res = await authFetch('/api/admin/plans?includeInactive=true');
       const data = await res.json();
       
       if (data.isAuthenticated === false) {
@@ -101,7 +102,7 @@ export default function PlansPage() {
   const seedPlans = async () => {
     setSeeding(true);
     try {
-      const res = await fetch('/api/admin/plans', {
+      const res = await authFetch('/api/admin/plans', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'seed-defaults' }),
