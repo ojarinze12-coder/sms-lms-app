@@ -6,23 +6,21 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getAuthUser();
     
-    const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get('tenantId') || user?.tenantId;
-
-    const whereClause: any = {};
-    if (tenantId) {
-      whereClause.tenantId = tenantId;
+    if (!user?.tenantId) {
+      return NextResponse.json({ years: [] });
     }
 
+    const { searchParams } = new URL(request.url);
+    const tenantId = searchParams.get('tenantId') || user.tenantId;
+
     const academicYears = await prisma.academicYear.findMany({
-      where: whereClause,
+      where: { tenantId },
       orderBy: { startDate: 'desc' },
     });
 
     return NextResponse.json({ years: academicYears });
   } catch (error: any) {
-    console.error('Error fetching academic years:', error);
-    return NextResponse.json({ error: error.message, years: [] }, { status: 500 });
+    return NextResponse.json({ years: [] });
   }
 }
 
