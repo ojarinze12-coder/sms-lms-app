@@ -27,14 +27,11 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
     ...(options.headers as Record<string, string> || {}),
   };
 
-  // Add Authorization header if we have a token
   const token = getAuthToken();
-  console.log('[authFetch] URL:', url, 'Token exists:', !!token);
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  // Always include credentials for cookie-based auth fallback
   const fetchOptions: RequestInit = {
     ...options,
     credentials: options.credentials || 'include',
