@@ -35,12 +35,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const records = await prisma.academicRecord.findMany({
       where,
-      include: {
-        academicYear: true,
-        term: true,
-        academicClass: true,
-        subject: true,
-      },
       orderBy: [{ createdAt: 'desc' }],
     });
 
