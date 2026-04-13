@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authUser = await getAuthUser();
     if (!authUser) {
@@ -12,7 +12,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       console.log('[Academic Records] No auth, allowing for test');
     }
     
-    const studentId = params.id;
+    // In Next.js 15+, params is a Promise
+    const { id: studentId } = await params;
     const { searchParams } = new URL(req.url);
     const academicYearId = searchParams.get('academicYearId');
     const termId = searchParams.get('termId');
@@ -44,14 +45,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authUser = await getAuthUser();
     if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const studentId = params.id;
+    // In Next.js 15+, params is a Promise
+    const { id: studentId } = await params;
     const body = await req.json();
 
     const {
@@ -91,7 +93,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         attendance,
         daysPresent,
         daysAbsent,
-        teacherId: teacherId || session.user.id,
+        // Fixed: use authUser.userId instead of undefined session.user.id
+        teacherId: teacherId || authUser.userId,
       },
     });
 

@@ -19,23 +19,21 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const authUser = await requireSuperAdmin();
-  if (!authUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const isAuthenticated = !!authUser;
+
+  if (!isAuthenticated) {
+    return NextResponse.json({ error: 'Super Admin access required', isAuthenticated: false }, { status: 401 });
   }
 
   try {
     const { id } = await params;
 
-    console.log('Fetching tenant with ID:', id);
-
     const tenant = await prisma.tenant.findUnique({
       where: { id },
     });
 
-    console.log('Tenant found:', tenant?.name);
-
     if (!tenant) {
-      return NextResponse.json({ error: 'Tenant not found', details: id }, { status: 404 });
+      return NextResponse.json({ error: 'Tenant not found', isAuthenticated: true }, { status: 404 });
     }
 
     const [studentCount, teacherCount, userCount, courseCount, subscriptions, tenantConfig, tenantHealth, recentActivity] = await Promise.all([
@@ -59,8 +57,6 @@ export async function GET(
       }),
     ]);
 
-    console.log(`[Admin Tenant API] Tenant ${id} counts:`, { studentCount, teacherCount, userCount, courseCount });
-
     return NextResponse.json({
       tenant: {
         ...tenant,
@@ -75,6 +71,7 @@ export async function GET(
         tenantHealth,
       },
       recentActivity,
+      isAuthenticated: true,
     });
   } catch (error) {
     console.error('Admin Tenant GET error:', error);

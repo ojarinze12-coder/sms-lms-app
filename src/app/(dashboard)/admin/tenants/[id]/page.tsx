@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -83,13 +84,10 @@ export default function TenantDetailPage() {
 
   const fetchTenant = async () => {
     try {
-      const res = await fetch(`/api/admin/tenants/${params.id}`);
+      const res = await authFetch(`/api/admin/tenants/${params.id}`);
       if (!res.ok) {
-        if (res.status === 404) {
-          setError('Tenant not found');
-        } else {
-          setError('Failed to load tenant');
-        }
+        const data = await res.json();
+        setError(data.error || 'Failed to load tenant');
         return;
       }
       const data = await res.json();

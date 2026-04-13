@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, GraduationCap, BookOpen, FileText, TrendingUp, ArrowRight, Settings, CreditCard, Calendar, CheckCircle, Activity, BarChart3 } from 'lucide-react';
 
@@ -57,7 +58,7 @@ export default function AdminAnalyticsPage() {
 
   const loadAnalytics = async () => {
     try {
-      const res = await fetch('/api/admin/analytics');
+      const res = await authFetch('/api/admin/analytics');
       if (res.ok) {
         const data = await res.json();
         setData(data);

@@ -29,6 +29,7 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
 
   // Add Authorization header if we have a token
   const token = getAuthToken();
+  console.log('[authFetch] URL:', url, 'Token exists:', !!token);
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

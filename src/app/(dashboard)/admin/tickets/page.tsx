@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Ticket {
   id: string;
@@ -34,7 +35,7 @@ export default function TicketsPage() {
   const fetchTickets = async () => {
     try {
       const url = filter === 'all' ? '/api/admin/tickets' : `/api/admin/tickets?status=${filter}`;
-      const res = await fetch(url);
+      const res = await authFetch(url);
       const data = await res.json();
       setTickets(data.tickets || []);
     } catch (err) {
@@ -48,7 +49,7 @@ export default function TicketsPage() {
     if (!selectedTicket || !replyContent.trim()) return;
     setReplying(true);
     try {
-      await fetch(`/api/admin/tickets/${selectedTicket.id}/reply`, {
+      await authFetch(`/api/admin/tickets/${selectedTicket.id}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: replyContent }),
@@ -64,7 +65,7 @@ export default function TicketsPage() {
 
   const handleAssign = async (ticketId: string, adminId: string) => {
     try {
-      await fetch(`/api/admin/tickets/${ticketId}/assign`, {
+      await authFetch(`/api/admin/tickets/${ticketId}/assign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assignedTo: adminId }),

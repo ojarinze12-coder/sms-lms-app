@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useBrand } from '@/components/brand-theme-provider';
 import { useTheme } from 'next-themes';
@@ -73,13 +74,17 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/admin/platform-settings');
+        const res = await authFetch('/api/admin/platform-settings');
         const data = await res.json();
+        
+        console.log('[Settings] Response status:', res.status, 'data:', data);
         
         if (!res.ok || data.isAuthenticated === false) {
           setAuthError('Please log in as Super Admin to manage platform settings');
           return;
         }
+        
+        setAuthError(null);
         
         if (data.settings) {
           setSettings(prev => ({
