@@ -60,7 +60,7 @@ useEffect(() => {
     setError(null);
     setLoading(true);
     try {
-      const yearQuery = selectedYear ? `?academicYearId=${selectedYear}` : '';
+      const yearQuery = selectedYear && selectedYear !== 'all' ? `?academicYearId=${selectedYear}` : '';
       const url = `/api/sms/students/${params.id}/academic-records${yearQuery}`;
       console.log('[Academic History] Fetching:', url);
       
@@ -205,7 +205,7 @@ useEffect(() => {
                 <SelectValue placeholder="Select academic year" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Years</SelectItem>
+                <SelectItem value="all">All Years</SelectItem>
               </SelectContent>
             </Select>
           </CardHeader>
