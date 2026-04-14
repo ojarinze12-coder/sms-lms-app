@@ -13,11 +13,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  console.log('[AI Exam] All env keys:', Object.keys(process.env).filter(k => k.includes('OPEN')));
-  console.log('[AI Exam] All env keys count:', Object.keys(process.env).length);
-  console.log('[AI Exam] OPENROUTER_API_KEY exists:', !!apiKey);
-  console.log('[AI Exam] process.env:', JSON.stringify(process.env).substring(0, 500));
+  console.log('[AI Exam] process keys:', Object.keys(process.env).join(', '));
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+  console.log('[AI Exam] Using API key from env');
   
   if (!apiKey) {
     console.error('OPENROUTER_API_KEY not set');
