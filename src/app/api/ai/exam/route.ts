@@ -13,9 +13,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  if (!process.env.OPENROUTER_API_KEY) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  console.log('[AI Exam] API Key exists:', !!apiKey);
+  console.log('[AI Exam] API Key prefix:', apiKey?.substring(0, 15));
+  
+  if (!apiKey) {
     console.error('OPENROUTER_API_KEY not set');
-    return NextResponse.json({ error: 'AI service not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'AI service not configured - missing API key' }, { status: 500 });
   }
 
   try {
