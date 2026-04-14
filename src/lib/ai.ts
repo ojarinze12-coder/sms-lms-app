@@ -47,11 +47,23 @@ async function callOpenRouter(prompt: string, systemPrompt?: string): Promise<st
     
     if (!response.ok) {
       console.error('Error response:', responseText.substring(0, 1000));
-      const errorData = JSON.parse(responseText);
-      throw new Error(errorData.error?.message || `API Error (${response.status}): ${responseText.substring(0, 200)}`);
+      let errorMessage = `API Error (${response.status})`;
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.error?.message || errorData.detail || errorMessage;
+      } catch {
+        errorMessage = responseText.substring(0, 200) || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
-    const data = JSON.parse(responseText);
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error('Invalid JSON response from AI API');
+    }
+    
     const content = data.choices?.[0]?.message?.content;
     console.log('Response content length:', content?.length || 0);
     return content || '';

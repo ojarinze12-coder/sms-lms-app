@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { 
@@ -17,6 +17,7 @@ import {
   type Staff, 
   type StaffFormData 
 } from '@/types/staff';
+import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import StaffForm from '@/components/staff/StaffForm';
 import StaffStats from '@/components/staff/StaffStats';
 import StaffTable from '@/components/staff/StaffTable';
@@ -134,6 +135,48 @@ export default function StaffPage() {
     }
   };
 
+  const handleExportExcel = () => {
+    const data = staff.map(s => ({
+      Name: `${s.firstName} ${s.lastName}`,
+      Email: s.email || '',
+      EmployeeID: s.employeeId || '',
+      Category: s.category || '',
+      Position: s.position || '',
+      Department: s.department || '',
+      Status: s.status || 'ACTIVE',
+    }));
+    exportToExcel(data, [
+      { key: 'Name', label: 'Name' },
+      { key: 'Email', label: 'Email' },
+      { key: 'EmployeeID', label: 'Employee ID' },
+      { key: 'Category', label: 'Category' },
+      { key: 'Position', label: 'Position' },
+      { key: 'Department', label: 'Department' },
+      { key: 'Status', label: 'Status' },
+    ], `staff_${new Date().toISOString().split('T')[0]}`);
+  };
+
+  const handleExportPDF = () => {
+    const data = staff.map(s => ({
+      Name: `${s.firstName} ${s.lastName}`,
+      Email: s.email || '',
+      EmployeeID: s.employeeId || '',
+      Category: s.category || '',
+      Position: s.position || '',
+      Department: s.department || '',
+      Status: s.status || 'ACTIVE',
+    }));
+    exportToPDF(data, [
+      { key: 'Name', label: 'Name' },
+      { key: 'Email', label: 'Email' },
+      { key: 'EmployeeID', label: 'Employee ID' },
+      { key: 'Category', label: 'Category' },
+      { key: 'Position', label: 'Position' },
+      { key: 'Department', label: 'Department' },
+      { key: 'Status', label: 'Status' },
+    ], `staff_${new Date().toISOString().split('T')[0]}`, 'Staff List');
+  };
+
   const handleCancel = () => {
     setShowAddDialog(false);
     setEditingStaff(null);
@@ -150,34 +193,58 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Non-Teaching Staff</h1>
-          <p className="text-gray-500 dark:text-gray-400">Manage administrative and support staff</p>
+          <p className="text-gray-500 dark:text-gray-400">{staff.length} staff member{staff.length !== 1 ? 's' : ''}</p>
         </div>
-        <Dialog open={showAddDialog} onOpenChange={(open) => {
-          if (!open) handleCancel();
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setShowAddDialog(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Staff
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl dark:bg-gray-800">
-            <DialogHeader>
-              <DialogTitle className="dark:text-white">{editingStaff ? 'Edit Staff' : 'Add New Staff'}</DialogTitle>
-            </DialogHeader>
-            <StaffForm
-              formData={formData}
-              onChange={setFormData}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              isEditing={!!editingStaff}
-              submitting={submitting}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <div className="relative group">
+            <button className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Export
+            </button>
+            <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+              <button
+                onClick={handleExportExcel}
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 rounded-t-lg"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Excel
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 rounded-b-lg"
+              >
+                <FileText className="w-4 h-4" />
+                PDF
+              </button>
+            </div>
+          </div>
+          <Dialog open={showAddDialog} onOpenChange={(open) => {
+            if (!open) handleCancel();
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setShowAddDialog(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Staff
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl dark:bg-gray-800">
+              <DialogHeader>
+                <DialogTitle className="dark:text-white">{editingStaff ? 'Edit Staff' : 'Add New Staff'}</DialogTitle>
+              </DialogHeader>
+              <StaffForm
+                formData={formData}
+                onChange={setFormData}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isEditing={!!editingStaff}
+                submitting={submitting}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <StaffStats staff={staff} />

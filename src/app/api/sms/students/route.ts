@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/rbac';
+import { getAuthUser } from '@/lib/auth-server';
 import { generateStudentId } from '@/lib/generate-id';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
+    const user = await getAuthUser(request);
+    console.log('[students GET] user:', JSON.stringify(user));
+    
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -13,15 +15,24 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
 
+    const tenantId = user.tenantId;
+    console.log('[students GET] tenantId:', tenantId);
+    
+    if (!tenantId) {
+      return NextResponse.json({ error: 'Tenant not found. Please login again.' }, { status: 400 });
+    }
+
     if (action === 'generate-id') {
-      const nextId = await generateStudentId(user.tenantId);
+      const nextId = await generateStudentId(tenantId);
       return NextResponse.json({ studentId: nextId });
     }
 
     const classId = searchParams.get('classId');
     const status = searchParams.get('status');
+    const branchId = searchParams.get('branchId');
+    const tierId = searchParams.get('tierId');
 
-    const where: any = { tenantId: user.tenantId };
+    const where: any = { tenantId };
     if (classId) {
       where.enrollments = {
         some: { classId }
@@ -29,6 +40,16 @@ export async function GET(request: NextRequest) {
     }
     if (status) {
       where.status = status;
+    }
+    if (branchId) {
+      where.branchId = branchId;
+    }
+    if (tierId) {
+      where.enrollments = {
+        some: {
+          academicClass: { tierId }
+        }
+      };
     }
 
     const students = await prisma.student.findMany({
@@ -40,11 +61,12 @@ export async function GET(request: NextRequest) {
           },
         },
         parents: true,
+        branch: true,
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(students);
+    return NextResponse.json({ students });
   } catch (error: any) {
     console.error('Error fetching students:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

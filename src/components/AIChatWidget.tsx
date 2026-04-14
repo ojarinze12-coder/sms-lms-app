@@ -85,11 +85,20 @@ export default function AIChatWidget({ userRole }: { userRole: string }) {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to get response');
-      }
-
       const data = await res.json();
+
+      if (!res.ok || data.error) {
+        if (data.isConfigured === false) {
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: data.response || 'AI chat is not configured. Please contact your administrator to enable AI features.',
+            timestamp: new Date(),
+          }]);
+          setLoading(false);
+          return;
+        }
+        throw new Error(data.error || 'Failed to get response');
+      }
 
       setMessages(prev => [...prev, {
         role: 'assistant',

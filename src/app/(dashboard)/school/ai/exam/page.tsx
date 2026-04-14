@@ -75,18 +75,16 @@ export default function SchoolAIExamPage() {
   const loadYears = async () => {
     try {
       const res = await fetch('/api/sms/academic-years');
-      if (!res.ok) {
-        console.error('Failed to load years:', res.status);
-        return;
-      }
       const data = await res.json();
-      setYears(data);
-      if (data.length > 0) {
-        const activeYear = data.find((y: any) => y.isActive);
-        setSelectedYearId(activeYear?.id || data[0].id);
+      const yearList = data?.years || (Array.isArray(data) ? data : []);
+      setYears(Array.isArray(yearList) ? yearList : []);
+      if (yearList.length > 0) {
+        const activeYear = yearList.find((y: any) => y.isActive);
+        setSelectedYearId(activeYear?.id || yearList[0].id);
       }
     } catch (err) {
-      console.error('Failed to load years:', err);
+      console.error('[loadYears] Error:', err);
+      setYears([]);
     }
   };
 

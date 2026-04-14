@@ -37,8 +37,9 @@ export default function AcademicYearsPage() {
     try {
       const res = await authFetch('/api/sms/academic-years');
       const data = await res.json();
-      if (Array.isArray(data)) {
-        setYears(data);
+      const yearList = data.years || [];
+      if (Array.isArray(yearList)) {
+        setYears(yearList);
       } else if (data.error) {
         console.error('API error:', data.error);
         setYears([]);

@@ -47,10 +47,11 @@ export default function LeaderboardPage() {
     try {
       const res = await authFetch('/api/sms/academic-years');
       const data = await res.json();
-      setYears(data);
-      if (data.length > 0) {
-        const activeYear = data.find((y: any) => y.isActive);
-        setSelectedYearId(activeYear?.id || data[0].id);
+      const yearList = data.years || [];
+      setYears(yearList);
+      if (yearList.length > 0) {
+        const activeYear = yearList.find((y: any) => y.isActive);
+        setSelectedYearId(activeYear?.id || yearList[0].id);
       }
     } catch (err) {
       console.error('Failed to load years:', err);

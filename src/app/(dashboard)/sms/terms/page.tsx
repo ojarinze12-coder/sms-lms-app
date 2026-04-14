@@ -54,7 +54,7 @@ export default function TermsPage() {
         return;
       }
       const data = await res.json();
-      setYears(data);
+      setYears(data.years || []);
       if (data.length > 0) {
         const activeYear = data.find((y: AcademicYear) => y.isActive);
         setSelectedYearId(activeYear?.id || data[0].id);

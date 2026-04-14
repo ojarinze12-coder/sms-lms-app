@@ -31,8 +31,33 @@ model Tenant {
   documentCategories DocumentCategory[]
   subscriptions Subscription[]
   announcements Announcement[]
+  branches   Branch[]
 
   @@map("tenants")
+}
+
+model Branch {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String
+  code     String   // "MAIN", "CAMPUS-A", "CAMPUS-B", etc.
+  address  String?
+  phone   String?
+  email   String?
+  isActive Boolean  @default(true)
+  isMain   Boolean  @default(false)
+  tenantId String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  students Student[]
+  teachers Teacher[]
+  staff    Staff[]
+  classes  AcademicClass[]
+  
+  @@unique([tenantId, code], map: "branches_tenantId_code_unique")
+  @@index([tenantId], map: "idx_branches_tenant")
+  @@map("branches")
 }
 
 model User {
@@ -86,6 +111,7 @@ model Student {
   photo               String?
   status              StudentStatus        @default(ACTIVE)
   tenantId            String               @db.Uuid
+  branchId            String?              @db.Uuid
   createdAt           DateTime             @default(now()) @db.Timestamptz(6)
   updatedAt           DateTime             @default(now()) @updatedAt @db.Timestamptz(6)
   barcode             String?
@@ -113,11 +139,13 @@ model Student {
   vaccinations       StudentVaccination[]
   transportSubscriptions TransportSubscription[]
   documents           Document[]
+  branch              Branch?             @relation(fields: [branchId], references: [id])
 
   @@unique([tenantId, studentId], map: "students_tenantId_studentId_unique")
   @@index([tenantId], map: "idx_students_tenant")
   @@index([stateOfOrigin], map: "idx_students_state")
   @@index([tenantId])
+  @@index([branchId], map: "idx_students_branch")
   @@map("students")
 }
 
@@ -130,6 +158,7 @@ model Teacher {
   specialty      String?
   phone          String?
   tenantId       String       @db.Uuid
+  branchId       String?      @db.Uuid
   createdAt      DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
   address        String?
@@ -165,10 +194,12 @@ model Teacher {
   departmentRelation Department?  @relation("TeacherDepartments", fields: [departmentId], references: [id])
   classTeacherClasses AcademicClass[] @relation("ClassTeacherClasses")
   formMasterClasses AcademicClass[] @relation("FormMasterClasses")
+  branch        Branch?      @relation(fields: [branchId], references: [id])
 
   @@unique([tenantId, employeeId], map: "teachers_tenantId_employeeId_unique")
   @@index([tenantId], map: "idx_teachers_tenant")
   @@index([tenantId])
+  @@index([branchId], map: "idx_teachers_branch")
   @@map("teachers")
 }
 
@@ -201,6 +232,7 @@ model Staff {
   bankSortCode   String?
   status         String              @default("ACTIVE")
   tenantId       String              @db.Uuid
+  branchId       String?            @db.Uuid
   createdAt      DateTime            @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
   barcode        String?
@@ -211,10 +243,12 @@ model Staff {
   qrCodeData     String?
   staffLeaves    StaffLeave[]
   caregiverClasses AcademicClass[] @relation("CaregiverClasses")
+  branch        Branch?            @relation(fields: [branchId], references: [id])
 
   @@unique([tenantId, employeeId], map: "staff_tenantId_employeeId_unique")
   @@index([tenantId], map: "idx_staff_tenant")
   @@index([tenantId, category], map: "idx_staff_category")
+  @@index([branchId], map: "idx_staff_branch")
   @@map("staff")
 }
 
@@ -364,6 +398,7 @@ model AcademicClass {
   caregiverId    String?         @db.Uuid @map("caregiver_id")  // Pre-Nursery/Nursery Care-giver
   academicYearId String?         @db.Uuid
   tenantId       String?         @db.Uuid
+  branchId       String?         @db.Uuid
   createdAt      DateTime?       @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime?       @default(now()) @updatedAt @db.Timestamptz(6)
   departmentId   String?         @db.Uuid
@@ -379,12 +414,14 @@ model AcademicClass {
   classTeacher  Teacher?        @relation("ClassTeacherClasses", fields: [classTeacherId], references: [id])
   formMaster    Teacher?        @relation("FormMasterClasses", fields: [formMasterId], references: [id])
   caregiver     Staff?          @relation("CaregiverClasses", fields: [caregiverId], references: [id])
+  branch        Branch?        @relation(fields: [branchId], references: [id])
 
   @@unique([academicYearId, name, stream], map: "academic_classes_academicYearId_name_stream_unique")
   @@index([academicYearId], map: "idx_academic_classes_academic_year")
   @@index([tierId], map: "idx_academic_classes_tier")
   @@index([tenantId], map: "idx_academic_classes_tenant")
   @@index([departmentId], map: "idx_academic_classes_department")
+  @@index([branchId], map: "idx_academic_classes_branch")
   @@map("academic_classes")
 }
 

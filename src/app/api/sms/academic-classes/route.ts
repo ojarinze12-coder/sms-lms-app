@@ -13,9 +13,10 @@ export async function GET(request: NextRequest) {
 
   const academicYearId = request.nextUrl.searchParams.get('academicYearId');
   const search = request.nextUrl.searchParams.get('search') || '';
+  const tierId = request.nextUrl.searchParams.get('tierId');
 
   try {
-    console.log('[CLASSES] Fetching for tenant:', authUser.tenantId);
+    console.log('[CLASSES] Fetching for tenant:', authUser.tenantId, 'tierId:', tierId);
     
     let where: any = {};
     
@@ -25,6 +26,10 @@ export async function GET(request: NextRequest) {
     
     if (academicYearId) {
       where.academicYearId = academicYearId;
+    }
+    
+    if (tierId) {
+      where.tierId = tierId;
     }
 
     const classes = await prisma.academicClass.findMany({
