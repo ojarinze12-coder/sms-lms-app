@@ -31,8 +31,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const authUser = await getAuthUser();
   
-  console.log('[branches POST] authUser:', JSON.stringify(authUser));
-  
   if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -43,7 +41,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    console.log('[branches POST] body:', body);
     const { name, code, address, phone, email, isMain } = body;
 
     if (!name || !code) {
@@ -51,13 +48,11 @@ export async function POST(request: NextRequest) {
     }
 
     const tenantId = authUser.tenantId || authUser.originalUserId;
-    console.log('[branches POST] tenantId:', tenantId);
     
     if (!tenantId) {
       return NextResponse.json({ error: 'Tenant not found. Please login again.' }, { status: 400 });
     }
 
-    // Create branch directly
     const branch = await prisma.branch.create({
       data: {
         name: name,
@@ -70,7 +65,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('[branches POST] Created:', branch);
     return NextResponse.json({ branch });
   } catch (error: any) {
     console.error('[branches POST] Error:', error);

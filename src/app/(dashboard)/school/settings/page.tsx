@@ -94,8 +94,11 @@ export default function SettingsPage() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [newBranch, setNewBranch] = useState({ name: '', code: '', address: '', phone: '', email: '', isMain: false });
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
   const [creatingBranch, setCreatingBranch] = useState(false);
+  const [deletingBranch, setDeletingBranch] = useState<string | null>(null);
   const [showAddBranch, setShowAddBranch] = useState(false);
+  const [showEditBranch, setShowEditBranch] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -235,6 +238,74 @@ export default function SettingsPage() {
       setError('Failed to create branch');
     } finally {
       setCreatingBranch(false);
+    }
+  };
+
+  const handleEditBranch = (branch: Branch) => {
+    setEditingBranch(branch);
+    setShowEditBranch(true);
+  };
+
+  const handleUpdateBranch = async () => {
+    if (!editingBranch) return;
+    
+    setSaving(true);
+    setError(null);
+    
+    try {
+      const res = await authFetch(`/api/sms/branches/${editingBranch.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editingBranch.name,
+          code: editingBranch.code,
+          address: editingBranch.address,
+          phone: editingBranch.phone,
+          email: editingBranch.email,
+          isMain: editingBranch.isMain,
+          isActive: editingBranch.isActive,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        setBranches(branches.map(b => b.id === editingBranch.id ? data.branch : b));
+        setShowEditBranch(false);
+        setEditingBranch(null);
+      } else {
+        setError(data.error || 'Failed to update branch');
+      }
+    } catch (err) {
+      console.error('Failed to update branch:', err);
+      setError('Failed to update branch');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteBranch = async (branchId: string) => {
+    if (!confirm('Are you sure you want to delete this branch?')) return;
+    
+    setDeletingBranch(branchId);
+    setError(null);
+    
+    try {
+      const res = await authFetch(`/api/sms/branches/${branchId}`, {
+        method: 'DELETE',
+      });
+      
+      if (res.ok) {
+        setBranches(branches.filter(b => b.id !== branchId));
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to delete branch');
+      }
+    } catch (err) {
+      console.error('Failed to delete branch:', err);
+      setError('Failed to delete branch');
+    } finally {
+      setDeletingBranch(null);
     }
   };
 
@@ -901,8 +972,21 @@ export default function SettingsPage() {
                         <div className="text-sm text-gray-500">Code: {branch.code}</div>
                         {branch.address && <div className="text-sm text-gray-500">{branch.address}</div>}
                       </div>
-                      <div className={`px-2 py-1 text-xs rounded ${branch.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {branch.isActive ? 'Active' : 'Inactive'}
+                      <div className="flex items-center gap-2">
+                        <div className={`px-2 py-1 text-xs rounded ${branch.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {branch.isActive ? 'Active' : 'Inactive'}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => handleEditBranch(branch)}>
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => handleDeleteBranch(branch.id)}
+                          disabled={deletingBranch === branch.id}
+                        >
+                          {deletingBranch === branch.id ? '...' : 'Delete'}
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -911,6 +995,84 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Edit Branch Modal */}
+        {showEditBranch && editingBranch && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4 dark:text-white">Edit Branch</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Branch Name *</label>
+                  <Input
+                    value={editingBranch.name}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
+                    placeholder="e.g., Main Campus"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Code *</label>
+                  <Input
+                    value={editingBranch.code}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, code: e.target.value.toUpperCase() })}
+                    placeholder="e.g., MAIN"
+                    disabled
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Address</label>
+                  <Input
+                    value={editingBranch.address || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, address: e.target.value })}
+                    placeholder="Branch address"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Phone</label>
+                  <Input
+                    value={editingBranch.phone || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, phone: e.target.value })}
+                    placeholder="Phone number"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Email</label>
+                  <Input
+                    type="email"
+                    value={editingBranch.email || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, email: e.target.value })}
+                    placeholder="Email"
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={editingBranch.isMain}
+                      onCheckedChange={(checked) => setEditingBranch({ ...editingBranch, isMain: checked })}
+                    />
+                    <span className="text-sm">Main Branch</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={editingBranch.isActive}
+                      onCheckedChange={(checked) => setEditingBranch({ ...editingBranch, isActive: checked })}
+                    />
+                    <span className="text-sm">Active</span>
+                  </div>
+                </div>
+                {error && <div className="text-red-500 text-sm">{error}</div>}
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <Button variant="outline" onClick={() => { setShowEditBranch(false); setEditingBranch(null); }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateBranch} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </Tabs>
     </div>
   );
