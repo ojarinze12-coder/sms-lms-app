@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Sparkles, Clock, Loader2, Save, CheckCircle } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Subject {
   id: string;
@@ -79,7 +80,11 @@ export default function SchoolAITimetablePage() {
 
 const loadYears = async () => {
   try {
-    const res = await fetch('/api/sms/academic-years');
+    const res = await authFetch('/api/sms/academic-years');
+    if (!res.ok) {
+      console.error('Failed to load years:', res.status);
+      return;
+    }
     const data = await res.json();
     const yearList = data?.years || [];
     setYears(Array.isArray(yearList) ? yearList : []);
@@ -97,7 +102,7 @@ const loadYears = async () => {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await fetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
       if (!res.ok) {
         console.error('Failed to load classes:', res.status);
         return;
@@ -111,7 +116,7 @@ const loadYears = async () => {
 
   const loadSubjects = async (classId: string) => {
     try {
-      const res = await fetch(`/api/sms/subjects?academicYearId=${classId}`);
+      const res = await authFetch(`/api/sms/subjects?academicYearId=${classId}`);
       if (!res.ok) {
         console.error('Failed to load subjects:', res.status);
         return;
