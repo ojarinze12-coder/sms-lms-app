@@ -83,7 +83,12 @@ export async function POST(request: NextRequest) {
   console.log('Model:', process.env.OPENROUTER_MODEL);
   
   if (!apiKey) {
-    return NextResponse.json({ error: 'AI service not configured: Missing API key' }, { status: 500 });
+    console.warn('AI Chat: OPENROUTER_API_KEY not configured');
+    return NextResponse.json({ 
+      error: 'AI service not configured',
+      response: 'AI chat is currently unavailable. Please configure OPENROUTER_API_KEY in your environment variables to enable this feature.',
+      isConfigured: false
+    }, { status: 200 });
   }
 
   try {

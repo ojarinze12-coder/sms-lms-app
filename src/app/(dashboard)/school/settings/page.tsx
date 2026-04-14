@@ -46,6 +46,17 @@ interface PaymentSettings {
   remitaEnvironment: string;
 }
 
+interface Branch {
+  id: string;
+  name: string;
+  code: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  isActive: boolean;
+  isMain: boolean;
+}
+
 export default function SettingsPage() {
   const { branding, updateBranding } = useBrand();
   const { theme, setTheme } = useTheme();
@@ -81,6 +92,10 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [newBranch, setNewBranch] = useState({ name: '', code: '', address: '', phone: '', email: '', isMain: false });
+  const [creatingBranch, setCreatingBranch] = useState(false);
+  const [showAddBranch, setShowAddBranch] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -96,14 +111,20 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       const timestamp = Date.now();
-      const [settingsRes, paymentRes] = await Promise.all([
+      const [settingsRes, paymentRes, branchesRes] = await Promise.all([
         authFetch(`/api/school/settings?_t=${timestamp}`),
-        authFetch(`/api/school/payment-gateways?_t=${timestamp}`)
+        authFetch(`/api/school/payment-gateways?_t=${timestamp}`),
+        authFetch(`/api/sms/branches`)
       ]);
       
       if (settingsRes.ok) {
         const data = await settingsRes.json();
         setSettings(prev => ({ ...prev, ...(data.settings || {}) }));
+      }
+      
+      if (branchesRes.ok) {
+        const data = await branchesRes.json();
+        setBranches(data.branches || []);
       }
       
       if (paymentRes.ok) {
@@ -184,6 +205,39 @@ export default function SettingsPage() {
     }
   };
 
+  const handleCreateBranch = async () => {
+    if (!newBranch.name || !newBranch.code) {
+      setError('Branch name and code are required');
+      return;
+    }
+    
+    setCreatingBranch(true);
+    setError(null);
+    
+    try {
+      const res = await authFetch('/api/sms/branches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBranch),
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        setBranches([...branches, data.branch]);
+        setNewBranch({ name: '', code: '', address: '', phone: '', email: '', isMain: false });
+        setShowAddBranch(false);
+      } else {
+        setError(data.error || 'Failed to create branch');
+      }
+    } catch (err) {
+      console.error('Failed to create branch:', err);
+      setError('Failed to create branch');
+    } finally {
+      setCreatingBranch(false);
+    }
+  };
+
   const colorPresets = [
     '#1a56db', '#059669', '#7c3aed', '#dc2626', '#ea580c', 
     '#0891b2', '#4f46e5', '#be185d', '#854d0e', '#1f2937'
@@ -224,6 +278,7 @@ export default function SettingsPage() {
         <TabsList className="bg-gray-100 dark:bg-gray-800 p-1">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="branches">Branches</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -752,6 +807,109 @@ export default function SettingsPage() {
               </Button>
             </div>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="branches">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Campuses / Branches</CardTitle>
+                  <CardDescription>Manage your school branches and campuses</CardDescription>
+                </div>
+                <Button onClick={() => setShowAddBranch(true)} size="sm">
+                  Add Branch
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {showAddBranch && (
+                <div className="mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Branch Name *</label>
+                      <Input
+                        value={newBranch.name}
+                        onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })}
+                        placeholder="e.g., Main Campus"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Code *</label>
+                      <Input
+                        value={newBranch.code}
+                        onChange={(e) => setNewBranch({ ...newBranch, code: e.target.value.toUpperCase() })}
+                        placeholder="e.g., MAIN"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Address</label>
+                      <Input
+                        value={newBranch.address}
+                        onChange={(e) => setNewBranch({ ...newBranch, address: e.target.value })}
+                        placeholder="Branch address"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Phone</label>
+                      <Input
+                        value={newBranch.phone}
+                        onChange={(e) => setNewBranch({ ...newBranch, phone: e.target.value })}
+                        placeholder="Phone number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Email</label>
+                      <Input
+                        type="email"
+                        value={newBranch.email}
+                        onChange={(e) => setNewBranch({ ...newBranch, email: e.target.value })}
+                        placeholder="Email"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 self-end">
+                      <Switch
+                        checked={newBranch.isMain}
+                        onCheckedChange={(checked) => setNewBranch({ ...newBranch, isMain: checked })}
+                      />
+                      <span className="text-sm">Main Branch</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    {error && <span className="text-red-500 text-sm self-center">{error}</span>}
+                    <Button variant="outline" onClick={() => setShowAddBranch(false)}>Cancel</Button>
+                    <Button onClick={handleCreateBranch} disabled={creatingBranch}>
+                      {creatingBranch ? 'Creating...' : 'Create Branch'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              {branches.length === 0 && !showAddBranch ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No branches yet. Add your first branch to get started.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {branches.map(branch => (
+                    <div key={branch.id} className="flex justify-between items-center p-4 border rounded-lg">
+                      <div>
+                        <div className="font-medium">
+                          {branch.name}
+                          {branch.isMain && <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Main</span>}
+                        </div>
+                        <div className="text-sm text-gray-500">Code: {branch.code}</div>
+                        {branch.address && <div className="text-sm text-gray-500">{branch.address}</div>}
+                      </div>
+                      <div className={`px-2 py-1 text-xs rounded ${branch.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {branch.isActive ? 'Active' : 'Inactive'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

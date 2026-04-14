@@ -135,7 +135,7 @@ export default function SchoolAIExamPage() {
     setQuestions([]);
     
     try {
-      const res = await fetch('/api/ai/exam', {
+      const res = await authFetch('/api/ai/exam', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -180,7 +180,7 @@ export default function SchoolAIExamPage() {
 
     setSaving(true);
     try {
-      const res = await fetch('/api/ai/exam/save', {
+      const res = await authFetch('/api/ai/exam/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

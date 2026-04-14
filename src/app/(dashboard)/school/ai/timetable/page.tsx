@@ -145,7 +145,7 @@ const loadYears = async () => {
       const subjectData = subjects.filter(s => selectedSubjects.includes(s.id));
       const periodsPerDay = calculatePeriodsPerDay();
       
-      const res = await fetch('/api/ai/timetable', {
+      const res = await authFetch('/api/ai/timetable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -199,7 +199,7 @@ const loadYears = async () => {
 
     setSaving(true);
     try {
-      const res = await fetch('/api/ai/timetable/save', {
+      const res = await authFetch('/api/ai/timetable/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
