@@ -13,9 +13,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  console.log('[AI Timetable] API Key exists:', !!apiKey);
-  console.log('[AI Timetable] API Key prefix:', apiKey?.substring(0, 15));
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+  console.log('[AI Timetable] Using API key from env');
   
   if (!apiKey) {
     console.error('OPENROUTER_API_KEY not set');
