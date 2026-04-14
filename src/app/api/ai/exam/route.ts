@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
   }
 
   const apiKey = process.env.OPENROUTER_API_KEY;
-  console.log('[AI Exam] All env vars:', Object.keys(process.env).sort().join(','));
-  console.log('[AI Exam] Has OPENROUTER key:', !!process.env.OPENROUTER_API_KEY);
+  console.log('[AI Exam] Env vars with OR:', Object.keys(process.env).filter(k => k.includes('OR')).join(','));
+  console.log('[AI Exam] ApiKey value:', apiKey ? 'FOUND-' + apiKey.substring(0,8) : 'NOT_FOUND');
   
   if (!apiKey) {
     console.error('OPENROUTER_API_KEY not set');
