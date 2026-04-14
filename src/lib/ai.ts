@@ -1,6 +1,6 @@
 async function callOpenRouter(prompt: string, systemPrompt?: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || 'openrouter/free:latest';
+  const model = process.env.OPENROUTER_MODEL || 'openrouter/free';
   
   console.log('=== AI DEBUG ===');
   console.log('API Key prefix:', apiKey ? apiKey.substring(0, 15) : 'MISSING');
