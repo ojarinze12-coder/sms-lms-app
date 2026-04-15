@@ -37,6 +37,8 @@ export async function GET() {
         brandColor: tenant?.brandColor || '#1a56db',
         logo: tenant?.logo || '',
         themeMode: settings?.themeMode || 'SYSTEM',
+        aiEnabled: settings?.aiEnabled || false,
+        openRouterModel: settings?.openRouterModel || 'qwen/qwen3-coder:free',
       },
     });
   } catch (error) {
@@ -64,7 +66,7 @@ export async function PUT(req: NextRequest) {
     console.log('[School Settings PUT] Saving for tenant:', tenantId);
     
     const body = await req.json();
-    const { schoolName, email, phone, address, timezone, dateFormat, gradingScale, currency, brandColor, logo, themeMode } = body;
+    const { schoolName, email, phone, address, timezone, dateFormat, gradingScale, currency, brandColor, logo, themeMode, aiEnabled, openRouterApiKey, openRouterModel } = body;
 
     await prisma.tenant.update({
       where: { id: tenantId },
@@ -92,10 +94,16 @@ export async function PUT(req: NextRequest) {
       where: { tenantId },
       update: {
         themeMode,
+        aiEnabled,
+        openRouterApiKey,
+        openRouterModel,
       },
       create: {
         tenantId,
         themeMode,
+        aiEnabled,
+        openRouterApiKey,
+        openRouterModel,
       },
     });
 

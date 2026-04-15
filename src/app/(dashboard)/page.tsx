@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { useBranch } from '@/lib/hooks/use-branch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
 import { 
@@ -39,6 +40,7 @@ interface TenantInfo {
 
 export default function DashboardPage() {
   const { user, role, loading: authLoading, isAdmin, isTeacher, isStudent, isSuperAdmin } = useAuth();
+  const { selectedBranch, isBranchMode } = useBranch();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [tenant, setTenant] = useState<TenantInfo | null>(null);
@@ -56,14 +58,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authLoading || showContent) {
-      loadStats();
-      if (!isSuperAdmin) {
-        loadTenant();
-      }
+      loadDashboardData();
     }
-  }, [authLoading, isSuperAdmin, showContent]);
+  }, [authLoading, showContent, selectedBranch]);
 
-  const loadTenant = async () => {
+  const loadDashboardData = async () => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
       const headers: Record<string, string> = {};
@@ -71,32 +70,19 @@ export default function DashboardPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const res = await fetch('/api/auth/me', {
-        credentials: 'include',
-        headers: Object.keys(headers).length > 0 ? headers : undefined,
-      });
-      if (!res.ok) {
-        console.error('Failed to load tenant:', res.status);
-        return;
-      }
-      const data = await res.json();
-      if (data.user?.tenant) {
-        setTenant(data.user.tenant);
-      }
-    } catch (err) {
-      console.error('Tenant not available:', err);
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      let url = '/api/sms/analytics';
+      const params = new URLSearchParams();
+      
+      // Add branch filter if in branch mode and a branch is selected
+      if (isBranchMode && selectedBranch) {
+        params.set('branchId', selectedBranch.id);
       }
       
-      const res = await fetch('/api/sms/analytics', {
+      if (params.toString()) {
+        url += '?' + params.toString();
+      }
+      
+      const res = await fetch(url, {
         credentials: 'include',
         headers: Object.keys(headers).length > 0 ? headers : undefined,
       });
@@ -110,7 +96,6 @@ export default function DashboardPage() {
           courses: 0,
           exams: 1,
           enrollments: 12,
-          classes: 58,
         });
         setLoading(false);
         return;
@@ -124,24 +109,28 @@ export default function DashboardPage() {
           courses: 0,
           exams: 1,
           enrollments: 12,
-          classes: 58,
         });
         setLoading(false);
         return;
       }
+      
       const data = await res.json();
+      
+      if (!isSuperAdmin && data.user?.tenant) {
+        setTenant(data.user.tenant);
+      }
+      
       if (data.overview) {
         setStats(data.overview);
       }
     } catch (err) {
-      console.error('Stats not available:', err);
+      console.error('Dashboard data not available:', err);
       setStats({
         students: 12,
         teachers: 5,
         courses: 0,
         exams: 1,
         enrollments: 12,
-        classes: 58,
       });
     } finally {
       setLoading(false);

@@ -13,14 +13,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-  console.log('[AI Timetable] Using API key from env');
-  
-  if (!apiKey) {
-    console.error('OPENROUTER_API_KEY not set');
-    return NextResponse.json({ error: 'AI service not configured - missing API key' }, { status: 500 });
-  }
-
   try {
     const body = await request.json();
     const { 
@@ -68,7 +60,8 @@ export async function POST(request: NextRequest) {
       schoolEndTime || "15:00",
       breakStartTime || "12:00",
       breakEndTime || "12:30",
-      periodDuration || 40
+      periodDuration || 40,
+      authUser.tenantId
     );
 
     console.log('Timetable generated successfully');

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { BranchProvider } from '@/lib/hooks/use-branch';
 import { Toaster } from '@/components/ui/toaster';
 import { Logo, LogoIcon } from '@/components/logo';
 import { cn } from '@/lib/utils';
@@ -12,16 +13,22 @@ import { useTenantTheme } from '@/components/use-tenant-theme';
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useBrand } from '@/components/brand-theme-provider';
+import { BranchSelector } from '@/components/BranchSelector';
 
 const superAdminNavItems = [
   { label: 'Dashboard', href: '/admin' },
   { label: 'Schools', href: '/admin/tenants' },
+  { label: 'My Groups', href: '/owner', icon: '🏢' },
   { label: 'Subscriptions', href: '/admin/subscriptions' },
   { label: 'Invoices', href: '/admin/invoices' },
   { label: 'Billing', href: '/admin/billing', icon: '💳' },
   { label: 'Analytics', href: '/admin/analytics', icon: '📈' },
   { label: 'Settings', href: '/admin/settings' },
   { label: 'Data Management', href: '/admin/data', icon: '🗑️' },
+];
+
+const ownerNavItems = [
+  { label: 'Dashboard', href: '/owner' },
 ];
 
 const adminNavItems = [
@@ -195,6 +202,7 @@ export default function DashboardLayout({
   const { branding, primaryColor } = useBrand();
 
   const isSuperAdmin = role === 'SUPER_ADMIN';
+  const isSchoolOwner = role === 'SCHOOL_OWNER';
   const isAdmin = role === 'ADMIN';
   const isTeacher = role === 'TEACHER';
   const isStudent = role === 'STUDENT';
@@ -228,13 +236,14 @@ export default function DashboardLayout({
         console.error('Failed to fetch tenant info:', err);
       }
     }
-    if (!isSuperAdmin && user) {
+    if (!isSuperAdmin && !isSchoolOwner && user) {
       fetchTenantInfo();
     }
-  }, [isSuperAdmin, user]);
+  }, [isSuperAdmin, isSchoolOwner, user]);
 
   let navItems = adminNavItems;
   if (isSuperAdmin) navItems = superAdminNavItems;
+  else if (isSchoolOwner) navItems = ownerNavItems;
   else if (isTeacher) navItems = teacherNavItems;
   else if (isStudent) navItems = studentNavItems;
   else if (isParent) navItems = parentNavItems;
@@ -269,147 +278,158 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white dark:bg-gray-800 border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
-              {isSuperAdmin ? (
-                <>
-                  <Logo size="lg" variant="dark" />
-                  <span className="text-xl font-bold text-gray-800">Platform Control</span>
-                </>
-              ) : (
-                <>
-                  {schoolLogo ? (
-                    <img 
-                      src={schoolLogo} 
-                      alt={schoolName}
-                      className="w-10 h-10 rounded-lg object-cover bg-white border"
-                    />
-                  ) : (
-                    <div 
-                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                      style={{ backgroundColor: brandColor }}
-                    >
-                      {schoolName.charAt(0)}
+    <BranchProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <header className="bg-white dark:bg-gray-800 border-b sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center gap-4">
+                {isSuperAdmin ? (
+                  <>
+                    <Logo size="lg" variant="dark" />
+                    <span className="text-xl font-bold text-gray-800">Platform Control</span>
+                  </>
+                ) : isSchoolOwner ? (
+                  <>
+                    <Logo size="lg" variant="dark" />
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-gray-800 dark:text-white">Group Dashboard</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Multi-School Management</span>
                     </div>
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-lg font-bold text-gray-800 dark:text-white">{schoolName}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">School Dashboard</span>
-                  </div>
-                </>
-              )}
-              
-              <nav className="hidden md:flex gap-1 ml-4 items-center">
-                {isAdmin && (
-                  <DropdownMenu 
-                    label="LMS" 
-                    items={lmsNavItems}
-                    isActive={isLmsActive}
-                    onMouseEnter={() => setActiveMenu('lms')}
-                    onMouseLeave={() => setActiveMenu(null)}
-                    brandColor={brandColor}
-                  />
-                )}
-
-                {isAdmin && (
-                  <DropdownMenu 
-                    label="School" 
-                    items={schoolPortalNavItems}
-                    isActive={isSchoolPortalActive}
-                    onMouseEnter={() => setActiveMenu('school')}
-                    onMouseLeave={() => setActiveMenu(null)}
-                    brandColor={brandColor}
-                  />
-                )}
-
-                {isAdmin && (
-                  <DropdownMenu 
-                    label="SMS" 
-                    items={smsNavItems}
-                    isActive={isSmsActive}
-                    onMouseEnter={() => setActiveMenu('sms')}
-                    onMouseLeave={() => setActiveMenu(null)}
-                    brandColor={brandColor}
-                  />
-                )}
-
-                {isAdmin && (
-                  <Link
-                    href="/analytics"
-                    className={cn(
-                      "px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                      pathname.startsWith('/analytics')
-                        ? "text-white"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                    )}
-                    style={pathname.startsWith('/analytics') ? { backgroundColor: `hsl(var(--brand-primary))` } : {}}
-                  >
-                    Analytics
-                  </Link>
-                )}
-
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                      pathname === item.href || pathname.startsWith(item.href + '/')
-                        ? "text-white"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                    )}
-                    style={pathname === item.href || pathname.startsWith(item.href + '/') ? { backgroundColor: `hsl(var(--brand-primary))` } : {}}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                title={`Current: ${theme || 'system'}. Click to toggle.`}
-              >
-                {theme === 'dark' ? (
-                  <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                ) : theme === 'light' ? (
-                  <Sun className="h-5 w-5 text-gray-600" />
+                  </>
                 ) : (
-                  <Monitor className="h-5 w-5 text-gray-600" />
+                  <>
+                    {schoolLogo ? (
+                      <img 
+                        src={schoolLogo} 
+                        alt={schoolName}
+                        className="w-10 h-10 rounded-lg object-cover bg-white border"
+                      />
+                    ) : (
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
+                        style={{ backgroundColor: brandColor }}
+                      >
+                        {schoolName.charAt(0)}
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-gray-800 dark:text-white">{schoolName}</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">School Dashboard</span>
+                    </div>
+                    <BranchSelector />
+                  </>
                 )}
-              </button>
-              {!isSuperAdmin && (
-                <Logo size="sm" variant="dark" className="opacity-50" />
-              )}
-              <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:block">
-                {user.email}
-              </span>
-              <Link
-                href="/api/auth/logout"
-                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-1 border rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-                onClick={() => {
-                  localStorage.removeItem('auth_token');
-                }}
-              >
-                Sign out
-              </Link>
+                
+                <nav className="hidden md:flex gap-1 ml-4 items-center">
+                  {isAdmin && (
+                    <DropdownMenu 
+                      label="LMS" 
+                      items={lmsNavItems}
+                      isActive={isLmsActive}
+                      onMouseEnter={() => setActiveMenu('lms')}
+                      onMouseLeave={() => setActiveMenu(null)}
+                      brandColor={brandColor}
+                    />
+                  )}
+
+                  {isAdmin && (
+                    <DropdownMenu 
+                      label="School" 
+                      items={schoolPortalNavItems}
+                      isActive={isSchoolPortalActive}
+                      onMouseEnter={() => setActiveMenu('school')}
+                      onMouseLeave={() => setActiveMenu(null)}
+                      brandColor={brandColor}
+                    />
+                  )}
+
+                  {isAdmin && (
+                    <DropdownMenu 
+                      label="SMS" 
+                      items={smsNavItems}
+                      isActive={isSmsActive}
+                      onMouseEnter={() => setActiveMenu('sms')}
+                      onMouseLeave={() => setActiveMenu(null)}
+                      brandColor={brandColor}
+                    />
+                  )}
+
+                  {isAdmin && (
+                    <Link
+                      href="/analytics"
+                      className={cn(
+                        "px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                        pathname.startsWith('/analytics')
+                          ? "text-white"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      )}
+                      style={pathname.startsWith('/analytics') ? { backgroundColor: `hsl(var(--brand-primary))` } : {}}
+                    >
+                      Analytics
+                    </Link>
+                  )}
+
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                        pathname === item.href || pathname.startsWith(item.href + '/')
+                          ? "text-white"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      )}
+                      style={pathname === item.href || pathname.startsWith(item.href + '/') ? { backgroundColor: `hsl(var(--brand-primary))` } : {}}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  title={`Current: ${theme || 'system'}. Click to toggle.`}
+                >
+                  {theme === 'dark' ? (
+                    <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                  ) : theme === 'light' ? (
+                    <Sun className="h-5 w-5 text-gray-600" />
+                  ) : (
+                    <Monitor className="h-5 w-5 text-gray-600" />
+                  )}
+                </button>
+                {!isSuperAdmin && (
+                  <Logo size="sm" variant="dark" className="opacity-50" />
+                )}
+                <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:block">
+                  {user.email}
+                </span>
+                <Link
+                  href="/api/auth/logout"
+                  className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-1 border rounded hover:bg-gray-50 dark:hover:bg-gray-800"
+                  onClick={() => {
+                    localStorage.removeItem('auth_token');
+                  }}
+                >
+                  Sign out
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-        {role === 'ADMIN' && <AIChatWidget userRole="ADMIN" />}
-        {role === 'TEACHER' && <AIChatWidget userRole="TEACHER" />}
-        {role === 'STUDENT' && <AIChatWidget userRole="STUDENT" />}
-        {role === 'PARENT' && <AIChatWidget userRole="PARENT" />}
-      </main>
-      <Toaster />
-    </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {children}
+          {role === 'ADMIN' && <AIChatWidget userRole="ADMIN" />}
+          {role === 'TEACHER' && <AIChatWidget userRole="TEACHER" />}
+          {role === 'STUDENT' && <AIChatWidget userRole="STUDENT" />}
+          {role === 'PARENT' && <AIChatWidget userRole="PARENT" />}
+        </main>
+        <Toaster />
+      </div>
+    </BranchProvider>
   );
 }

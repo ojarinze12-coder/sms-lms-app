@@ -14,11 +14,13 @@ export async function GET(request: NextRequest) {
     const classId = searchParams.get('classId');
     const date = searchParams.get('date');
     const studentId = searchParams.get('studentId');
+    const branchId = searchParams.get('branchId');
 
     const where: any = { tenantId: user.tenantId };
 
     if (classId) where.classId = classId;
     if (studentId) where.studentId = studentId;
+    if (branchId) where.branchId = branchId;
     if (date) {
       const searchDate = new Date(date);
       searchDate.setHours(0, 0, 0, 0);
@@ -39,13 +41,17 @@ export async function GET(request: NextRequest) {
             studentId: true,
             firstName: true,
             lastName: true,
+            branchId: true,
             parents: {
               select: { phone: true },
             },
           },
         },
         class: {
-          select: { name: true },
+          select: { name: true, branchId: true },
+        },
+        branch: {
+          select: { id: true, name: true, code: true },
         },
       },
       orderBy: { date: 'desc' },
@@ -100,6 +106,13 @@ async function markAttendance(user: any, body: any) {
   const attendanceDate = new Date(date);
   attendanceDate.setHours(0, 0, 0, 0);
 
+  const [student, academicClass] = await Promise.all([
+    prisma.student.findUnique({ where: { id: studentId }, select: { branchId: true } }),
+    prisma.academicClass.findUnique({ where: { id: classId }, select: { branchId: true } }),
+  ]);
+
+  const branchId = student?.branchId || academicClass?.branchId || null;
+
   const existing = await prisma.attendance.findFirst({
     where: {
       studentId,
@@ -116,6 +129,7 @@ async function markAttendance(user: any, body: any) {
         status,
         remarks,
         lateMinutes: lateMinutes || null,
+        branchId,
       },
     });
   } else {
@@ -128,6 +142,7 @@ async function markAttendance(user: any, body: any) {
         remarks,
         lateMinutes: lateMinutes || null,
         tenantId: user.tenantId,
+        branchId,
         recordedById: user.id,
       },
     });
@@ -153,6 +168,12 @@ async function bulkMarkAttendance(user: any, body: any) {
   const attendanceDate = new Date(date);
   attendanceDate.setHours(0, 0, 0, 0);
 
+  const academicClass = await prisma.academicClass.findUnique({
+    where: { id: classId },
+    select: { branchId: true }
+  });
+  const branchId = academicClass?.branchId || null;
+
   const results = [];
   const absentStudents: string[] = [];
 
@@ -175,6 +196,7 @@ async function bulkMarkAttendance(user: any, body: any) {
           status,
           remarks,
           lateMinutes: lateMinutes || null,
+          branchId,
         },
       });
     } else {
@@ -187,6 +209,7 @@ async function bulkMarkAttendance(user: any, body: any) {
           remarks,
           lateMinutes: lateMinutes || null,
           tenantId: user.tenantId,
+          branchId,
           recordedById: user.id,
         },
       });

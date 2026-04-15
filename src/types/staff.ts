@@ -13,6 +13,12 @@ export interface Staff {
   employmentType: string;
   status: string;
   joinDate: string;
+  branchId?: string;
+  branch?: {
+    id: string;
+    name: string;
+    code: string;
+  };
 }
 
 export interface StaffFormData {
@@ -40,6 +46,7 @@ export interface StaffFormData {
   bankName: string;
   bankAccount: string;
   bankSortCode: string;
+  branchId: string;
 }
 
 export const staffCategories = [
@@ -125,4 +132,5 @@ export const getInitialFormData = (): StaffFormData => ({
   bankName: '',
   bankAccount: '',
   bankSortCode: '',
+  branchId: '',
 });

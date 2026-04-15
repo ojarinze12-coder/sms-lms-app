@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
 
     const position = searchParams.get('position');
     const departmentId = searchParams.get('departmentId');
+    const branchId = searchParams.get('branchId');
 
     const where: any = { tenantId: authUser.tenantId };
     
@@ -32,11 +33,18 @@ export async function GET(request: NextRequest) {
       where.departmentId = departmentId;
     }
 
+    if (branchId) {
+      where.branchId = branchId;
+    }
+
     const teachers = await prisma.teacher.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       include: {
         departmentRelation: {
+          select: { id: true, name: true, code: true }
+        },
+        branch: {
           select: { id: true, name: true, code: true }
         }
       }
@@ -58,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json();
-    const { employeeId, firstName, lastName, email, specialty, phone, position, departmentId } = data;
+    const { employeeId, firstName, lastName, email, specialty, phone, position, departmentId, branchId } = data;
 
     if (!employeeId || !firstName || !lastName || !email) {
       return NextResponse.json(
@@ -91,8 +99,14 @@ export async function POST(request: NextRequest) {
         phone,
         position: position || null,
         departmentId: departmentId || null,
+        branchId: branchId || null,
         tenantId: authUser.tenantId,
       },
+      include: {
+        branch: {
+          select: { id: true, name: true, code: true }
+        }
+      }
     });
 
     return NextResponse.json(teacher, { status: 201 });

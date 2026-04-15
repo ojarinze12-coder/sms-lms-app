@@ -18,8 +18,9 @@ model Tenant {
   logo       String?
   config     Json     @default("{}")
   createdAt  DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   plan       String   @default("FREE")
+  ownerId    String?  @db.Uuid  // Groups multiple schools under one owner
   users      User[]
   courses    Course[]
   supportTickets SupportTicket[]
@@ -32,7 +33,8 @@ model Tenant {
   subscriptions Subscription[]
   announcements Announcement[]
   branches   Branch[]
-
+  
+  @@index([ownerId], map: "idx_tenants_owner")
   @@map("tenants")
 }
 
@@ -54,6 +56,12 @@ model Branch {
   teachers Teacher[]
   staff    Staff[]
   classes  AcademicClass[]
+  enrollments Enrollment[]
+  attendances Attendance[]
+  feePayments FeePayment[]
+  results    Result[]
+  timetableSlots TimetableSlot[]
+  feeStructures FeeStructure[]
   
   @@unique([tenantId, code], map: "branches_tenantId_code_unique")
   @@index([tenantId], map: "idx_branches_tenant")
@@ -587,6 +595,11 @@ model TenantSettings {
   remitaServiceTypeId        String?
   remitaEnvironment          String?    // 'DEMO', 'LIVE'
 
+  // AI Features Configuration
+  aiEnabled                  Boolean    @default(false)
+  openRouterApiKey           String?    // Per-tenant API key (encrypted)
+  openRouterModel            String?    @default("qwen/qwen3-coder:free")
+
   @@map("tenant_settings")
 }
 
@@ -723,14 +736,16 @@ model Enrollment {
   tenantId      String           @db.Uuid
   studentId     String           @db.Uuid
   classId       String           @db.Uuid
+  branchId      String?          @db.Uuid
   createdAt     DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
   academicClass AcademicClass    @relation(fields: [classId], references: [id])
   student       Student          @relation(fields: [studentId], references: [id])
+  branch        Branch?          @relation(fields: [branchId], references: [id])
 
   @@unique([tenantId, studentId, classId], map: "enrollments_tenantId_studentId_classId_unique")
   @@index([tenantId], map: "idx_enrollments_tenant")
-  @@index([tenantId])
+  @@index([branchId], map: "idx_enrollments_branch")
   @@map("enrollments")
 }
 
@@ -800,16 +815,19 @@ model Result {
   examId      String?         @db.Uuid
   studentId   String?         @db.Uuid
   tenantId    String?         @db.Uuid
+  branchId    String?         @db.Uuid
   createdAt   DateTime?       @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime?       @default(now()) @updatedAt @db.Timestamptz(6)
   exam        Exam?           @relation(fields: [examId], references: [id])
   student     Student?        @relation(fields: [studentId], references: [id])
+  branch      Branch?         @relation(fields: [branchId], references: [id])
   answers     StudentAnswer[]
 
   @@unique([examId, studentId], map: "results_examId_studentId_unique")
   @@index([examId], map: "idx_results_exam")
   @@index([studentId], map: "idx_results_student")
   @@index([tenantId], map: "idx_results_tenant")
+  @@index([branchId], map: "idx_results_branch")
   @@map("results")
 }
 
@@ -941,14 +959,17 @@ model TimetableSlot {
   period          Int?
   startTime       String?
   endTime         String?
+  branchId        String?        @db.Uuid
   createdAt       DateTime?      @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime?      @default(now()) @updatedAt @db.Timestamptz(6)
   academicClass   AcademicClass? @relation(fields: [academicClassId], references: [id])
   subject         Subject?       @relation(fields: [subjectId], references: [id])
   timetable       Timetable?     @relation(fields: [timetableId], references: [id], onDelete: Cascade)
+  branch          Branch?        @relation(fields: [branchId], references: [id])
 
   @@unique([timetableId, academicClassId, dayOfWeek, period], map: "timetable_slots_unique")
   @@index([academicClassId], map: "idx_timetable_slots_class")
+  @@index([branchId], map: "idx_timetable_slots_branch")
   @@map("timetable_slots")
 }
 
@@ -1092,16 +1113,19 @@ model Attendance {
   studentId    String           @db.Uuid
   classId      String           @db.Uuid
   tenantId     String           @db.Uuid
+  branchId     String?          @db.Uuid
   recordedById String?          @db.Uuid
   createdAt    DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt    DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
   class        AcademicClass    @relation(fields: [classId], references: [id], onDelete: Cascade)
   student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  branch       Branch?          @relation(fields: [branchId], references: [id])
 
   @@unique([studentId, date, classId], map: "attendance_student_date_class_unique")
   @@index([studentId], map: "idx_attendance_student")
   @@index([classId, date], map: "idx_attendance_class_date")
   @@index([tenantId, date], map: "idx_attendance_tenant_date")
+  @@index([branchId], map: "idx_attendance_branch")
   @@map("attendances")
 }
 
@@ -1118,14 +1142,17 @@ model FeeStructure {
   academicYearId String       @db.Uuid
   termId         String?      @db.Uuid
   tenantId       String       @db.Uuid
+  branchId       String?      @db.Uuid
   createdAt      DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
   payments       FeePayment[]
   academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
   term           Term?        @relation(fields: [termId], references: [id])
+  branch         Branch?      @relation(fields: [branchId], references: [id])
 
   @@index([academicYearId], map: "idx_fee_structures_academic_year")
   @@index([tenantId], map: "idx_fee_structures_tenant")
+  @@index([branchId], map: "idx_fee_structures_branch")
   @@map("fee_structures")
 }
 
@@ -1144,15 +1171,18 @@ model FeePayment {
   studentId       String        @db.Uuid
   feeId           String        @db.Uuid
   tenantId        String        @db.Uuid
+  branchId        String?       @db.Uuid
   createdAt       DateTime      @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
   feeStructure    FeeStructure  @relation(fields: [feeId], references: [id])
   student         Student       @relation(fields: [studentId], references: [id])
+  branch          Branch?       @relation(fields: [branchId], references: [id])
 
   @@unique([tenantId, referenceNo], map: "fee_payments_tenantId_referenceNo_unique")
   @@index([studentId], map: "idx_fee_payments_student")
   @@index([feeId], map: "idx_fee_payments_fee")
   @@index([transactionId], map: "idx_fee_payments_transaction")
+  @@index([branchId], map: "idx_fee_payments_branch")
   @@map("fee_payments")
 }
 

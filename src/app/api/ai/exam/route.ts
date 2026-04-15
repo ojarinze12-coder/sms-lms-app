@@ -13,15 +13,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  console.log('[AI Exam] Env vars with OR:', Object.keys(process.env).filter(k => k.includes('OR')).join(','));
-  console.log('[AI Exam] ApiKey value:', apiKey ? 'FOUND-' + apiKey.substring(0,8) : 'NOT_FOUND');
-  
-  if (!apiKey) {
-    console.error('OPENROUTER_API_KEY not set');
-    return NextResponse.json({ error: 'AI service not configured - missing API key' }, { status: 500 });
-  }
-
   try {
     const body = await request.json();
     const { topic, subject, difficulty, numQuestions, questionType } = body;
@@ -43,7 +34,8 @@ export async function POST(request: NextRequest) {
       subject,
       difficulty || 'medium',
       numQuestions || 10,
-      questionType || 'MULTIPLE_CHOICE'
+      questionType || 'MULTIPLE_CHOICE',
+      authUser.tenantId
     );
 
     console.log('Questions generated:', questions.questions?.length);

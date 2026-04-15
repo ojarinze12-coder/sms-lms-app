@@ -29,6 +29,7 @@ const createStaffSchema = z.object({
   bankName: z.string().optional(),
   bankAccount: z.string().optional(),
   bankSortCode: z.string().optional(),
+  branchId: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -50,6 +51,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const status = searchParams.get('status');
     const department = searchParams.get('department');
+    const branchId = searchParams.get('branchId');
 
     const where: any = {};
 
@@ -73,10 +75,16 @@ export async function GET(request: NextRequest) {
     if (category) where.category = category;
     if (status) where.status = status;
     if (department) where.department = department;
+    if (branchId) where.branchId = branchId;
 
     const staff = await prisma.staff.findMany({
       where,
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+      include: {
+        branch: {
+          select: { id: true, name: true, code: true }
+        }
+      },
     });
 
     return NextResponse.json(staff || []);
@@ -139,9 +147,15 @@ export async function POST(request: NextRequest) {
         bankName: data.bankName,
         bankAccount: data.bankAccount,
         bankSortCode: data.bankSortCode,
+        branchId: data.branchId || null,
         tenant: {
           connect: { id: authUser.tenantId },
         },
+      },
+      include: {
+        branch: {
+          select: { id: true, name: true, code: true }
+        }
       },
     });
 

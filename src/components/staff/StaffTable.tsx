@@ -100,6 +100,7 @@ export default function StaffTable({
                   <th className="text-left py-3 px-4 font-medium">Employee</th>
                   <th className="text-left py-3 px-4 font-medium">ID</th>
                   <th className="text-left py-3 px-4 font-medium">Category</th>
+                  <th className="text-left py-3 px-4 font-medium">Branch</th>
                   <th className="text-left py-3 px-4 font-medium">Department</th>
                   <th className="text-left py-3 px-4 font-medium">Position</th>
                   <th className="text-left py-3 px-4 font-medium">Status</th>
@@ -122,6 +123,9 @@ export default function StaffTable({
                       <Badge variant="outline">
                         {categoryLabels[staffMember.category] || staffMember.category}
                       </Badge>
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {staffMember.branch?.name || '-'}
                     </td>
                     <td className="py-3 px-4 text-sm">{staffMember.department || '-'}</td>
                     <td className="py-3 px-4 text-sm">{staffMember.position || '-'}</td>

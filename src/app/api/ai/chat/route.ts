@@ -18,13 +18,37 @@ checking child progress, viewing attendance, fees inquiries, communicating with 
 and understanding school policies. Be friendly and helpful.`,
 };
 
-async function callOpenRouter(prompt: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+async function callOpenRouter(prompt: string, tenantId?: string): Promise<string> {
+  let apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free';
   
   console.log('=== CHAT AI DEBUG ===');
-  console.log('API Key prefix:', apiKey ? apiKey.substring(0, 15) : 'MISSING');
+  console.log('API Key from env:', apiKey ? apiKey.substring(0, 15) + '...' : 'MISSING');
   console.log('Model:', model);
+
+  // If no env key, try to get from tenant settings
+  if (!apiKey && tenantId) {
+    try {
+      const { prisma } = await import('@/lib/prisma');
+      const settings = await prisma.tenantSettings.findUnique({
+        where: { tenantId },
+        select: { openRouterApiKey: true, aiEnabled: true }
+      });
+      if (settings?.openRouterApiKey) {
+        apiKey = settings.openRouterApiKey;
+        console.log('API Key from tenant settings: found');
+      }
+      if (settings?.aiEnabled === false) {
+        throw new Error('AI features are disabled for this school');
+      }
+    } catch (err) {
+      console.log('Could not fetch tenant settings:', err);
+    }
+  }
+
+  if (!apiKey) {
+    throw new Error('AI service not configured. Please add OPENROUTER_API_KEY to environment variables or configure in school settings.');
+  }
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -76,21 +100,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  console.log('=== AI Chat Debug ===');
-  console.log('API Key exists:', !!apiKey);
-  console.log('API Key prefix:', apiKey ? apiKey.substring(0, 15) : 'N/A');
-  console.log('Model:', process.env.OPENROUTER_MODEL);
-  
-  if (!apiKey) {
-    console.warn('AI Chat: OPENROUTER_API_KEY not configured');
-    return NextResponse.json({ 
-      error: 'AI service not configured',
-      response: 'AI chat is currently unavailable. Please configure OPENROUTER_API_KEY in your environment variables to enable this feature.',
-      isConfigured: false
-    }, { status: 200 });
-  }
-
   try {
     const body = await request.json();
     const { messages, userRole } = body;
@@ -111,7 +120,7 @@ ${conversationHistory}
 Provide a helpful response:
 `;
 
-    const response = await callOpenRouter(prompt);
+    const response = await callOpenRouter(prompt, authUser.tenantId);
 
     return NextResponse.json({ response });
   } catch (error: any) {

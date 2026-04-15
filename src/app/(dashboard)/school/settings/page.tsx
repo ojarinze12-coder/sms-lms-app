@@ -46,6 +46,12 @@ interface PaymentSettings {
   remitaEnvironment: string;
 }
 
+interface AISettings {
+  aiEnabled: boolean;
+  openRouterApiKey: string;
+  openRouterModel: string;
+}
+
 interface Branch {
   id: string;
   name: string;
@@ -86,6 +92,11 @@ export default function SettingsPage() {
     remitaServiceTypeId: '',
     remitaEnvironment: 'DEMO',
   });
+  const [aiSettings, setAiSettings] = useState<AISettings>({
+    aiEnabled: false,
+    openRouterApiKey: '',
+    openRouterModel: 'qwen/qwen3-coder:free',
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -123,6 +134,13 @@ export default function SettingsPage() {
       if (settingsRes.ok) {
         const data = await settingsRes.json();
         setSettings(prev => ({ ...prev, ...(data.settings || {}) }));
+        if (data.settings) {
+          setAiSettings({
+            aiEnabled: data.settings.aiEnabled || false,
+            openRouterApiKey: data.settings.openRouterApiKey || '',
+            openRouterModel: data.settings.openRouterModel || 'qwen/qwen3-coder:free',
+          });
+        }
       }
       
       if (branchesRes.ok) {
@@ -167,6 +185,37 @@ export default function SettingsPage() {
     } catch (err) {
       console.error('Failed to save payment settings:', err);
       setError('Failed to save payment settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveAISettings = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await authFetch('/api/school/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...settings,
+          aiEnabled: aiSettings.aiEnabled,
+          openRouterApiKey: aiSettings.openRouterApiKey || null,
+          openRouterModel: aiSettings.openRouterModel,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        setError(data.error || 'Failed to save AI settings');
+      }
+    } catch (err) {
+      console.error('Failed to save AI settings:', err);
+      setError('Failed to save AI settings');
     } finally {
       setSaving(false);
     }
@@ -348,6 +397,7 @@ export default function SettingsPage() {
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="bg-gray-100 dark:bg-gray-800 p-1">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="ai">AI Features</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="branches">Branches</TabsTrigger>
         </TabsList>
@@ -654,6 +704,103 @@ export default function SettingsPage() {
                 )}
               </Button>
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="ai">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+                      <circle cx="9" cy="13" r="1"/>
+                      <circle cx="15" cy="13" r="1"/>
+                    </svg>
+                    AI Features
+                  </CardTitle>
+                  <CardDescription>Configure AI-powered features for your school</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  {aiSettings.aiEnabled ? (
+                    <span className="flex items-center gap-1 text-green-600 text-sm">
+                      <CheckCircle className="h-4 w-4" /> Enabled
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-gray-500 text-sm">
+                      <AlertCircle className="h-4 w-4" /> Disabled
+                    </span>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={aiSettings.aiEnabled}
+                    onCheckedChange={(checked) => setAiSettings({ ...aiSettings, aiEnabled: checked })}
+                  />
+                  <div>
+                    <p className="font-medium">Enable AI Features</p>
+                    <p className="text-sm text-gray-500">Enable AI-powered timetable generation, exam creation, and chat assistant</p>
+                  </div>
+                </div>
+              </div>
+
+              {aiSettings.aiEnabled && (
+                <div className="space-y-4 pt-4 border-t">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">OpenRouter API Key</label>
+                    <Input
+                      type="password"
+                      value={aiSettings.openRouterApiKey}
+                      onChange={(e) => setAiSettings({ ...aiSettings, openRouterApiKey: e.target.value })}
+                      placeholder="sk-or-..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">openrouter.ai</a></p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Model</label>
+                    <Select
+                      value={aiSettings.openRouterModel}
+                      onValueChange={(value) => setAiSettings({ ...aiSettings, openRouterModel: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</SelectItem>
+                        <SelectItem value="deepseek/deepseek-chat:free">DeepSeek Chat (Free)</SelectItem>
+                        <SelectItem value="google/gemma-3n-e4b-it:free">Gemma 3N (Free)</SelectItem>
+                        <SelectItem value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</SelectItem>
+                        <SelectItem value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end gap-3 mt-6">
+            {saved && (
+              <span className="text-green-600 dark:text-green-400 text-sm font-medium self-center">Settings saved!</span>
+            )}
+            {error && (
+              <span className="text-red-500 dark:text-red-400 text-sm font-medium self-center">{error}</span>
+            )}
+            <Button onClick={handleSaveAISettings} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save AI Settings'
+              )}
+            </Button>
           </div>
         </TabsContent>
 

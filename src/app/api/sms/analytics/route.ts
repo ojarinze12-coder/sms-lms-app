@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || 'term';
     const academicYearId = searchParams.get('academicYearId');
+    const branchId = searchParams.get('branchId');
 
     // SuperAdmin: Show global analytics
     if (authUser.role === 'SUPER_ADMIN') {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (!authUser.tenantId) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 400 });
     }
-    return getSchoolAnalytics(authUser.tenantId, period, academicYearId || undefined);
+    return getSchoolAnalytics(authUser.tenantId, period, academicYearId || undefined, branchId);
 
   } catch (error) {
     console.error('Analytics error:', error);
@@ -69,34 +70,32 @@ async function getSuperAdminAnalytics() {
   });
 }
 
-async function getSchoolAnalytics(tenantId: string, period: string, academicYearId?: string) {
+async function getSchoolAnalytics(tenantId: string, period: string, academicYearId?: string, branchId?: string | null) {
   const whereClause: any = { tenantId };
-  if (academicYearId) {
-    whereClause.academicYearId = academicYearId;
-  }
+  const branchFilter = branchId ? { branchId } : {};
 
-  // Core metrics
+  // Core metrics - filtered by branch if provided
   const [studentCount, teacherCount, courseCount, examCount, enrollmentCount, classCount] = await Promise.all([
-    prisma.student.count({ where: { tenantId } }),
-    prisma.teacher.count({ where: { tenantId } }),
+    prisma.student.count({ where: { tenantId, ...branchFilter } }),
+    prisma.teacher.count({ where: { tenantId, ...branchFilter } }),
     prisma.course.count({ where: { tenantId } }),
-    prisma.exam.count({ where: { subject: { academicClass: { academicYear: { tenantId } } } } }),
-    prisma.enrollment.count({ where: { tenantId } }),
-    prisma.academicClass.count({ where: { academicYear: { tenantId } } }),
+    prisma.exam.count({ where: { subject: { academicClass: { academicYear: { tenantId }, ...branchFilter } } } }),
+    prisma.enrollment.count({ where: { tenantId, ...branchFilter } }),
+    prisma.academicClass.count({ where: { academicYear: { tenantId }, ...branchFilter } }),
   ]);
 
   // Fee analytics
-  const feeStats = await getFeeAnalytics(tenantId);
+  const feeStats = await getFeeAnalytics(tenantId, branchFilter);
 
   // Attendance analytics
-  const attendanceStats = await getAttendanceAnalytics(tenantId);
+  const attendanceStats = await getAttendanceAnalytics(tenantId, branchFilter);
 
   // Exam performance
-  const examStats = await getExamAnalytics(tenantId);
+  const examStats = await getExamAnalytics(tenantId, branchFilter);
 
   // Recent activity
   const recentExams = await prisma.exam.findMany({
-    where: { subject: { academicClass: { academicYear: { tenantId } } } },
+    where: { subject: { academicClass: { academicYear: { tenantId }, ...branchFilter } } },
     select: { id: true, title: true, status: true, createdAt: true, subject: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
     take: 5
@@ -106,7 +105,7 @@ async function getSchoolAnalytics(tenantId: string, period: string, academicYear
   const topStudents = await prisma.result.findMany({
     where: {
       status: 'GRADED',
-      exam: { subject: { academicClass: { academicYear: { tenantId } } } },
+      exam: { subject: { academicClass: { academicYear: { tenantId }, ...branchFilter } } },
     },
     include: {
       student: { select: { id: true, firstName: true, lastName: true, studentId: true } },
@@ -119,7 +118,7 @@ async function getSchoolAnalytics(tenantId: string, period: string, academicYear
   const enrollmentByClass = await prisma.enrollment.groupBy({
     by: ['classId'],
     _count: { studentId: true },
-    where: { tenantId },
+    where: { tenantId, ...branchFilter },
   });
 
   return NextResponse.json({
@@ -142,12 +141,13 @@ async function getSchoolAnalytics(tenantId: string, period: string, academicYear
       score: r.percentage,
     })),
     enrollmentByClass,
+    branchId: branchId || null,
   });
 }
 
-async function getFeeAnalytics(tenantId: string) {
+async function getFeeAnalytics(tenantId: string, branchFilter: any = {}) {
   const payments = await prisma.feePayment.findMany({
-    where: { tenantId },
+    where: { tenantId, ...branchFilter },
     select: { amount: true, status: true, createdAt: true },
   });
 
@@ -174,13 +174,14 @@ async function getFeeAnalytics(tenantId: string) {
   };
 }
 
-async function getAttendanceAnalytics(tenantId: string) {
+async function getAttendanceAnalytics(tenantId: string, branchFilter: any = {}) {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const attendances = await prisma.attendance.findMany({
     where: {
       tenantId,
+      ...branchFilter,
       date: { gte: thirtyDaysAgo },
     },
     select: { status: true },
@@ -203,10 +204,10 @@ async function getAttendanceAnalytics(tenantId: string) {
   };
 }
 
-async function getExamAnalytics(tenantId: string) {
+async function getExamAnalytics(tenantId: string, branchFilter: any = {}) {
   const results = await prisma.result.findMany({
     where: {
-      exam: { subject: { academicClass: { academicYear: { tenantId } } } },
+      exam: { subject: { academicClass: { academicYear: { tenantId }, ...branchFilter } } },
     },
     select: { status: true, percentage: true },
   });

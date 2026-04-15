@@ -31,12 +31,14 @@ export async function GET(request: NextRequest) {
     const studentId = searchParams.get('studentId');
     const feeId = searchParams.get('feeId');
     const status = searchParams.get('status');
+    const branchId = searchParams.get('branchId');
 
     const where: any = { tenantId: user.tenantId };
     
     if (studentId) where.studentId = studentId;
     if (feeId) where.feeId = feeId;
     if (status) where.status = status;
+    if (branchId) where.branchId = branchId;
 
     const payments = await prisma.feePayment.findMany({
       where,
@@ -47,9 +49,13 @@ export async function GET(request: NextRequest) {
             studentId: true,
             firstName: true,
             lastName: true,
+            branchId: true,
           },
         },
         feeStructure: true,
+        branch: {
+          select: { id: true, name: true, code: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -210,6 +216,7 @@ async function initializePayment(
       studentId,
       feeId,
       tenantId: user.tenantId,
+      branchId: null,
     },
   });
 
@@ -223,6 +230,11 @@ async function initializePayment(
 async function recordPayment(user: any, body: any) {
   const { studentId, feeId, amount, method, transactionId, gatewayResponse, status } = body;
 
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { branchId: true }
+  });
+
   const payment = await prisma.feePayment.create({
     data: {
       amount: parseFloat(amount),
@@ -233,6 +245,7 @@ async function recordPayment(user: any, body: any) {
       studentId,
       feeId,
       tenantId: user.tenantId,
+      branchId: student?.branchId || null,
       paidAt: status === 'COMPLETED' ? new Date() : null,
     },
   });

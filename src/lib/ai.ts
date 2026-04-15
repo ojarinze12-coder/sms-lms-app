@@ -1,14 +1,30 @@
-async function callOpenRouter(prompt: string, systemPrompt?: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: string): Promise<string> {
+  let apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL || 'qwen/qwen3-coder:free';
   
   console.log('=== AI DEBUG ===');
-  console.log('API Key prefix:', apiKey ? apiKey.substring(0, 15) : 'MISSING');
-  console.log('API Key full:', apiKey ? 'exists' : 'MISSING');
+  console.log('API Key from env:', apiKey ? apiKey.substring(0, 15) + '...' : 'MISSING');
   console.log('Model:', model);
 
+  // If no env key, try to get from tenant settings
+  if (!apiKey && tenantId) {
+    try {
+      const { prisma } = await import('@/lib/prisma');
+      const settings = await prisma.tenantSettings.findUnique({
+        where: { tenantId },
+        select: { openRouterApiKey: true }
+      });
+      if (settings?.openRouterApiKey) {
+        apiKey = settings.openRouterApiKey;
+        console.log('API Key from tenant settings: found');
+      }
+    } catch (err) {
+      console.log('Could not fetch tenant settings:', err);
+    }
+  }
+
   if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not set in environment variables');
+    throw new Error('AI service not configured. Please add OPENROUTER_API_KEY to environment variables or configure in school settings.');
   }
 
   try {
@@ -89,7 +105,8 @@ export async function generateTimetable(
   schoolEndTime: string = "15:00",
   breakStartTime: string = "12:00",
   breakEndTime: string = "12:30",
-  periodDuration: number = 40
+  periodDuration: number = 40,
+  tenantId?: string
 ): Promise<{
   slots: Array<{
     dayOfWeek: number;
@@ -144,7 +161,7 @@ Output format (JSON only, no markdown):
 `;
 
   try {
-    const text = await callOpenRouter(prompt);
+    const text = await callOpenRouter(prompt, undefined, tenantId);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
@@ -161,7 +178,8 @@ export async function generateExamQuestions(
   subject: string,
   difficulty: 'easy' | 'medium' | 'hard',
   numQuestions: number = 10,
-  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' = 'MULTIPLE_CHOICE'
+  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' = 'MULTIPLE_CHOICE',
+  tenantId?: string
 ): Promise<{
   questions: Array<{
     content: string;
@@ -200,7 +218,7 @@ Output format (JSON only, no markdown):
 `;
 
   try {
-    const text = await callOpenRouter(prompt);
+    const text = await callOpenRouter(prompt, undefined, tenantId);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
@@ -217,7 +235,8 @@ Output format (JSON only, no markdown):
 
 export async function generateChatResponse(
   messages: Array<{ role: string; content: string }>,
-  systemPrompt?: string
+  systemPrompt?: string,
+  tenantId?: string
 ): Promise<string> {
   const prompt = `
 ${systemPrompt || 'You are a helpful educational assistant.'}
@@ -229,7 +248,7 @@ Provide a helpful response:
 `;
 
   try {
-    return await callOpenRouter(prompt, systemPrompt);
+    return await callOpenRouter(prompt, systemPrompt, tenantId);
   } catch (error) {
     console.error('Chat error:', error);
     throw new Error('Failed to generate response');

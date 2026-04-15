@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
-import { UserPlus, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { UserPlus, Download, FileSpreadsheet, FileText, Filter } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { 
@@ -22,12 +22,20 @@ import StaffForm from '@/components/staff/StaffForm';
 import StaffStats from '@/components/staff/StaffStats';
 import StaffTable from '@/components/staff/StaffTable';
 
+interface Branch {
+  id: string;
+  name: string;
+  code: string;
+}
+
 export default function StaffPage() {
   const { user, loading: authLoading } = useAuth();
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
+  const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +44,7 @@ export default function StaffPage() {
   useEffect(() => {
     if (!authLoading) {
       fetchStaff();
+      fetchBranches();
     }
   }, [authLoading]);
 
@@ -52,6 +61,42 @@ export default function StaffPage() {
       setLoading(false);
     }
   };
+
+  const fetchBranches = async () => {
+    try {
+      const res = await authFetch('/api/sms/branches');
+      if (res.ok) {
+        const data = await res.json();
+        setBranches(data.branches || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch branches:', error);
+    }
+  };
+
+  const filteredStaff = useMemo(() => {
+    let result = staff;
+    
+    if (selectedBranch) {
+      result = result.filter(s => s.branchId === selectedBranch);
+    }
+    
+    if (filterCategory) {
+      result = result.filter(s => s.category === filterCategory);
+    }
+    
+    if (search) {
+      const query = search.toLowerCase();
+      result = result.filter(s => 
+        s.firstName.toLowerCase().includes(query) ||
+        s.lastName.toLowerCase().includes(query) ||
+        s.email?.toLowerCase().includes(query) ||
+        s.employeeId?.toLowerCase().includes(query)
+      );
+    }
+    
+    return result;
+  }, [staff, selectedBranch, filterCategory, search]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +156,7 @@ export default function StaffPage() {
       bankName: '',
       bankAccount: '',
       bankSortCode: '',
+      branchId: staffMember.branchId || '',
     });
     setShowAddDialog(true);
   };
@@ -136,11 +182,12 @@ export default function StaffPage() {
   };
 
   const handleExportExcel = () => {
-    const data = staff.map(s => ({
+    const data = filteredStaff.map(s => ({
       Name: `${s.firstName} ${s.lastName}`,
       Email: s.email || '',
       EmployeeID: s.employeeId || '',
       Category: s.category || '',
+      Branch: s.branch?.name || '',
       Position: s.position || '',
       Department: s.department || '',
       Status: s.status || 'ACTIVE',
@@ -150,6 +197,7 @@ export default function StaffPage() {
       { key: 'Email', label: 'Email' },
       { key: 'EmployeeID', label: 'Employee ID' },
       { key: 'Category', label: 'Category' },
+      { key: 'Branch', label: 'Branch' },
       { key: 'Position', label: 'Position' },
       { key: 'Department', label: 'Department' },
       { key: 'Status', label: 'Status' },
@@ -157,11 +205,12 @@ export default function StaffPage() {
   };
 
   const handleExportPDF = () => {
-    const data = staff.map(s => ({
+    const data = filteredStaff.map(s => ({
       Name: `${s.firstName} ${s.lastName}`,
       Email: s.email || '',
       EmployeeID: s.employeeId || '',
       Category: s.category || '',
+      Branch: s.branch?.name || '',
       Position: s.position || '',
       Department: s.department || '',
       Status: s.status || 'ACTIVE',
@@ -171,6 +220,7 @@ export default function StaffPage() {
       { key: 'Email', label: 'Email' },
       { key: 'EmployeeID', label: 'Employee ID' },
       { key: 'Category', label: 'Category' },
+      { key: 'Branch', label: 'Branch' },
       { key: 'Position', label: 'Position' },
       { key: 'Department', label: 'Department' },
       { key: 'Status', label: 'Status' },
@@ -196,9 +246,21 @@ export default function StaffPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Non-Teaching Staff</h1>
-          <p className="text-gray-500 dark:text-gray-400">{staff.length} staff member{staff.length !== 1 ? 's' : ''}</p>
+          <p className="text-gray-500 dark:text-gray-400">{filteredStaff.length} staff member{filteredStaff.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
+          {branches.length > 0 && (
+            <select
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+              className="px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            >
+              <option value="">All Branches</option>
+              {branches.map(branch => (
+                <option key={branch.id} value={branch.id}>{branch.name}</option>
+              ))}
+            </select>
+          )}
           <div className="relative group">
             <button className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2">
               <Download className="w-4 h-4" />
@@ -241,16 +303,17 @@ export default function StaffPage() {
                 onCancel={handleCancel}
                 isEditing={!!editingStaff}
                 submitting={submitting}
+                branches={branches}
               />
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      <StaffStats staff={staff} />
+      <StaffStats staff={filteredStaff} />
 
       <StaffTable
-        staff={staff}
+        staff={filteredStaff}
         search={search}
         filterCategory={filterCategory}
         onSearchChange={setSearch}

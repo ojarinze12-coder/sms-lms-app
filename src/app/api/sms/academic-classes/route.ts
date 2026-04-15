@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
   const academicYearId = request.nextUrl.searchParams.get('academicYearId');
   const search = request.nextUrl.searchParams.get('search') || '';
   const tierId = request.nextUrl.searchParams.get('tierId');
+  const branchId = request.nextUrl.searchParams.get('branchId');
 
   try {
     console.log('[CLASSES] Fetching for tenant:', authUser.tenantId, 'tierId:', tierId);
@@ -30,6 +31,10 @@ export async function GET(request: NextRequest) {
     
     if (tierId) {
       where.tierId = tierId;
+    }
+
+    if (branchId) {
+      where.branchId = branchId;
     }
 
     const classes = await prisma.academicClass.findMany({
@@ -52,6 +57,9 @@ export async function GET(request: NextRequest) {
         },
         caregiver: {
           select: { id: true, firstName: true, lastName: true, employeeId: true, category: true }
+        },
+        branch: {
+          select: { id: true, name: true, code: true }
         }
       }
     });
@@ -78,9 +86,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, level, capacity, academicYearId, addNerdcSubjects, tierId, stream, departmentId, classTeacherId, formMasterId, caregiverId } = body;
+    const { name, level, capacity, academicYearId, addNerdcSubjects, tierId, stream, departmentId, classTeacherId, formMasterId, caregiverId, branchId } = body;
 
-    console.log('[CLASSES POST] Creating class:', name, 'level:', level, 'stream:', stream, 'department:', departmentId, 'year:', academicYearId, 'tenant:', authUser.tenantId, 'addSubjects:', addNerdcSubjects, 'tierId:', tierId, 'formMasterId:', formMasterId, 'caregiverId:', caregiverId);
+    console.log('[CLASSES POST] Creating class:', name, 'level:', level, 'stream:', stream, 'department:', departmentId, 'year:', academicYearId, 'tenant:', authUser.tenantId, 'addSubjects:', addNerdcSubjects, 'tierId:', tierId, 'formMasterId:', formMasterId, 'caregiverId:', caregiverId, 'branchId:', branchId);
 
     // Ensure addNerdcSubjects is a proper boolean
     const shouldAddSubjects = addNerdcSubjects === true || addNerdcSubjects === 'true' || addNerdcSubjects === true;
@@ -117,6 +125,7 @@ export async function POST(request: NextRequest) {
         classTeacherId: classTeacherId || null,
         formMasterId: formMasterId || null,
         caregiverId: caregiverId || null,
+        branchId: branchId || null,
       },
     });
 

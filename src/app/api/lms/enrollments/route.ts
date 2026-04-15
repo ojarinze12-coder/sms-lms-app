@@ -9,8 +9,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get('branchId');
+    const classId = searchParams.get('classId');
+    const studentId = searchParams.get('studentId');
+    const status = searchParams.get('status');
+
+    const where: any = { tenantId: authUser.tenantId };
+    
+    if (branchId) {
+      where.branchId = branchId;
+    }
+    if (classId) {
+      where.classId = classId;
+    }
+    if (studentId) {
+      where.studentId = studentId;
+    }
+    if (status) {
+      where.status = status;
+    }
+
     const enrollments = await prisma.enrollment.findMany({
-      where: { tenantId: authUser.tenantId },
+      where,
       include: {
         student: {
           select: {
@@ -18,6 +39,7 @@ export async function GET(request: NextRequest) {
             studentId: true,
             firstName: true,
             lastName: true,
+            branchId: true,
           },
         },
         academicClass: {
@@ -26,9 +48,17 @@ export async function GET(request: NextRequest) {
             name: true,
             level: true,
             stream: true,
+            branchId: true,
             department: {
               select: { id: true, name: true, code: true },
             },
+          },
+        },
+        branch: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
           },
         },
       },
@@ -74,12 +104,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const [student, academicClass] = await Promise.all([
+      prisma.student.findUnique({ where: { id: studentId }, select: { branchId: true } }),
+      prisma.academicClass.findUnique({ where: { id: classId }, select: { branchId: true } }),
+    ]);
+
+    const branchId = student?.branchId || academicClass?.branchId || null;
+
     const enrollment = await prisma.enrollment.create({
       data: {
         studentId,
         classId,
         tenantId: authUser.tenantId,
+        branchId,
         status: 'ACTIVE',
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            studentId: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        academicClass: {
+          select: {
+            id: true,
+            name: true,
+            level: true,
+            stream: true,
+          },
+        },
+        branch: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
       },
     });
 
