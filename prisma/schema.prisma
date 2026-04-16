@@ -62,6 +62,9 @@ model Branch {
   results    Result[]
   timetableSlots TimetableSlot[]
   feeStructures FeeStructure[]
+  tiers    Tier[]
+  departments Department[]
+  academicYears AcademicYear[]
   
   @@unique([tenantId, code], map: "branches_tenantId_code_unique")
   @@index([tenantId], map: "idx_branches_tenant")
@@ -358,6 +361,7 @@ model AcademicYear {
   endDate         DateTime          @db.Timestamptz(6)
   isActive        Boolean?          @default(false)
   tenantId        String?           @db.Uuid
+  branchId        String?           @db.Uuid
   createdAt       DateTime?         @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime?         @default(now()) @updatedAt @db.Timestamptz(6)
   classes         AcademicClass[]
@@ -370,9 +374,11 @@ model AcademicYear {
   applications    Application[]
   transportSubscriptions TransportSubscription[]
   hostelAllocations HostelAllocation[]
+  branch          Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, name], map: "academic_years_tenantId_name_unique")
   @@index([tenantId], map: "idx_academic_years_tenant")
+  @@index([branchId], map: "idx_academic_years_branch")
   @@map("academic_years")
 }
 
@@ -465,14 +471,17 @@ model Tier {
   order     Int
   isActive  Boolean?  @default(true)
   tenantId  String    @db.Uuid
+  branchId  String?   @db.Uuid
   createdAt DateTime? @default(now()) @db.Timestamptz(6)
   updatedAt DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
   badges    Badge[]
   departments Department[]
   tierCurriculum TierCurriculum?
+  branch    Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, code], map: "tiers_tenantId_code_unique")
   @@index([tenantId], map: "idx_tiers_tenant")
+  @@index([branchId], map: "idx_tiers_branch")
   @@map("tiers")
 }
 
@@ -484,16 +493,19 @@ model Department {
   isActive  Boolean  @default(true)
   tierId    String   @db.Uuid
   tenantId  String   @db.Uuid
+  branchId  String?  @db.Uuid
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   tier            Tier            @relation(fields: [tierId], references: [id], onDelete: Cascade)
   academicClasses AcademicClass[]
   teachers        Teacher[]       @relation("TeacherDepartments")
+  branch          Branch?         @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, code], map: "departments_tenantId_code_unique")
   @@index([tenantId], map: "idx_departments_tenant")
   @@index([tierId], map: "idx_departments_tier")
+  @@index([branchId], map: "idx_departments_branch")
   @@map("departments")
 }
 

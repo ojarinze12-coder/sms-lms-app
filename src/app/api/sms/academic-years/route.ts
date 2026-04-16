@@ -14,31 +14,18 @@ export async function GET(request: NextRequest) {
     const tenantId = searchParams.get('tenantId') || user.tenantId;
     const branchId = searchParams.get('branchId');
 
-    let academicYears;
-    
+    const whereClause: any = { tenantId };
     if (branchId) {
-      // Filter academic years by branch - only return years that have classes in this branch
-      academicYears = await prisma.academicYear.findMany({
-        where: { tenantId },
-        include: {
-          classes: {
-            where: { branchId },
-            select: { id: true },
-          },
-        },
-        orderBy: { startDate: 'desc' },
-      });
-      // Filter out years that have no classes in this branch
-      academicYears = academicYears.filter(ay => ay.classes.length > 0).map(ay => ({
-        ...ay,
-        classes: undefined,
-      }));
-    } else {
-      academicYears = await prisma.academicYear.findMany({
-        where: { tenantId },
-        orderBy: { startDate: 'desc' },
-      });
+      whereClause.OR = [
+        { branchId },
+        { branchId: null },
+      ];
     }
+
+    const academicYears = await prisma.academicYear.findMany({
+      where: whereClause,
+      orderBy: { startDate: 'desc' },
+    });
 
     return NextResponse.json({ years: academicYears });
   } catch (error: any) {
@@ -54,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, startDate, endDate, isActive } = body;
+    const { name, startDate, endDate, isActive, branchId } = body;
 
     if (!name || !startDate || !endDate) {
       return NextResponse.json(
@@ -65,8 +52,16 @@ export async function POST(request: NextRequest) {
 
     console.log('Creating academic year:', name, 'for tenant:', user.tenantId);
 
+    // Check if year exists for this tenant (considering branch)
     const existingYear = await prisma.academicYear.findFirst({
-      where: { tenantId: user.tenantId, name },
+      where: { 
+        tenantId: user.tenantId, 
+        name,
+        OR: [
+          { branchId },
+          { branchId: null },
+        ],
+      },
     });
 
     if (existingYear) {
@@ -88,6 +83,7 @@ export async function POST(request: NextRequest) {
         endDate: new Date(endDate),
         isActive: isActive || false,
         tenantId: user.tenantId,
+        branchId: branchId || null,
       },
     });
 

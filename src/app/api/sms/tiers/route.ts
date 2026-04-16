@@ -12,10 +12,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get('branchId');
     const tenantId = user.tenantId;
 
+    const whereClause: any = { tenantId };
+    if (branchId) {
+      whereClause.OR = [
+        { branchId },
+        { branchId: null },
+      ];
+    }
+
     const tiers = await prisma.tier.findMany({
-      where: { tenantId },
+      where: whereClause,
       orderBy: { order: 'asc' },
       include: {
         _count: {
@@ -47,6 +57,7 @@ export async function POST(request: NextRequest) {
 
     const tenantId = user.tenantId;
     const body = await request.json();
+    const branchId = body.branchId || null;
 
     // Check if applying a template
     if (body.template) {
@@ -72,6 +83,7 @@ export async function POST(request: NextRequest) {
               code: tier.code,
               order: tier.order,
               tenantId,
+              branchId,
             },
           });
         })
@@ -118,10 +130,15 @@ export async function POST(request: NextRequest) {
 
     const { name, code, alias, order } = validation.data;
 
-    // Check if code already exists for this tenant
-    const existingTier = await prisma.tier.findUnique({
+    // Check if code already exists for this tenant (considering branch)
+    const existingTier = await prisma.tier.findFirst({
       where: {
-        tenantId_code: { tenantId, code },
+        tenantId,
+        code,
+        OR: [
+          { branchId },
+          { branchId: null },
+        ],
       },
     });
 
@@ -139,6 +156,7 @@ export async function POST(request: NextRequest) {
         alias,
         order,
         tenantId,
+        branchId,
       },
     });
 

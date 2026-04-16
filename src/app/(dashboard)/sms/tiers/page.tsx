@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { TIER_TEMPLATE_OPTIONS } from '@/lib/constants/tiers';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Tier {
   id: string;
@@ -18,6 +19,7 @@ interface Tier {
 }
 
 export default function TiersPage() {
+  const { selectedBranch } = useBranch();
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -36,11 +38,16 @@ export default function TiersPage() {
 
   useEffect(() => {
     loadTiers();
-  }, []);
+  }, [selectedBranch]);
 
   const loadTiers = async () => {
     try {
-      const res = await authFetch('/api/sms/tiers');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/tiers' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       const data = await res.json();
       setTiers(data.data || []);
     } catch (err) {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { DEFAULT_SSS_DEPARTMENTS } from '@/lib/constants/departments';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Tier {
   id: string;
@@ -25,6 +26,7 @@ interface Department {
 }
 
 export default function DepartmentsPage() {
+  const { selectedBranch } = useBranch();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [selectedTierId, setSelectedTierId] = useState<string>('');
@@ -44,17 +46,22 @@ export default function DepartmentsPage() {
 
   useEffect(() => {
     loadTiers();
-  }, []);
+  }, [selectedBranch]);
 
   useEffect(() => {
     if (selectedTierId) {
       loadDepartments(selectedTierId);
     }
-  }, [selectedTierId]);
+  }, [selectedTierId, selectedBranch]);
 
   const loadTiers = async () => {
     try {
-      const res = await authFetch('/api/sms/tiers');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/tiers' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       const data = await res.json();
       const allTiers = data.data || [];
       setTiers(allTiers);
@@ -75,7 +82,13 @@ export default function DepartmentsPage() {
 
   const loadDepartments = async (tierId: string) => {
     try {
-      const res = await authFetch(`/api/sms/departments?tierId=${tierId}`);
+      const params = new URLSearchParams();
+      params.set('tierId', tierId);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/departments?' + params.toString();
+      const res = await authFetch(url);
       const data = await res.json();
       setDepartments(data.data || []);
     } catch (err) {

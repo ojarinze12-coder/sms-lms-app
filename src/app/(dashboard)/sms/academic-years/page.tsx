@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authFetch } from '@/lib/auth-fetch';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface AcademicYear {
   id: string;
@@ -15,6 +16,7 @@ interface AcademicYear {
 
 export default function AcademicYearsPage() {
   const router = useRouter();
+  const { selectedBranch, branches } = useBranch();
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -25,17 +27,23 @@ export default function AcademicYearsPage() {
     startDate: '',
     endDate: '',
     isActive: false,
+    branchId: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadYears();
-  }, []);
+  }, [selectedBranch]);
 
   const loadYears = async () => {
     try {
-      const res = await authFetch('/api/sms/academic-years');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/academic-years' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       const data = await res.json();
       const yearList = data.years || [];
       if (Array.isArray(yearList)) {
@@ -63,7 +71,10 @@ export default function AcademicYearsPage() {
       const res = await authFetch('/api/sms/academic-years', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          branchId: formData.branchId || null,
+        }),
       });
 
       if (!res.ok) {
@@ -73,7 +84,7 @@ export default function AcademicYearsPage() {
       }
 
       setShowModal(false);
-      setFormData({ name: '', startDate: '', endDate: '', isActive: false });
+      setFormData({ name: '', startDate: '', endDate: '', isActive: false, branchId: '' });
       loadYears();
     } catch {
       setError('An error occurred');
@@ -278,6 +289,25 @@ export default function AcademicYearsPage() {
                 <label htmlFor="isActive" className="text-sm text-gray-700 dark:text-gray-300">
                   Set as active academic year
                 </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Branch (Optional)
+                </label>
+                <select
+                  value={formData.branchId}
+                  onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
+                  className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">All Branches (Tenant-wide)</option>
+                  {selectedBranch && (
+                    <option value={selectedBranch.id}>{selectedBranch.name}</option>
+                  )}
+                  {!selectedBranch && branches.map((branch: any) => (
+                    <option key={branch.id} value={branch.id}>{branch.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex gap-4 pt-4">

@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const user = await getAuthUser();
     const { searchParams } = new URL(request.url);
     const tierId = searchParams.get('tierId');
+    const branchId = searchParams.get('branchId');
     
     if (!user?.tenantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -17,11 +18,20 @@ export async function GET(request: NextRequest) {
 
     const tenantId = user.tenantId;
 
+    const whereClause: any = {
+      tenantId,
+      ...(tierId && { tierId }),
+    };
+
+    if (branchId) {
+      whereClause.OR = [
+        { branchId },
+        { branchId: null },
+      ];
+    }
+
     const departments = await prisma.department.findMany({
-      where: {
-        tenantId,
-        ...(tierId && { tierId }),
-      },
+      where: whereClause,
       include: {
         tier: true,
       },
@@ -49,6 +59,7 @@ export async function POST(request: NextRequest) {
 
     const tenantId = user.tenantId;
     const body = await request.json();
+    const branchId = body.branchId || null;
 
     // Check if applying default departments
     if (body.applyDefaults && body.tierId) {
@@ -62,9 +73,15 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if departments already exist for this tier
+      // Check if departments already exist for this tier (considering branch)
       const existingDepts = await prisma.department.count({
-        where: { tierId: body.tierId },
+        where: { 
+          tierId: body.tierId,
+          OR: [
+            { branchId },
+            { branchId: null },
+          ],
+        },
       });
 
       if (existingDepts > 0) {
@@ -86,6 +103,7 @@ export async function POST(request: NextRequest) {
               code: dept.code,
               tierId: body.tierId,
               tenantId,
+              branchId,
             },
           });
 
@@ -99,6 +117,7 @@ export async function POST(request: NextRequest) {
                   code: `${dept.code}_${index + 1}`,
                   departmentId: department.id,
                   curriculum: body.curriculum || 'NERDC',
+                  tenantId,
                 },
               });
             })
@@ -131,10 +150,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
     }
 
-    // Check if code already exists for this tenant
-    const existingDept = await prisma.department.findUnique({
+    // Check if code already exists for this tenant (considering branch)
+    const existingDept = await prisma.department.findFirst({
       where: {
-        tenantId_code: { tenantId, code },
+        tenantId,
+        code,
+        OR: [
+          { branchId },
+          { branchId: null },
+        ],
       },
     });
 
@@ -152,6 +176,9 @@ export async function POST(request: NextRequest) {
         alias,
         tierId,
         tenantId,
+        branchId,
+      },
+    });
       },
       include: {
         tier: true,
