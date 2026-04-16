@@ -69,6 +69,7 @@ export async function PUT(
         cardStatus: body.cardStatus,
         position: body.position || null,
         departmentId: body.departmentId || null,
+        branchId: body.branchId || null,
       },
     });
 

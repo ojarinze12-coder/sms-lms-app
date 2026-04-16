@@ -15,6 +15,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Student {
   id: string;
@@ -27,12 +28,14 @@ interface Student {
   gender?: string;
   dateOfBirth?: string;
   status?: string;
+  branchId?: string | null;
 }
 
 export default function EditStudentPage() {
   const router = useRouter();
   const params = useParams();
   const studentId = params.id as string;
+  const { branches } = useBranch();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -47,6 +50,7 @@ export default function EditStudentPage() {
     gender: '',
     dateOfBirth: '',
     status: 'ACTIVE',
+    branchId: '',
   });
 
   useEffect(() => {
@@ -214,6 +218,24 @@ export default function EditStudentPage() {
                   value={student.dateOfBirth || ''}
                   onChange={(e) => setStudent({ ...student, dateOfBirth: e.target.value })}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">School Branch</label>
+                <Select
+                  value={student.branchId || ''}
+                  onValueChange={(v) => setStudent({ ...student, branchId: v || null })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((branch: any) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

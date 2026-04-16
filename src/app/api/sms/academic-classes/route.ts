@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (branchId) {
-      where.branchId = branchId;
+      where.OR = [
+        { branchId },
+        { branchId: null },
+      ];
     }
 
     const classes = await prisma.academicClass.findMany({

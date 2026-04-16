@@ -72,6 +72,7 @@ export async function PUT(
         dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : undefined,
         status: body.status,
         cardStatus: body.cardStatus,
+        branchId: body.branchId || null,
       },
     });
 
