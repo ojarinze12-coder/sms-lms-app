@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
+import { requireAuth } from '@/lib/rbac';
 import { generateStudentId } from '@/lib/generate-id';
 
 export async function GET(request: NextRequest) {
