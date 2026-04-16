@@ -100,6 +100,7 @@ export default function AcademicYearsPage() {
       startDate: year.startDate.split('T')[0],
       endDate: year.endDate.split('T')[0],
       isActive: year.isActive,
+      branchId: (year as any).branchId || '',
     });
     setShowEditModal(true);
   };
@@ -119,13 +120,14 @@ export default function AcademicYearsPage() {
           startDate: formData.startDate,
           endDate: formData.endDate,
           isActive: formData.isActive,
+          branchId: formData.branchId || null,
         }),
       });
 
       if (res.ok) {
         setShowEditModal(false);
         setEditingYear(null);
-        setFormData({ name: '', startDate: '', endDate: '', isActive: false });
+        setFormData({ name: '', startDate: '', endDate: '', isActive: false, branchId: '' });
         loadYears();
       } else {
         const data = await res.json();

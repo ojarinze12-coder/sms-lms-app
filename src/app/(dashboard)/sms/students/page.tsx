@@ -8,6 +8,7 @@ import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 
 interface Student {
   id: string;
+  studentId?: string;
   firstName: string;
   lastName: string;
   email: string;
