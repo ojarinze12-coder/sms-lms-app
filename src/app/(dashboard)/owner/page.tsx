@@ -50,7 +50,7 @@ export default function OwnerDashboardPage() {
   const [aiSettings, setAiSettings] = useState({
     aiEnabled: false,
     openRouterApiKey: '',
-    openRouterModel: 'qwen/qwen2.5-72b-instruct:free',
+    openRouterModel: 'openrouter/free',
   });
   const [aiSaving, setAiSaving] = useState(false);
   const [aiSaved, setAiSaved] = useState(false);
@@ -87,7 +87,7 @@ export default function OwnerDashboardPage() {
         setAiSettings({
           aiEnabled: data.settings?.aiEnabled || false,
           openRouterApiKey: data.settings?.openRouterApiKey || '',
-          openRouterModel: data.settings?.openRouterModel || 'qwen/qwen2.5-72b-instruct:free',
+          openRouterModel: data.settings?.openRouterModel || 'openrouter/free',
         });
       }
     } catch (err) {
@@ -237,12 +237,13 @@ export default function OwnerDashboardPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="qwen/qwen2.5-72b-instruct:free">Qwen 2.5 72B (Free)</SelectItem>
-                    <SelectItem value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</SelectItem>
-                    <SelectItem value="deepseek/deepseek-chat:free">DeepSeek Chat (Free)</SelectItem>
-                    <SelectItem value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B (Free)</SelectItem>
-                    <SelectItem value="google/gemma-3n-e4b-it:free">Gemma 3N (Free)</SelectItem>
-                    <SelectItem value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</SelectItem>
+                    <SelectItem value="openrouter/free">Auto-Select Best Free Model</SelectItem>
+                    <SelectItem value="deepseek/deepseek-r1:free">DeepSeek R1 (Reasoning)</SelectItem>
+                    <SelectItem value="deepseek/deepseek-chat:free">DeepSeek Chat</SelectItem>
+                    <SelectItem value="nvidia/nemotron-3-super-120b-a12b:free">NVIDIA Nemotron 3 Super</SelectItem>
+                    <SelectItem value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B</SelectItem>
+                    <SelectItem value="google/gemma-3-27b-it:free">Gemma 3 27B</SelectItem>
+                    <SelectItem value="minimax/minimax-m2.5:free">MiniMax M2.5</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

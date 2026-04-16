@@ -1,13 +1,22 @@
 async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: string): Promise<string> {
-  // Priority 1: Environment variable (Vercel)
+  // Priority 1: Environment variable (Vercel) - but validate it
   let apiKey = process.env.OPENROUTER_API_KEY;
-  
-  // Model priority: env var > tenant settings > default
   let model = process.env.OPENROUTER_MODEL;
   
+  // If env model is invalid, ignore it and use default
+  const invalidEnvModels = [
+    'qwen/qwen3-72b-instruct:free',
+    'qwen/qwen2.5-72b-instruct:free',
+    'qwen/qwen3-coder:free',
+  ];
+  if (model && invalidEnvModels.includes(model)) {
+    console.log('Ignoring invalid env model:', model);
+    model = ''; // Will use default below
+  }
+  
   console.log('=== AI DEBUG ===');
-  console.log('API Key from env:', apiKey ? 'present (' + apiKey.substring(0, 8) + '...)' : 'NOT SET');
-  console.log('Model from env:', model || 'not set');
+  console.log('API Key from env:', apiKey ? 'present' : 'NOT SET');
+  console.log('Model from env:', model || 'not set (will use default)');
 
   // Priority 2: Tenant settings (if no env key or model)
   if (!apiKey || !model) {
@@ -37,10 +46,62 @@ async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: 
     }
   }
 
-  // Default model if none specified
+// Default model if none specified - use openrouter/free which auto-selects best available free model
   if (!model) {
-    model = 'qwen/qwen2.5-72b-instruct:free';
-    console.log('Using default model:', model);
+    model = 'openrouter/free';
+    console.log('Using default model (auto-router):', model);
+  }
+
+  // Map old/invalid model IDs to valid OpenRouter model IDs
+  // Only include models that are confirmed to exist on OpenRouter
+  const modelMap: Record<string, string> = {
+    // Old Qwen names that don't work
+    'qwen/qwen3-72b-instruct:free': 'openrouter/free',
+    'qwen/qwen2.5-72b-instruct:free': 'openrouter/free',
+    'qwen/qwen3-coder:free': 'openrouter/free',
+    // DeepSeek models
+    'deepseek/deepseek-r1:free': 'deepseek/deepseek-r1:free',
+    'deepseek/deepseek-chat:free': 'deepseek/deepseek-chat:free',
+    // MiniMax
+    'minimax/minimax-m2.5:free': 'minimax/minimax-m2.5:free',
+    'minimax/minimax-m2:free': 'minimax/minimax-m2.5:free',
+    // Google
+    'google/gemma-3n-e4b-it:free': 'google/gemma-3n-e4b-it:free',
+    'google/gemma-3-27b-it:free': 'google/gemma-3-27b-it:free',
+    // Meta Llama
+    'meta-llama/llama-3.3-70b-instruct': 'meta-llama/llama-3.1-8b-instruct:free',
+    'meta-llama/llama-3.1-70b-instruct:free': 'meta-llama/llama-3.1-8b-instruct:free',
+    // Anthropic
+    'anthropic/claude-3.5-sonnet': 'anthropic/claude-3.5-haiku:free',
+    // NVIDIA models
+    'nvidia/nemotron-3-super-120b-a12b:free': 'nvidia/nemotron-3-super-120b-a12b:free',
+    // OpenAI
+    'openai/gpt-oss-120b:free': 'openai/gpt-oss-120b:free',
+  };
+  
+  // Apply mapping if model is in the map
+  if (modelMap[model]) {
+    model = modelMap[model];
+    console.log('Mapped model to:', model);
+  } else {
+    console.log('Using model:', model);
+  }
+  
+  // Final safety check - use openrouter/free as ultimate fallback
+  const knownWorkingModels = [
+    'openrouter/free',
+    'deepseek/deepseek-r1:free',
+    'minimax/minimax-m2.5:free',
+    'nvidia/nemotron-3-super-120b-a12b:free',
+    'meta-llama/llama-3.1-8b-instruct:free',
+    'google/gemma-3n-e4b-it:free',
+    'google/gemma-3-27b-it:free',
+    'openai/gpt-oss-120b:free',
+  ];
+  
+  if (!knownWorkingModels.includes(model)) {
+    console.log('Model not recognized, using openrouter/free as fallback');
+    model = 'openrouter/free';
   }
 
   // Map old/invalid model IDs to valid OpenRouter model IDs
