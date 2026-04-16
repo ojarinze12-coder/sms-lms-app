@@ -17,10 +17,12 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { NIGERIAN_STATES, NIGERIAN_LGAS } from '@/lib/nigeria';
 import { Loader2, Wand2 } from 'lucide-react';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 export default function NewTeacherPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const { selectedBranch, branches } = useBranch();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [formData, setFormData] = useState({
@@ -38,6 +40,7 @@ export default function NewTeacherPage() {
     stateOfOrigin: '',
     lgaOfOrigin: '',
     gender: 'MALE',
+    branchId: '',
   });
 
   const stateCode = useMemo(() => {
@@ -50,6 +53,13 @@ export default function NewTeacherPage() {
     return NIGERIAN_LGAS[stateCode] || [];
   }, [stateCode]);
 
+  // Auto-select current branch
+  useMemo(() => {
+    if (selectedBranch && !formData.branchId) {
+      setFormData(prev => ({ ...prev, branchId: selectedBranch.id }));
+    }
+  }, [selectedBranch]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -60,6 +70,7 @@ export default function NewTeacherPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          branchId: formData.branchId || null,
           experience: formData.experience ? parseInt(formData.experience) : null,
           salary: formData.salary ? parseFloat(formData.salary) : null,
           joinDate: formData.joinDate || null,
@@ -145,6 +156,24 @@ export default function NewTeacherPage() {
                     <SelectItem value="MALE">Male</SelectItem>
                     <SelectItem value="FEMALE">Female</SelectItem>
                     <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">School Branch *</label>
+                <Select 
+                  value={formData.branchId} 
+                  onValueChange={(v) => setFormData({ ...formData, branchId: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((branch: any) => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
