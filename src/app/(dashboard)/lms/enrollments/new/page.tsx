@@ -46,7 +46,7 @@ export default function NewEnrollmentPage() {
     authFetch(url)
       .then(res => res.json())
       .then(data => {
-        const yearsList = Array.isArray(data) ? data : (data.data || []);
+        const yearsList = Array.isArray(data) ? data : (data.years || []);
         setYears(yearsList);
         // Select active year or first year
         const activeYear = yearsList.find((y: any) => y.isActive);
@@ -57,7 +57,7 @@ export default function NewEnrollmentPage() {
         }
       })
       .catch(err => console.error('Error loading years:', err));
-  }, []);
+  }, [selectedBranch]);
 
   useEffect(() => {
     // Load students with branch filter
@@ -69,7 +69,8 @@ export default function NewEnrollmentPage() {
     authFetch(url)
       .then(res => res.json())
       .then(data => {
-        const studentsList = Array.isArray(data) ? data : (data.data || []);
+        const studentsList = data.students || [];
+        console.log('Students loaded:', studentsList.length);
         setStudents(studentsList);
       })
       .catch(err => console.error('Error loading students:', err));
