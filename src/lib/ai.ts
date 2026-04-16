@@ -6,7 +6,7 @@ async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: 
   let model = process.env.OPENROUTER_MODEL;
   
   console.log('=== AI DEBUG ===');
-  console.log('API Key from env:', apiKey ? apiKey.substring(0, 15) + '...' : 'MISSING');
+  console.log('API Key from env:', apiKey ? 'present (' + apiKey.substring(0, 8) + '...)' : 'NOT SET');
   console.log('Model from env:', model || 'not set');
 
   // Priority 2: Tenant settings (if no env key or model)
@@ -43,8 +43,10 @@ async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: 
     console.log('Using default model:', model);
   }
 
-  if (!apiKey) {
-    throw new Error('AI service not configured. Please configure OPENROUTER_API_KEY in Vercel environment or contact your administrator.');
+  // Check if API key is valid (not placeholder)
+  if (!apiKey || apiKey === 'YOUR_OPENROUTER_API_KEY_HERE' || apiKey.length < 20) {
+    console.log('ERROR: Invalid or missing API key');
+    throw new Error('AI service not configured. Please add a valid OPENROUTER_API_KEY in Vercel environment variables (not placeholder).');
   }
 
   try {

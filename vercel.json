@@ -11,8 +11,6 @@
     "NEXTAUTH_URL": "https://your-vercel-app.vercel.app",
     "NEXT_PUBLIC_SUPABASE_URL": "https://tfsijcllawvisvuravtn.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmc2lqY2xsYXd2aXN2dXJhdnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjQ3NTAsImV4cCI6MjA4NzQ0MDc1MH0.0SYvMCPm8l4EkkhwCSxbX1oTGDxMpwmemJ1vxNurg0I",
-    "NEXT_PUBLIC_APP_URL": "https://your-vercel-app.vercel.app",
-    "OPENROUTER_API_KEY": "YOUR_OPENROUTER_API_KEY_HERE",
-    "OPENROUTER_MODEL": "qwen/qwen3-72b-instruct:free"
+    "NEXT_PUBLIC_APP_URL": "https://your-vercel-app.vercel.app"
   }
 }
