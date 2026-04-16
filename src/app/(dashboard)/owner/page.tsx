@@ -3,8 +3,17 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { authFetch } from '@/lib/auth-fetch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Users, GraduationCap, UserCog, TrendingUp, Calendar } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Building2, Users, GraduationCap, UserCog, TrendingUp, Calendar, Bot, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface Tenant {
@@ -36,10 +45,20 @@ export default function OwnerDashboardPage() {
   const [groupStats, setGroupStats] = useState<GroupStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // AI Settings state
+  const [aiSettings, setAiSettings] = useState({
+    aiEnabled: false,
+    openRouterApiKey: '',
+    openRouterModel: 'qwen/qwen3-72b-instruct:free',
+  });
+  const [aiSaving, setAiSaving] = useState(false);
+  const [aiSaved, setAiSaved] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
       fetchGroupData();
+      fetchAiSettings();
     }
   }, [authLoading, user]);
 
@@ -53,10 +72,50 @@ export default function OwnerDashboardPage() {
       } else {
         setError('Failed to load group data');
       }
-    } catch (err) {
-      setError('Error loading data');
+} catch (err) {
+      console.error('Error loading data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAiSettings = async () => {
+    try {
+      const res = await authFetch('/api/owner/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setAiSettings({
+          aiEnabled: data.settings?.aiEnabled || false,
+          openRouterApiKey: data.settings?.openRouterApiKey || '',
+          openRouterModel: data.settings?.openRouterModel || 'qwen/qwen3-72b-instruct:free',
+        });
+      }
+    } catch (err) {
+      console.error('Error loading AI settings:', err);
+    }
+  };
+
+  const handleSaveAiSettings = async () => {
+    setAiSaving(true);
+    try {
+      const res = await authFetch('/api/owner/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          aiEnabled: aiSettings.aiEnabled,
+          openRouterApiKey: aiSettings.openRouterApiKey || null,
+          openRouterModel: aiSettings.openRouterModel,
+        }),
+      });
+
+      if (res.ok) {
+        setAiSaved(true);
+        setTimeout(() => setAiSaved(false), 3000);
+      }
+    } catch (err) {
+      console.error('Error saving AI settings:', err);
+    } finally {
+      setAiSaving(false);
     }
   };
 
@@ -90,7 +149,7 @@ export default function OwnerDashboardPage() {
         </div>
       </div>
 
-      {groupStats && (
+{groupStats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -113,7 +172,7 @@ export default function OwnerDashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <UserCog className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{groupStats.totalTeachers.toLocaleString()}</div>
@@ -122,7 +181,7 @@ export default function OwnerDashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
-              <UserCog className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{groupStats.totalStaff.toLocaleString()}</div>
@@ -130,6 +189,75 @@ export default function OwnerDashboardPage() {
           </Card>
         </div>
       )}
+
+      {/* AI Settings Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            <CardTitle>AI Configuration</CardTitle>
+          </div>
+          <CardDescription>Configure OpenRouter API settings for all schools in your group</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Enable AI Features</p>
+              <p className="text-sm text-gray-500">Allow schools to use AI for timetable, exams, and chat</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={aiSettings.aiEnabled}
+              onChange={(e) => setAiSettings({ ...aiSettings, aiEnabled: e.target.checked })}
+              className="h-5 w-5"
+            />
+          </div>
+
+          {aiSettings.aiEnabled && (
+            <div className="space-y-4 pt-4 border-t">
+              <div>
+                <label className="block text-sm font-medium mb-1">OpenRouter API Key</label>
+                <Input
+                  type="password"
+                  value={aiSettings.openRouterApiKey}
+                  onChange={(e) => setAiSettings({ ...aiSettings, openRouterApiKey: e.target.value })}
+                  placeholder="sk-or-v1-..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">openrouter.ai</a>
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">AI Model</label>
+                <Select
+                  value={aiSettings.openRouterModel}
+                  onValueChange={(value) => setAiSettings({ ...aiSettings, openRouterModel: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="qwen/qwen3-72b-instruct:free">Qwen 3 72B (Free)</SelectItem>
+                    <SelectItem value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</SelectItem>
+                    <SelectItem value="minimax/minimax-m2:free">MiniMax M2 (Free)</SelectItem>
+                    <SelectItem value="google/gemma-3n-e4b-it:free">Gemma 3N (Free)</SelectItem>
+                    <SelectItem value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</SelectItem>
+                    <SelectItem value="deepseek/deepseek-chat:free">DeepSeek Chat (Free)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-4">
+            {aiSaved && <span className="text-green-600 text-sm self-center">Saved!</span>}
+            <Button onClick={handleSaveAiSettings} disabled={aiSaving}>
+              {aiSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Save AI Settings
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

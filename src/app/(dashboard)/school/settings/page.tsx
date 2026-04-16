@@ -198,10 +198,7 @@ export default function SettingsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...settings,
           aiEnabled: aiSettings.aiEnabled,
-          openRouterApiKey: aiSettings.openRouterApiKey || null,
-          openRouterModel: aiSettings.openRouterModel,
         }),
       });
 
@@ -749,23 +746,12 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {aiSettings.aiEnabled && (
-                <div className="space-y-4 pt-4 border-t">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">OpenRouter API Key</label>
-                    <Input
-                      type="password"
-                      value={aiSettings.openRouterApiKey}
-                      onChange={(e) => setAiSettings({ ...aiSettings, openRouterApiKey: e.target.value })}
-                      placeholder="sk-or-..."
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">openrouter.ai</a></p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Model</label>
-                    <Select
-                      value={aiSettings.openRouterModel}
-                      onValueChange={(value) => setAiSettings({ ...aiSettings, openRouterModel: value })}
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mt-4">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Note:</strong> AI API key and model configuration is managed at the owner/tenant level. Contact your administrator to change these settings.
+                </p>
+              </div>
+            </CardContent>
                     >
                       <SelectTrigger>
                         <SelectValue />

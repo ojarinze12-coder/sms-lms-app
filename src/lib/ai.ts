@@ -1,30 +1,50 @@
 async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: string): Promise<string> {
+  // Priority 1: Environment variable (Vercel)
   let apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || 'qwen/qwen3-coder:free';
+  
+  // Model priority: env var > tenant settings > default
+  let model = process.env.OPENROUTER_MODEL;
   
   console.log('=== AI DEBUG ===');
   console.log('API Key from env:', apiKey ? apiKey.substring(0, 15) + '...' : 'MISSING');
-  console.log('Model:', model);
+  console.log('Model from env:', model || 'not set');
 
-  // If no env key, try to get from tenant settings
-  if (!apiKey && tenantId) {
+  // Priority 2: Tenant settings (if no env key or model)
+  if (!apiKey || !model) {
     try {
       const { prisma } = await import('@/lib/prisma');
       const settings = await prisma.tenantSettings.findUnique({
         where: { tenantId },
-        select: { openRouterApiKey: true }
+        select: { 
+          openRouterApiKey: true, 
+          openRouterModel: true,
+          aiEnabled: true 
+        }
       });
-      if (settings?.openRouterApiKey) {
-        apiKey = settings.openRouterApiKey;
-        console.log('API Key from tenant settings: found');
+      
+      if (settings) {
+        if (!apiKey && settings.openRouterApiKey) {
+          apiKey = settings.openRouterApiKey;
+          console.log('API Key from tenant settings: found');
+        }
+        if (!model && settings.openRouterModel) {
+          model = settings.openRouterModel;
+          console.log('Model from tenant settings:', model);
+        }
       }
     } catch (err) {
       console.log('Could not fetch tenant settings:', err);
     }
   }
 
+  // Default model if none specified
+  if (!model) {
+    model = 'qwen/qwen3-72b-instruct:free';
+    console.log('Using default model:', model);
+  }
+
   if (!apiKey) {
-    throw new Error('AI service not configured. Please add OPENROUTER_API_KEY to environment variables or configure in school settings.');
+    throw new Error('AI service not configured. Please configure OPENROUTER_API_KEY in Vercel environment or contact your administrator.');
   }
 
   try {
