@@ -231,7 +231,7 @@ export default function StaffPage() {
           <p className="text-gray-500 dark:text-gray-400">{filteredStaff.length} staff member{filteredStaff.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
-          {branches.length > 0 && (
+          {branchList.length > 0 && (
             <select
               value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
