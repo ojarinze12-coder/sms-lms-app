@@ -178,8 +178,6 @@ export async function POST(request: NextRequest) {
         tenantId,
         branchId,
       },
-    });
-      },
       include: {
         tier: true,
       },
