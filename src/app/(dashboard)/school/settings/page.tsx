@@ -752,22 +752,6 @@ export default function SettingsPage() {
                 </p>
               </div>
             </CardContent>
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</SelectItem>
-                        <SelectItem value="deepseek/deepseek-chat:free">DeepSeek Chat (Free)</SelectItem>
-                        <SelectItem value="google/gemma-3n-e4b-it:free">Gemma 3N (Free)</SelectItem>
-                        <SelectItem value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</SelectItem>
-                        <SelectItem value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </CardContent>
           </Card>
 
           <div className="flex justify-end gap-3 mt-6">
