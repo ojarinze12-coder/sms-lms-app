@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Teacher {
   id: string;
@@ -14,6 +15,7 @@ interface Teacher {
 
 export default function NewCoursePage() {
   const router = useRouter();
+  const { selectedBranch } = useBranch();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -26,11 +28,16 @@ export default function NewCoursePage() {
   });
 
   useEffect(() => {
-    authFetch('/api/sms/teachers')
+    const params = new URLSearchParams();
+    if (selectedBranch) {
+      params.set('branchId', selectedBranch.id);
+    }
+    const url = '/api/sms/teachers' + (params.toString() ? '?' + params.toString() : '');
+    authFetch(url)
       .then(res => res.json())
       .then(data => setTeachers(data))
       .catch(console.error);
-  }, []);
+  }, [selectedBranch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

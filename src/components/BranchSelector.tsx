@@ -30,7 +30,7 @@ export function BranchSelector() {
         className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
       >
         <Building2 className="w-4 h-4" />
-        <span>{selectedBranch?.name || 'Select Branch'}</span>
+        <span>{selectedBranch ? selectedBranch.name : 'All Branches'}</span>
         <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 

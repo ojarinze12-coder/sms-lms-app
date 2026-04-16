@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Student {
   id: string;
@@ -23,6 +24,7 @@ interface ClassItem {
 
 export default function NewEnrollmentPage() {
   const router = useRouter();
+  const { selectedBranch, isBranchMode } = useBranch();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [students, setStudents] = useState<Student[]>([]);
@@ -53,20 +55,30 @@ export default function NewEnrollmentPage() {
   }, []);
 
   useEffect(() => {
-    // Load students
-    authFetch('/api/sms/students')
+    // Load students with branch filter
+    const params = new URLSearchParams();
+    if (selectedBranch) {
+      params.set('branchId', selectedBranch.id);
+    }
+    const url = '/api/sms/students' + (params.toString() ? '?' + params.toString() : '');
+    authFetch(url)
       .then(res => res.json())
       .then(data => {
         const studentsList = Array.isArray(data) ? data : (data.data || []);
         setStudents(studentsList);
       })
       .catch(err => console.error('Error loading students:', err));
-  }, []);
+  }, [selectedBranch]);
 
   useEffect(() => {
     // Load classes when academic year is selected
     if (selectedYear) {
-      authFetch(`/api/sms/academic-classes?academicYearId=${selectedYear}`)
+      const params = new URLSearchParams();
+      params.set('academicYearId', selectedYear);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      authFetch(`/api/sms/academic-classes?${params.toString()}`)
         .then(res => res.json())
         .then(data => {
           console.log('Classes data:', data);
@@ -75,7 +87,7 @@ export default function NewEnrollmentPage() {
         })
         .catch(err => console.error('Error loading classes:', err));
     }
-  }, [selectedYear]);
+  }, [selectedYear, selectedBranch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

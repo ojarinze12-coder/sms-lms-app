@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { useBranch } from '@/lib/hooks/use-branch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Users, 
@@ -63,6 +64,7 @@ interface AnalyticsData {
 
 export default function AnalyticsPage() {
   const { user, role, loading: authLoading } = useAuth();
+  const { selectedBranch, isBranchMode } = useBranch();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [error, setError] = useState('');
@@ -71,7 +73,7 @@ export default function AnalyticsPage() {
     if (!authLoading && user) {
       loadAnalytics();
     }
-  }, [authLoading, user]);
+  }, [authLoading, user, selectedBranch]);
 
   async function loadAnalytics() {
     try {
@@ -81,7 +83,16 @@ export default function AnalyticsPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch('/api/sms/analytics', {
+      let url = '/api/sms/analytics';
+      const params = new URLSearchParams();
+      if (isBranchMode && selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      if (params.toString()) {
+        url += '?' + params.toString();
+      }
+
+      const res = await fetch(url, {
         credentials: 'include',
         headers: Object.keys(headers).length > 0 ? headers : undefined,
       });

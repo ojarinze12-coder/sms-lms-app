@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/lib/hooks/use-auth';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -76,7 +78,7 @@ export default function AIChatWidget({ userRole }: { userRole: string }) {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/ai/chat', {
+      const res = await authFetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

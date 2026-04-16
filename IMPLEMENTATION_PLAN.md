@@ -363,3 +363,105 @@ April 13, 2026 (Session 2 Updates)
 - ✅ PCC > Users - displays users
 - ✅ PCC > Tenants > View > Manage Data - loads data
 - ✅ SCC > Students > Academic History - loads with year filter
+
+---
+
+## Database Security - RLS Implementation Plan
+
+### Objective
+Enable Row Level Security (RLS) on all Supabase database tables to add defense-in-depth security layer without disrupting existing Prisma access.
+
+---
+
+### Current Architecture Analysis
+
+| Component | Auth Method | DB Access |
+|-----------|-------------|-----------|
+| API Routes | Custom JWT (contains tenantId) | Prisma (bypasses RLS) |
+| Frontend | Custom JWT | Via API routes |
+| Background Jobs | Service role | Prisma (bypasses RLS) |
+| Supabase Client | Session | RLS applies (if enabled) |
+
+**Key Insight:** Prisma connections bypass RLS because they use direct PostgreSQL access. RLS will only affect:
+- Direct Supabase client connections from frontend
+- Any direct SQL access outside Prisma
+
+---
+
+### Implementation Strategy: Session Variable with Prisma Middleware
+
+**How it works:**
+1. API route extracts tenantId from JWT
+2. Prisma middleware runs `SET LOCAL` before queries
+3. RLS policies check this session variable via `current_setting()`
+
+---
+
+### SQL Migration Structure
+
+**File:** `prisma/migrate-rls.sql`
+
+**Contents:**
+1. Helper function to set tenant context
+2. Enable RLS on all ~99 tables
+3. Create tenant isolation policies for each table
+4. Handle special cases (users table uses user_id, Super Admin bypass, etc.)
+
+---
+
+### Tables Coverage (99 total)
+
+**Tenant/School Level (~10 tables):** tenants, branches, tenant_settings, tenant_config, tenant_modules, tenant_resources, tenant_health, onboarding_tasks, subscription_plans, plan_features
+
+**Users (~8 tables):** users, students, teachers, staff, parents, parent_students, sibling_discounts
+
+**Academic (~25 tables):** academic_years, terms, tiers, departments, tier_curriculum, academic_classes, subjects, courses, lessons, lesson_progress, assignments, assignment_submissions, classes, enrollments, exams, questions, options, results, student_answers, grading_scales, report_cards, applications, timetables, timetable_slots, academic_records
+
+**Finance (~10 tables):** invoices, subscriptions, subscription_invoices, subscription_payments, fee_structures, fee_payments, payroll, audit_logs
+
+**Communication (~8 tables):** announcements, message_campaigns, pta_notices, conversations, conversation_participants, messages, broadcasts, support_tickets, ticket_messages
+
+**Library (~2 tables):** library_books, library_circulations
+
+**Hostel (~4 tables):** hostels, hostel_rooms, hostel_beds, hostel_allocations
+
+**Transport (~4 tables):** transport_routes, transport_stops, transport_vehicles, transport_subscriptions
+
+**Other (~28 tables):** staff_leaves, nigerian_locations, badges, student_badges, certificates, student_certificates, certificate_templates, certificate_issuances, student_medical_records, student_vaccinations, student_chronic_conditions, behavior_incidents, behavior_logs, transcripts, discussion_forums, discussion_posts, virtual_classes, report_templates, report_generations, documents, document_categories, platform_settings, platform_audit_logs, global_policies, system_statuses, feature_usage, resource_logs, background_jobs
+
+---
+
+### Disruption Risk: LOW
+
+The RLS will:
+1. Only affect direct Supabase client access (minimal in your app)
+2. Prisma middleware will handle the session context
+3. Existing API-level auth remains primary
+4. RLS adds defense-in-depth layer
+5. No changes needed to existing Prisma queries
+
+---
+
+### Implementation Components
+
+1. **`prisma/migrate-rls.sql`** - Main migration file
+2. **`src/lib/prisma-middleware.ts`** - Prisma middleware for tenant context
+3. **Prisma Schema Update** - Already has proper mappings
+
+---
+
+### Security Considerations
+
+**AI API Key Storage:** Stored in plain text - RLS restricts to tenant admin only
+
+**Super Admin Bypass:** Service role can be excluded from RLS for platform-level queries
+
+---
+
+### Status
+📋 Plan documented - Ready for implementation
+
+---
+
+## Date Updated
+April 15, 2026
