@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Term {
   id: string;
@@ -23,6 +24,7 @@ interface AcademicYear {
 export default function AcademicYearTermsPage() {
   const params = useParams();
   const router = useRouter();
+  const { selectedBranch } = useBranch();
   const [year, setYear] = useState<AcademicYear | null>(null);
   const [terms, setTerms] = useState<Term[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,13 +41,23 @@ export default function AcademicYearTermsPage() {
     if (params.id) {
       loadData();
     }
-  }, [params.id]);
+  }, [params.id, selectedBranch]);
 
   const loadData = async () => {
     try {
+      const yearParams = new URLSearchParams();
+      if (selectedBranch) {
+        yearParams.set('branchId', selectedBranch.id);
+      }
+      const termsParams = new URLSearchParams();
+      termsParams.set('academicYearId', params.id as string);
+      if (selectedBranch) {
+        termsParams.set('branchId', selectedBranch.id);
+      }
+      
       const [yearRes, termsRes] = await Promise.all([
-        fetch('/api/sms/academic-years'),
-        fetch(`/api/sms/terms?academicYearId=${params.id}`),
+        fetch('/api/sms/academic-years' + (yearParams.toString() ? '?' + yearParams.toString() : '')),
+        fetch('/api/sms/terms?' + termsParams.toString()),
       ]);
       
       const yearsData = await yearRes.json();

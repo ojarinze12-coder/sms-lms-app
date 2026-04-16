@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const academicYearId = searchParams.get('academicYearId');
+    const branchId = searchParams.get('branchId');
 
     const where: any = {};
 
@@ -18,7 +19,17 @@ export async function GET(request: NextRequest) {
       where.academicYearId = academicYearId;
     } else {
       where.academicYear = {
-        tenantId: user.tenantId
+        tenantId: user.tenantId,
+      };
+    }
+
+    if (branchId) {
+      where.academicYear = {
+        ...where.academicYear,
+        OR: [
+          { branchId },
+          { branchId: null },
+        ],
       };
     }
 

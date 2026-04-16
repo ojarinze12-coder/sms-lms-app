@@ -164,7 +164,12 @@ export default function ClassesPage() {
 
   const loadYears = async () => {
     try {
-      const res = await authFetch('/api/sms/academic-years');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/academic-years' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       if (!res.ok) {
         console.error('Failed to load years:', res.status);
         return;
@@ -185,7 +190,12 @@ export default function ClassesPage() {
 
   const loadTiers = async () => {
     try {
-      const res = await authFetch('/api/sms/tiers');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/tiers' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       if (res.ok) {
         const data = await res.json();
         setTiers(data.data || []);
@@ -197,7 +207,12 @@ export default function ClassesPage() {
 
   const loadDepartments = async () => {
     try {
-      const res = await authFetch('/api/sms/departments');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/departments' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       if (res.ok) {
         const data = await res.json();
         setDepartments(data.data || []);
