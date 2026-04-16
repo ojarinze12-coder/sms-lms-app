@@ -237,12 +237,12 @@ export default function OwnerDashboardPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="qwen/qwen3-72b-instruct:free">Qwen 3 72B (Free)</SelectItem>
+                    <SelectItem value="qwen/qwen2.5-72b-instruct:free">Qwen 2.5 72B (Free)</SelectItem>
                     <SelectItem value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</SelectItem>
-                    <SelectItem value="minimax/minimax-m2:free">MiniMax M2 (Free)</SelectItem>
-                    <SelectItem value="google/gemma-3n-e4b-it:free">Gemma 3N (Free)</SelectItem>
-                    <SelectItem value="qwen/qwen3-coder:free">Qwen 3 Coder (Free)</SelectItem>
                     <SelectItem value="deepseek/deepseek-chat:free">DeepSeek Chat (Free)</SelectItem>
+                    <SelectItem value="meta-llama/llama-3.1-8b-instruct:free">Llama 3.1 8B (Free)</SelectItem>
+                    <SelectItem value="google/gemma-3n-e4b-it:free">Gemma 3N (Free)</SelectItem>
+                    <SelectItem value="mistralai/mistral-7b-instruct:free">Mistral 7B (Free)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

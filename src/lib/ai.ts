@@ -39,8 +39,23 @@ async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: 
 
   // Default model if none specified
   if (!model) {
-    model = 'qwen/qwen3-72b-instruct:free';
+    model = 'qwen/qwen2.5-72b-instruct:free';
     console.log('Using default model:', model);
+  }
+
+  // Map short names to full model IDs
+  const modelMap: Record<string, string> = {
+    'qwen/qwen3-72b-instruct:free': 'qwen/qwen2.5-72b-instruct:free',
+    'qwen/qwen3-coder:free': 'qwen/qwen2.5-coder-32b-instruct:free',
+    'deepseek/deepseek-r1:free': 'deepseek/deepseek-r1:free',
+    'deepseek/deepseek-chat:free': 'deepseek/deepseek-chat:free',
+    'minimax/minimax-m2:free': 'minimax/minimax-text-01:free',
+    'google/gemma-3n-e4b-it:free': 'google/gemma-3n-e4b-it:free',
+  };
+  
+  if (modelMap[model]) {
+    model = modelMap[model];
+    console.log('Mapped to valid model:', model);
   }
 
   // Check if API key is valid (not placeholder)
