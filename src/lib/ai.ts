@@ -85,13 +85,39 @@ async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: 
     
     if (!response.ok) {
       console.error('Error response:', responseText.substring(0, 1000));
+      
       let errorMessage = `API Error (${response.status})`;
+      let errorCode = response.status.toString();
+      
       try {
         const errorData = JSON.parse(responseText);
         errorMessage = errorData.error?.message || errorData.detail || errorMessage;
+        errorCode = errorData.error?.code || errorCode;
       } catch {
         errorMessage = responseText.substring(0, 200) || errorMessage;
       }
+
+      // Provide user-friendly error messages for common issues
+      if (response.status === 401 || errorMessage.includes('not found') || errorMessage.includes('Missing Authentication')) {
+        throw new Error('AI service not configured. Please contact your administrator to set up the OpenRouter API key.');
+      }
+      
+      if (response.status === 403 || errorMessage.includes(' Forbidden')) {
+        throw new Error('AI service access denied. Your API key may not have permission for this model.');
+      }
+      
+      if (response.status === 429 || errorMessage.includes('rate_limit') || errorMessage.includes('Rate limit')) {
+        throw new Error('AI service is busy. Please try again in a few moments.');
+      }
+      
+      if (response.status === 402 || errorMessage.includes('credits') || errorMessage.includes('insufficient')) {
+        throw new Error('AI service credits exhausted. Please contact your administrator to add credits to your OpenRouter account.');
+      }
+      
+      if (response.status === 503 || errorMessage.includes('unavailable') || errorMessage.includes('overloaded')) {
+        throw new Error('AI service is temporarily unavailable. Please try again later.');
+      }
+      
       throw new Error(errorMessage);
     }
 
