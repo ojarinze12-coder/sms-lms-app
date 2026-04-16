@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { useBranch } from '@/lib/hooks/use-branch';
 import { UserPlus, Download, FileSpreadsheet, FileText, Filter } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
@@ -22,16 +23,10 @@ import StaffForm from '@/components/staff/StaffForm';
 import StaffStats from '@/components/staff/StaffStats';
 import StaffTable from '@/components/staff/StaffTable';
 
-interface Branch {
-  id: string;
-  name: string;
-  code: string;
-}
-
 export default function StaffPage() {
   const { user, loading: authLoading } = useAuth();
+  const { branches: branchList } = useBranch();
   const [staff, setStaff] = useState<Staff[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
@@ -44,7 +39,6 @@ export default function StaffPage() {
   useEffect(() => {
     if (!authLoading) {
       fetchStaff();
-      fetchBranches();
     }
   }, [authLoading]);
 
@@ -59,18 +53,6 @@ export default function StaffPage() {
       console.error('Failed to fetch staff:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchBranches = async () => {
-    try {
-      const res = await authFetch('/api/sms/branches');
-      if (res.ok) {
-        const data = await res.json();
-        setBranches(data.branches || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch branches:', error);
     }
   };
 
@@ -256,7 +238,7 @@ export default function StaffPage() {
               className="px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             >
               <option value="">All Branches</option>
-              {branches.map(branch => (
+              {branchList.map(branch => (
                 <option key={branch.id} value={branch.id}>{branch.name}</option>
               ))}
             </select>
@@ -303,7 +285,7 @@ export default function StaffPage() {
                 onCancel={handleCancel}
                 isEditing={!!editingStaff}
                 submitting={submitting}
-                branches={branches}
+                branches={branchList}
               />
             </DialogContent>
           </Dialog>
