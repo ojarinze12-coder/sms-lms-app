@@ -73,8 +73,8 @@ export default function DashboardPage() {
       let url = '/api/sms/analytics';
       const params = new URLSearchParams();
       
-      // Add branch filter if in branch mode and a branch is selected
-      if (isBranchMode && selectedBranch) {
+      // Add branch filter if a branch is selected
+      if (selectedBranch) {
         params.set('branchId', selectedBranch.id);
       }
       

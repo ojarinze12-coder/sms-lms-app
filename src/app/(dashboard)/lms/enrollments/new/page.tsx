@@ -37,8 +37,13 @@ export default function NewEnrollmentPage() {
   });
 
   useEffect(() => {
-    // Load academic years first
-    authFetch('/api/sms/academic-years')
+    // Load academic years with branch filter
+    const params = new URLSearchParams();
+    if (selectedBranch) {
+      params.set('branchId', selectedBranch.id);
+    }
+    const url = '/api/sms/academic-years' + (params.toString() ? '?' + params.toString() : '');
+    authFetch(url)
       .then(res => res.json())
       .then(data => {
         const yearsList = Array.isArray(data) ? data : (data.data || []);

@@ -6,6 +6,7 @@ import { getSubjectsByCurriculum } from '@/lib/nigeria';
 import { Loader2, Plus, Pencil, Trash2, BookOpen, ChevronDown } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { CURRICULUM_INFO } from '@/types';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface AcademicYear {
   id: string;
@@ -65,6 +66,7 @@ const STREAM_OPTIONS = {
 };
 
 export default function ClassesPage() {
+  const { selectedBranch } = useBranch();
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -141,7 +143,7 @@ export default function ClassesPage() {
     if (selectedYearId) {
       loadClasses(selectedYearId);
     }
-  }, [selectedYearId]);
+  }, [selectedYearId, selectedBranch]);
 
   // Tier detection for Create Modal
   useEffect(() => {
@@ -221,7 +223,13 @@ export default function ClassesPage() {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const params = new URLSearchParams();
+      params.set('academicYearId', yearId);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = `/api/sms/academic-classes?${params.toString()}`;
+      const res = await authFetch(url);
       if (!res.ok) {
         console.error('Failed to load classes:', res.status);
         return;

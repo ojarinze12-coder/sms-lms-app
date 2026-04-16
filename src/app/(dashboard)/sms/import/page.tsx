@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 type ImportType = 'students' | 'teachers' | 'staff' | 'parents' | 'legacy';
 
@@ -27,6 +28,7 @@ interface ImportResult {
 }
 
 export default function ImportPage() {
+  const { selectedBranch } = useBranch();
   const [importType, setImportType] = useState<ImportType>('students');
   const [file, setFile] = useState<File | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
@@ -49,7 +51,7 @@ export default function ImportPage() {
     if (selectedYearId) {
       loadClasses(selectedYearId);
     }
-  }, [selectedYearId]);
+  }, [selectedYearId, selectedBranch]);
 
   const loadAcademicYears = async () => {
     try {
@@ -67,7 +69,13 @@ export default function ImportPage() {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const params = new URLSearchParams();
+      params.set('academicYearId', yearId);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = `/api/sms/academic-classes?${params.toString()}`;
+      const res = await authFetch(url);
       if (res.ok) {
         const data = await res.json();
         setClasses(data.data || []);

@@ -67,9 +67,10 @@ export default function StudentsPage() {
 
   async function loadClasses() {
     try {
-      const url = selectedTier 
-        ? `/api/sms/academic-classes?tierId=${selectedTier}`
-        : '/api/sms/academic-classes';
+      const params = new URLSearchParams();
+      if (selectedTier) params.set('tierId', selectedTier);
+      if (selectedBranch) params.set('branchId', selectedBranch);
+      const url = `/api/sms/academic-classes${params.toString() ? '?' + params.toString() : ''}`;
       const res = await authFetch(url);
       const data = await res.json();
       const classList = data?.classes || data?.data || data || [];

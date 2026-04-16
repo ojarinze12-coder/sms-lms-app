@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
 
       let url = '/api/sms/analytics';
       const params = new URLSearchParams();
-      if (isBranchMode && selectedBranch) {
+      if (selectedBranch) {
         params.set('branchId', selectedBranch.id);
       }
       if (params.toString()) {

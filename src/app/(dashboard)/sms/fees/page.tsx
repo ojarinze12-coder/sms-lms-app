@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { authFetch } from '@/lib/auth-fetch';
+import { useBranch } from '@/lib/hooks/use-branch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,6 +74,7 @@ interface AcademicYear {
 export default function FeesPage() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { selectedBranch } = useBranch();
   const [feeStructures, setFeeStructures] = useState<FeeStructure[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
@@ -91,11 +93,14 @@ export default function FeesPage() {
     fetchFeeStructures();
     fetchPayments();
     fetchAcademicYears();
-  }, []);
+  }, [selectedBranch]);
 
   async function fetchFeeStructures() {
     try {
-      const res = await authFetch('/api/sms/fees');
+      const params = new URLSearchParams();
+      if (selectedBranch) params.set('branchId', selectedBranch.id);
+      const url = '/api/sms/fees' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       const data = await res.json();
       setFeeStructures(data.feeStructures || []);
     } catch (err) {

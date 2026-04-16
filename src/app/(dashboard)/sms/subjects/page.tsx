@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getSubjectsByCurriculum } from '@/lib/nigeria';
 import { authFetch } from '@/lib/auth-fetch';
 import { CURRICULUM_INFO } from '@/types';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface AcademicYear {
   id: string;
@@ -39,6 +40,7 @@ interface Subject {
 }
 
 export default function SubjectsPage() {
+  const { selectedBranch } = useBranch();
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -69,7 +71,7 @@ export default function SubjectsPage() {
     if (selectedYearId) {
       loadClasses(selectedYearId);
     }
-  }, [selectedYearId]);
+  }, [selectedYearId, selectedBranch]);
 
   useEffect(() => {
     if (selectedClassId) {
@@ -118,7 +120,13 @@ export default function SubjectsPage() {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const params = new URLSearchParams();
+      params.set('academicYearId', yearId);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = `/api/sms/academic-classes?${params.toString()}`;
+      const res = await authFetch(url);
       if (!res.ok) {
         console.error('Failed to load classes:', res.status);
         return;

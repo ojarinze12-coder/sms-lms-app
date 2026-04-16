@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Sparkles, Clock, Loader2, Save, CheckCircle } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Subject {
   id: string;
@@ -18,6 +19,7 @@ interface AcademicClass {
 }
 
 export default function SchoolAITimetablePage() {
+  const { selectedBranch } = useBranch();
   const [years, setYears] = useState<any[]>([]);
   const [selectedYearId, setSelectedYearId] = useState<string>('');
   const [classes, setClasses] = useState<AcademicClass[]>([]);
@@ -49,7 +51,7 @@ export default function SchoolAITimetablePage() {
     if (selectedYearId) {
       loadClasses(selectedYearId);
     }
-  }, [selectedYearId]);
+  }, [selectedYearId, selectedBranch]);
 
   useEffect(() => {
     if (selectedClassId) {
@@ -102,7 +104,13 @@ const loadYears = async () => {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const params = new URLSearchParams();
+      params.set('academicYearId', yearId);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = `/api/sms/academic-classes?${params.toString()}`;
+      const res = await authFetch(url);
       if (!res.ok) {
         console.error('Failed to load classes:', res.status);
         return;

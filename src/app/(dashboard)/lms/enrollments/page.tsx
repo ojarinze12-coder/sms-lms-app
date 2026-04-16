@@ -33,6 +33,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Enrollment {
   id: string;
@@ -71,6 +72,7 @@ interface AcademicClass {
 export default function EnrollmentsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { selectedBranch, isBranchMode } = useBranch();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<AcademicClass[]>([]);
@@ -85,11 +87,16 @@ export default function EnrollmentsPage() {
     authFetchEnrollments();
     authFetchStudents();
     authFetchClasses();
-  }, []);
+  }, [selectedBranch]);
 
   async function authFetchEnrollments() {
     try {
-      const res = await authFetch('/api/lms/enrollments');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/lms/enrollments' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       if (res.ok) {
         const data = await res.json();
         setEnrollments(data.enrollments || []);
@@ -103,7 +110,12 @@ export default function EnrollmentsPage() {
 
   async function authFetchStudents() {
     try {
-      const res = await authFetch('/api/sms/students');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/students' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       if (res.ok) {
         const data = await res.json();
         setStudents(data || []);
@@ -115,7 +127,12 @@ export default function EnrollmentsPage() {
 
   async function authFetchClasses() {
     try {
-      const res = await authFetch('/api/sms/academic-classes');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/academic-classes' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       if (res.ok) {
         const data = await res.json();
         setClasses(data.classes || []);

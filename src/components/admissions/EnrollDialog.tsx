@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, UserPlus } from 'lucide-react';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Application {
   id: string;
@@ -35,6 +36,7 @@ interface EnrollDialogProps {
 }
 
 export function EnrollDialog({ open, onOpenChange, application, onEnroll }: EnrollDialogProps) {
+  const { selectedBranch } = useBranch();
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
@@ -49,7 +51,12 @@ export function EnrollDialog({ open, onOpenChange, application, onEnroll }: Enro
   const fetchClasses = async () => {
     setLoadingClasses(true);
     try {
-      const res = await fetch('/api/sms/academic-classes');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/academic-classes' + (params.toString() ? '?' + params.toString() : '');
+      const res = await fetch(url);
       const response = await res.json();
       const data = response.data || response || [];
       setClasses(Array.isArray(data) ? data : []);

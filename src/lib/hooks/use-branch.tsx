@@ -36,8 +36,8 @@ export function BranchProvider({ children }: { children: ReactNode }) {
           const branchList = data.branches || [];
           setBranches(branchList);
           
-          // Check if multiple branches exist
-          if (branchList.length > 1) {
+          // Check if any branches exist - branch mode is true when branches exist
+          if (branchList.length >= 1) {
             setIsBranchMode(true);
             
             // Try to restore previously selected branch from localStorage
@@ -46,19 +46,26 @@ export function BranchProvider({ children }: { children: ReactNode }) {
               const savedBranch = branchList.find((b: Branch) => b.id === savedBranchId);
               if (savedBranch) {
                 setSelectedBranch(savedBranch);
+              } else {
+                // Saved branch not found - default to main branch
+                const mainBranch = branchList.find((b: Branch) => b.isMain);
+                if (mainBranch) {
+                  setSelectedBranch(mainBranch);
+                  localStorage.setItem('selectedBranchId', mainBranch.id);
+                }
               }
             } else {
-              // Default to main branch if exists
+              // No saved branch - default to main branch if exists
               const mainBranch = branchList.find((b: Branch) => b.isMain);
               if (mainBranch) {
                 setSelectedBranch(mainBranch);
                 localStorage.setItem('selectedBranchId', mainBranch.id);
+              } else if (branchList.length === 1) {
+                // Single branch with no main flag - auto-select it
+                setSelectedBranch(branchList[0]);
+                localStorage.setItem('selectedBranchId', branchList[0].id);
               }
             }
-          } else if (branchList.length === 1) {
-            // Single branch - auto-select it
-            setSelectedBranch(branchList[0]);
-            localStorage.setItem('selectedBranchId', branchList[0].id);
           }
         }
       } catch (error) {

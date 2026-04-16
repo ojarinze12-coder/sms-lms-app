@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { authFetch } from '@/lib/auth-fetch';
+import { useBranch } from '@/lib/hooks/use-branch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,6 +73,7 @@ interface AttendanceRecord {
 export default function AttendancePage() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { selectedBranch } = useBranch();
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('');
@@ -82,7 +84,7 @@ export default function AttendancePage() {
 
   useEffect(() => {
     fetchClasses();
-  }, []);
+  }, [selectedBranch]);
 
   useEffect(() => {
     if (selectedClass) {
@@ -92,7 +94,12 @@ export default function AttendancePage() {
 
   async function fetchClasses() {
     try {
-      const res = await authFetch('/api/sms/academic-classes');
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/academic-classes' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       const data = await res.json();
       setClasses(data.data || data || []);
     } catch (err) {

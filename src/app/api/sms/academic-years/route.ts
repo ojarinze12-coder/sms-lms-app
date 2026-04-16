@@ -12,11 +12,33 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const tenantId = searchParams.get('tenantId') || user.tenantId;
+    const branchId = searchParams.get('branchId');
 
-    const academicYears = await prisma.academicYear.findMany({
-      where: { tenantId },
-      orderBy: { startDate: 'desc' },
-    });
+    let academicYears;
+    
+    if (branchId) {
+      // Filter academic years by branch - only return years that have classes in this branch
+      academicYears = await prisma.academicYear.findMany({
+        where: { tenantId },
+        include: {
+          classes: {
+            where: { branchId },
+            select: { id: true },
+          },
+        },
+        orderBy: { startDate: 'desc' },
+      });
+      // Filter out years that have no classes in this branch
+      academicYears = academicYears.filter(ay => ay.classes.length > 0).map(ay => ({
+        ...ay,
+        classes: undefined,
+      }));
+    } else {
+      academicYears = await prisma.academicYear.findMany({
+        where: { tenantId },
+        orderBy: { startDate: 'desc' },
+      });
+    }
 
     return NextResponse.json({ years: academicYears });
   } catch (error: any) {

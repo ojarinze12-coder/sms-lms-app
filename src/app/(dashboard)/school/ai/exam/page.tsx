@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Sparkles, Loader2, X, Save, CheckCircle } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Subject {
   id: string;
@@ -40,6 +41,7 @@ const EXAM_TYPES = [
 ];
 
 export default function SchoolAIExamPage() {
+  const { selectedBranch } = useBranch();
   const [years, setYears] = useState<any[]>([]);
   const [selectedYearId, setSelectedYearId] = useState<string>('');
   const [classes, setClasses] = useState<AcademicClass[]>([]);
@@ -65,7 +67,7 @@ export default function SchoolAIExamPage() {
     if (selectedYearId) {
       loadClasses(selectedYearId);
     }
-  }, [selectedYearId]);
+  }, [selectedYearId, selectedBranch]);
 
   useEffect(() => {
     if (selectedClassId) {
@@ -95,7 +97,13 @@ export default function SchoolAIExamPage() {
 
   const loadClasses = async (yearId: string) => {
     try {
-      const res = await authFetch(`/api/sms/academic-classes?academicYearId=${yearId}`);
+      const params = new URLSearchParams();
+      params.set('academicYearId', yearId);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = `/api/sms/academic-classes?${params.toString()}`;
+      const res = await authFetch(url);
       if (!res.ok) {
         console.error('Failed to load classes:', res.status);
         return;
