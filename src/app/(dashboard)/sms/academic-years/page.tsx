@@ -16,7 +16,7 @@ interface AcademicYear {
 
 export default function AcademicYearsPage() {
   const router = useRouter();
-  const { selectedBranch, branches } = useBranch();
+  const { selectedBranch, branches = [] } = useBranch();
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -303,10 +303,7 @@ export default function AcademicYearsPage() {
                   className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">All Branches (Tenant-wide)</option>
-                  {selectedBranch && (
-                    <option value={selectedBranch.id}>{selectedBranch.name}</option>
-                  )}
-                  {!selectedBranch && branches.map((branch: any) => (
+                  {branches?.map((branch: any) => (
                     <option key={branch.id} value={branch.id}>{branch.name}</option>
                   ))}
                 </select>
