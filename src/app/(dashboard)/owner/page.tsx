@@ -50,7 +50,7 @@ export default function OwnerDashboardPage() {
   const [aiSettings, setAiSettings] = useState({
     aiEnabled: false,
     openRouterApiKey: '',
-    openRouterModel: 'qwen/qwen3-72b-instruct:free',
+    openRouterModel: 'qwen/qwen2.5-72b-instruct:free',
   });
   const [aiSaving, setAiSaving] = useState(false);
   const [aiSaved, setAiSaved] = useState(false);
@@ -87,7 +87,7 @@ export default function OwnerDashboardPage() {
         setAiSettings({
           aiEnabled: data.settings?.aiEnabled || false,
           openRouterApiKey: data.settings?.openRouterApiKey || '',
-          openRouterModel: data.settings?.openRouterModel || 'qwen/qwen3-72b-instruct:free',
+          openRouterModel: data.settings?.openRouterModel || 'qwen/qwen2.5-72b-instruct:free',
         });
       }
     } catch (err) {

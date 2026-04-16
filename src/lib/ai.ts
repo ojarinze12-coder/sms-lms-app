@@ -43,19 +43,52 @@ async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: 
     console.log('Using default model:', model);
   }
 
-  // Map short names to full model IDs
+  // Map old/invalid model IDs to valid OpenRouter model IDs
   const modelMap: Record<string, string> = {
+    // Qwen models
     'qwen/qwen3-72b-instruct:free': 'qwen/qwen2.5-72b-instruct:free',
     'qwen/qwen3-coder:free': 'qwen/qwen2.5-coder-32b-instruct:free',
+    'qwen/qwen3-8b-instruct:free': 'qwen/qwen2.5-8b-instruct:free',
+    // DeepSeek models
     'deepseek/deepseek-r1:free': 'deepseek/deepseek-r1:free',
     'deepseek/deepseek-chat:free': 'deepseek/deepseek-chat:free',
+    // MiniMax
     'minimax/minimax-m2:free': 'minimax/minimax-text-01:free',
+    // Google
     'google/gemma-3n-e4b-it:free': 'google/gemma-3n-e4b-it:free',
+    'google/gemma-2-9b-it:free': 'google/gemma-2-9b-it:free',
+    // Meta
+    'meta-llama/llama-3.3-70b-instruct': 'meta-llama/llama-3.1-70b-instruct:free',
+    'meta-llama/llama-3.2-90b-instruct:free': 'meta-llama/llama-3.1-90b-instruct:free',
+    // Anthropic
+    'anthropic/claude-3.5-sonnet': 'anthropic/claude-3.5-haiku:free',
+    'anthropic/claude-3-opus:free': 'anthropic/claude-3-haiku:free',
+    // Mistral
+    'mistralai/mistral-7b-instruct:free': 'mistralai/mistral-7b-instruct:free',
+    'mistralai/codestral-22b-instruct:free': 'mistralai/codestral-22b-instruct:free',
   };
   
+  // Apply mapping if model is in the map
   if (modelMap[model]) {
     model = modelMap[model];
-    console.log('Mapped to valid model:', model);
+    console.log('Mapped invalid model to:', model);
+  } else {
+    console.log('Using model:', model);
+  }
+  
+  // Final safety check - if model still seems invalid, use a known working one
+  const validModels = [
+    'qwen/qwen2.5-72b-instruct:free',
+    'deepseek/deepseek-r1:free',
+    'deepseek/deepseek-chat:free',
+    'meta-llama/llama-3.1-8b-instruct:free',
+    'google/gemma-3n-e4b-it:free',
+    'mistralai/mistral-7b-instruct:free',
+  ];
+  
+  if (!validModels.includes(model)) {
+    console.log('Model not in valid list, using default');
+    model = 'qwen/qwen2.5-72b-instruct:free';
   }
 
   // Check if API key is valid (not placeholder)
