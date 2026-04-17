@@ -64,6 +64,9 @@ async function callOpenRouter(prompt: string, tenantId?: string): Promise<string
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -84,10 +87,13 @@ async function callOpenRouter(prompt: string, tenantId?: string): Promise<string
             content: prompt
           }
         ],
-        max_tokens: 4096,
+        max_tokens: 1024,
         temperature: 0.7,
       }),
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     const responseText = await response.text();
     console.log('Response status:', response.status);
