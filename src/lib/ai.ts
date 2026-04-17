@@ -1,50 +1,23 @@
-async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: string): Promise<string> {
-  // Priority 1: Environment variable (Vercel) - but validate it
-  let apiKey = process.env.OPENROUTER_API_KEY;
-  let model = process.env.OPENROUTER_MODEL;
-  
-  // If env model is invalid, ignore it and use default
-  const invalidEnvModels = [
+const invalidModels = [
     'qwen/qwen3-72b-instruct:free',
     'qwen/qwen2.5-72b-instruct:free',
     'qwen/qwen3-coder:free',
+    'qwen/qwen2.5-coder-32b-instruct:free',
   ];
-  if (model && invalidEnvModels.includes(model)) {
-    console.log('Ignoring invalid env model:', model);
-    model = ''; // Will use default below
+  
+async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: string): Promise<string> {
+  let apiKey = process.env.OPENROUTER_API_KEY;
+  let model = process.env.OPENROUTER_MODEL;
+  
+  // Validate env model - reject known invalid models
+  if (model && invalidModels.includes(model)) {
+    console.log('Invalid env model, ignoring:', model);
+    model = '';
   }
   
   console.log('=== AI DEBUG ===');
   console.log('API Key from env:', apiKey ? 'present' : 'NOT SET');
   console.log('Model from env:', model || 'not set (will use default)');
-
-  // Priority 2: Tenant settings (if no env key or model)
-  if (!apiKey || !model) {
-    try {
-      const { prisma } = await import('@/lib/prisma');
-      const settings = await prisma.tenantSettings.findUnique({
-        where: { tenantId },
-        select: { 
-          openRouterApiKey: true, 
-          openRouterModel: true,
-          aiEnabled: true 
-        }
-      });
-      
-      if (settings) {
-        if (!apiKey && settings.openRouterApiKey) {
-          apiKey = settings.openRouterApiKey;
-          console.log('API Key from tenant settings: found');
-        }
-        if (!model && settings.openRouterModel) {
-          model = settings.openRouterModel;
-          console.log('Model from tenant settings:', model);
-        }
-      }
-    } catch (err) {
-      console.log('Could not fetch tenant settings:', err);
-    }
-  }
 
 // Default model if none specified - use openrouter/free which auto-selects best available free model
   if (!model) {
@@ -53,103 +26,46 @@ async function callOpenRouter(prompt: string, systemPrompt?: string, tenantId?: 
   }
 
   // Map old/invalid model IDs to valid OpenRouter model IDs
-  // Only include models that are confirmed to exist on OpenRouter
+  // Use openrouter/free as default which auto-selects best available free model
   const modelMap: Record<string, string> = {
-    // Old Qwen names that don't work
+    // Old Qwen names - map to auto-router
     'qwen/qwen3-72b-instruct:free': 'openrouter/free',
     'qwen/qwen2.5-72b-instruct:free': 'openrouter/free',
     'qwen/qwen3-coder:free': 'openrouter/free',
+    'qwen/qwen2.5-coder-32b-instruct:free': 'openrouter/free',
+    'qwen/qwen3-8b-instruct:free': 'openrouter/free',
     // DeepSeek models
     'deepseek/deepseek-r1:free': 'deepseek/deepseek-r1:free',
     'deepseek/deepseek-chat:free': 'deepseek/deepseek-chat:free',
     // MiniMax
     'minimax/minimax-m2.5:free': 'minimax/minimax-m2.5:free',
-    'minimax/minimax-m2:free': 'minimax/minimax-m2.5:free',
+    'minimax/minimax-m2:free': 'openrouter/free',
     // Google
-    'google/gemma-3n-e4b-it:free': 'google/gemma-3n-e4b-it:free',
-    'google/gemma-3-27b-it:free': 'google/gemma-3-27b-it:free',
+    'google/gemma-3n-e4b-it:free': 'openrouter/free',
+    'google/gemma-3-27b-it:free': 'openrouter/free',
+    'google/gemma-2-9b-it:free': 'openrouter/free',
     // Meta Llama
-    'meta-llama/llama-3.3-70b-instruct': 'meta-llama/llama-3.1-8b-instruct:free',
-    'meta-llama/llama-3.1-70b-instruct:free': 'meta-llama/llama-3.1-8b-instruct:free',
+    'meta-llama/llama-3.3-70b-instruct': 'openrouter/free',
+    'meta-llama/llama-3.1-70b-instruct:free': 'openrouter/free',
+    'meta-llama/llama-3.2-90b-instruct:free': 'openrouter/free',
     // Anthropic
-    'anthropic/claude-3.5-sonnet': 'anthropic/claude-3.5-haiku:free',
-    // NVIDIA models
-    'nvidia/nemotron-3-super-120b-a12b:free': 'nvidia/nemotron-3-super-120b-a12b:free',
+    'anthropic/claude-3.5-sonnet': 'openrouter/free',
+    'anthropic/claude-3-opus:free': 'openrouter/free',
+    // NVIDIA
+    'nvidia/nemotron-3-super-120b-a12b:free': 'openrouter/free',
     // OpenAI
-    'openai/gpt-oss-120b:free': 'openai/gpt-oss-120b:free',
+    'openai/gpt-oss-120b:free': 'openrouter/free',
+    // Mistral
+    'mistralai/mistral-7b-instruct:free': 'openrouter/free',
+    'mistralai/codestral-22b-instruct:free': 'openrouter/free',
   };
   
-  // Apply mapping if model is in the map
+  // Apply mapping if model is in the map, otherwise keep current model
   if (modelMap[model]) {
     model = modelMap[model];
     console.log('Mapped model to:', model);
   } else {
     console.log('Using model:', model);
-  }
-  
-  // Final safety check - use openrouter/free as ultimate fallback
-  const knownWorkingModels = [
-    'openrouter/free',
-    'deepseek/deepseek-r1:free',
-    'minimax/minimax-m2.5:free',
-    'nvidia/nemotron-3-super-120b-a12b:free',
-    'meta-llama/llama-3.1-8b-instruct:free',
-    'google/gemma-3n-e4b-it:free',
-    'google/gemma-3-27b-it:free',
-    'openai/gpt-oss-120b:free',
-  ];
-  
-  if (!knownWorkingModels.includes(model)) {
-    console.log('Model not recognized, using openrouter/free as fallback');
-    model = 'openrouter/free';
-  }
-
-  // Map old/invalid model IDs to valid OpenRouter model IDs
-  const modelMap: Record<string, string> = {
-    // Qwen models
-    'qwen/qwen3-72b-instruct:free': 'qwen/qwen2.5-72b-instruct:free',
-    'qwen/qwen3-coder:free': 'qwen/qwen2.5-coder-32b-instruct:free',
-    'qwen/qwen3-8b-instruct:free': 'qwen/qwen2.5-8b-instruct:free',
-    // DeepSeek models
-    'deepseek/deepseek-r1:free': 'deepseek/deepseek-r1:free',
-    'deepseek/deepseek-chat:free': 'deepseek/deepseek-chat:free',
-    // MiniMax
-    'minimax/minimax-m2:free': 'minimax/minimax-text-01:free',
-    // Google
-    'google/gemma-3n-e4b-it:free': 'google/gemma-3n-e4b-it:free',
-    'google/gemma-2-9b-it:free': 'google/gemma-2-9b-it:free',
-    // Meta
-    'meta-llama/llama-3.3-70b-instruct': 'meta-llama/llama-3.1-70b-instruct:free',
-    'meta-llama/llama-3.2-90b-instruct:free': 'meta-llama/llama-3.1-90b-instruct:free',
-    // Anthropic
-    'anthropic/claude-3.5-sonnet': 'anthropic/claude-3.5-haiku:free',
-    'anthropic/claude-3-opus:free': 'anthropic/claude-3-haiku:free',
-    // Mistral
-    'mistralai/mistral-7b-instruct:free': 'mistralai/mistral-7b-instruct:free',
-    'mistralai/codestral-22b-instruct:free': 'mistralai/codestral-22b-instruct:free',
-  };
-  
-  // Apply mapping if model is in the map
-  if (modelMap[model]) {
-    model = modelMap[model];
-    console.log('Mapped invalid model to:', model);
-  } else {
-    console.log('Using model:', model);
-  }
-  
-  // Final safety check - if model still seems invalid, use a known working one
-  const validModels = [
-    'qwen/qwen2.5-72b-instruct:free',
-    'deepseek/deepseek-r1:free',
-    'deepseek/deepseek-chat:free',
-    'meta-llama/llama-3.1-8b-instruct:free',
-    'google/gemma-3n-e4b-it:free',
-    'mistralai/mistral-7b-instruct:free',
-  ];
-  
-  if (!validModels.includes(model)) {
-    console.log('Model not in valid list, using default');
-    model = 'qwen/qwen2.5-72b-instruct:free';
   }
 
   // Check if API key is valid (not placeholder)
