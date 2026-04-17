@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run vercel-build",
-  "installCommand": "npm install",
+  "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
   "env": {
     "DATABASE_URL": "postgresql://postgres.tfsijcllawvisvuravtn:astar2207**@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true",
