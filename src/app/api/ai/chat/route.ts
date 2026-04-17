@@ -20,7 +20,20 @@ and understanding school policies. Be friendly and helpful.`,
 
 async function callOpenRouter(prompt: string, tenantId?: string): Promise<string> {
   let apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free';
+  let model = process.env.OPENROUTER_MODEL || 'openrouter/free';
+  
+  // Validate and map model - reject known invalid models
+  const invalidModels = [
+    'qwen/qwen3-72b-instruct:free',
+    'qwen/qwen2.5-72b-instruct:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'meta-llama/llama-3.1-70b-instruct:free',
+    'qwen/qwen2.5-coder-32b-instruct:free',
+  ];
+  if (model && invalidModels.includes(model)) {
+    console.log('Invalid model, using default:', model);
+    model = 'openrouter/free';
+  }
   
   console.log('=== CHAT AI DEBUG ===');
   console.log('API Key from env:', apiKey ? apiKey.substring(0, 15) + '...' : 'MISSING');
@@ -71,6 +84,7 @@ async function callOpenRouter(prompt: string, tenantId?: string): Promise<string
             content: prompt
           }
         ],
+        max_tokens: 4096,
         temperature: 0.7,
       }),
     });
