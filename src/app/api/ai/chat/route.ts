@@ -20,7 +20,7 @@ and understanding school policies. Be friendly and helpful.`,
 
 async function callOpenRouter(prompt: string, tenantId?: string): Promise<string> {
   let apiKey = process.env.OPENROUTER_API_KEY;
-  let model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat:free';
+  let model = process.env.OPENROUTER_MODEL || 'openrouter/free';
   
   // Validate and map model - reject known invalid models
   const invalidModels = [
@@ -29,7 +29,7 @@ async function callOpenRouter(prompt: string, tenantId?: string): Promise<string
     'meta-llama/llama-3.3-70b-instruct:free',
     'meta-llama/llama-3.1-70b-instruct:free',
     'qwen/qwen2.5-coder-32b-instruct:free',
-    'openrouter/free', // Use specific models instead
+    'deepseek/deepseek-chat:free', // No longer available
   ];
   if (model && invalidModels.includes(model)) {
     console.log('Invalid model, using default:', model);
