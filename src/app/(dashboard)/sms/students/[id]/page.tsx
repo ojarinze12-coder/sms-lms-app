@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { authFetch } from '@/lib/auth-fetch';
+import { useBranch } from '@/lib/hooks/use-branch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   User, 
   Mail, 
@@ -19,7 +22,9 @@ import {
   CreditCard,
   Heart,
   AlertTriangle,
-  FileText
+  FileText,
+  ArrowRightLeft,
+  Loader2
 } from 'lucide-react';
 
 interface Student {
@@ -41,6 +46,7 @@ interface Student {
   jambRegistrationNo: string | null;
   status: string;
   photo: string | null;
+  branch: { id: string; name: string; code: string } | null;
   enrollments: Array<{
     id: string;
     academicClass: {
@@ -68,9 +74,16 @@ interface Student {
 
 export default function StudentDetailPage() {
   const params = useParams();
+  const { branches } = useBranch();
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'classes' | 'attendance' | 'payments'>('details');
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferBranchId, setTransferBranchId] = useState('');
+  const [transferReason, setTransferReason] = useState('');
+  const [transferring, setTransferring] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const [transferSuccess, setTransferSuccess] = useState(false);
 
   useEffect(() => {
     const fetchStudent = async () => {
@@ -91,6 +104,48 @@ export default function StudentDetailPage() {
       fetchStudent();
     }
   }, [params.id]);
+
+  const handleTransfer = async () => {
+    if (!transferBranchId) return;
+    setTransferring(true);
+    setTransferError(null);
+    
+    try {
+      const res = await authFetch(`/api/sms/students/${params.id}/transfer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetBranchId: transferBranchId,
+          reason: transferReason,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        setTransferSuccess(true);
+        setStudent(data.student);
+        setTimeout(() => {
+          setShowTransfer(false);
+          setTransferSuccess(false);
+          setTransferBranchId('');
+          setTransferReason('');
+        }, 2000);
+      } else {
+        if (data.validationErrors) {
+          setTransferError(data.validationErrors.join(', '));
+        } else {
+          setTransferError(data.error || 'Transfer failed');
+        }
+      }
+    } catch (err) {
+      setTransferError('Transfer failed');
+    } finally {
+      setTransferring(false);
+    }
+  };
+
+  const availableBranches = branches.filter(b => b.id !== student?.branch?.id);
 
   if (loading) {
     return (
@@ -154,6 +209,15 @@ export default function StudentDetailPage() {
             <FileText className="w-4 h-4" />
             Academic
           </Link>
+          {branches.length > 1 && student.branch && (
+            <button
+              onClick={() => setShowTransfer(true)}
+              className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-200"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+              Transfer
+            </button>
+          )}
           <Link
             href={`/sms/students/${student.id}/edit`}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-200"
@@ -386,6 +450,74 @@ export default function StudentDetailPage() {
           </Card>
         </div>
       </div>
+
+      {showTransfer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Transfer Student</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Current branch: {student.branch?.name || 'None'}
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Target Branch</label>
+                <select
+                  value={transferBranchId}
+                  onChange={(e) => setTransferBranchId(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                >
+                  <option value="">Select branch...</option>
+                  {availableBranches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name} ({branch.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Reason (optional)</label>
+                <Input
+                  value={transferReason}
+                  onChange={(e) => setTransferReason(e.target.value)}
+                  placeholder="Reason for transfer"
+                />
+              </div>
+              
+              {transferError && (
+                <div className="text-red-500 text-sm">{transferError}</div>
+              )}
+              
+              {transferSuccess && (
+                <div className="text-green-500 text-sm">Transfer successful!</div>
+              )}
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => { setShowTransfer(false); setTransferError(null); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleTransfer}
+                disabled={!transferBranchId || transferring}
+              >
+                {transferring ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Transferring...
+                  </>
+                ) : (
+                  'Transfer'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

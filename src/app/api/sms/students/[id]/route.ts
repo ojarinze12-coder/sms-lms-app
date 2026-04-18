@@ -32,6 +32,9 @@ export async function GET(
             feeStructure: true,
           },
         },
+        branch: {
+          select: { id: true, name: true, code: true },
+        },
       },
     });
 

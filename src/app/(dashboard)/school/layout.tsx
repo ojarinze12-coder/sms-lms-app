@@ -24,6 +24,7 @@ const schoolNavItems = [
     items: [
       { label: 'Overview', href: '/school/academics', icon: 'book' },
       { label: 'Timetable', href: '/school/timetable', icon: 'calendar' },
+      { label: 'Promotions', href: '/school/promotions', icon: 'graduation' },
       { label: 'Grading Scales', href: '/school/exams', icon: 'clipboard' },
       { label: 'Leaderboard', href: '/sms/leaderboard', icon: 'trophy' },
     ]
@@ -72,6 +73,7 @@ const schoolNavItems = [
     section: 'Reports & Settings',
     items: [
       { label: 'Reports Center', href: '/sms/reports', icon: 'bar-chart' },
+      { label: 'Transfers', href: '/school/transfers', icon: 'repeat' },
       { label: 'Settings', href: '/school/settings', icon: 'settings' },
     ]
   },
@@ -98,6 +100,8 @@ const iconMap: Record<string, React.ReactNode> = {
   message: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
   bell: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>,
   help: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  repeat: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>,
+  graduation: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 12 0M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>,
 };
 
 export default function SchoolAdminLayout({

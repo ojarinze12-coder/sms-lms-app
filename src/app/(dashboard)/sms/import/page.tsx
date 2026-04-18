@@ -28,7 +28,7 @@ interface ImportResult {
 }
 
 export default function ImportPage() {
-  const { selectedBranch } = useBranch();
+  const { selectedBranch, branches } = useBranch();
   const [importType, setImportType] = useState<ImportType>('students');
   const [file, setFile] = useState<File | null>(null);
   const [mapping, setMapping] = useState<Record<string, string>>({});
@@ -40,6 +40,7 @@ export default function ImportPage() {
   const [selectedYearId, setSelectedYearId] = useState<string>('');
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [autoEnroll, setAutoEnroll] = useState(false);
+  const [importBranchId, setImportBranchId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -98,6 +99,7 @@ export default function ImportPage() {
       { csv: 'stateOfOrigin', required: false },
       { csv: 'lgaOfOrigin', required: false },
       { csv: 'studentId', required: false },
+      { csv: 'branchCode', required: false },
     ],
     teachers: [
       { csv: 'firstName', required: true },
@@ -108,7 +110,8 @@ export default function ImportPage() {
       { csv: 'department', required: false },
       { csv: 'specialty', required: false },
       { csv: 'qualification', required: false },
-      { csv: 'position', required: false }, // HOD, SENIOR_TEACHER, FORM_MASTER, CLASS_TEACHER
+      { csv: 'position', required: false },
+      { csv: 'branchCode', required: false },
     ],
     staff: [
       { csv: 'firstName', required: true },
@@ -116,9 +119,10 @@ export default function ImportPage() {
       { csv: 'email', required: true },
       { csv: 'phone', required: false },
       { csv: 'employeeId', required: false },
-      { csv: 'category', required: false }, // TEACHING, CAREGIVER, ADMINISTRATIVE, etc.
+      { csv: 'category', required: false },
       { csv: 'department', required: false },
       { csv: 'designation', required: false },
+      { csv: 'branchCode', required: false },
     ],
     parents: [
       { csv: 'firstName', required: true },
@@ -198,6 +202,9 @@ export default function ImportPage() {
       formData.append('academicYearId', selectedYearId);
       formData.append('classId', selectedClassId);
       formData.append('autoEnroll', autoEnroll.toString());
+      if (importBranchId) {
+        formData.append('branchId', importBranchId);
+      }
 
       const res = await authFetch('/api/sms/import', {
         method: 'POST',
@@ -251,6 +258,33 @@ export default function ImportPage() {
               ))}
             </div>
           </div>
+
+          {branches.length > 0 && importType !== 'legacy' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">
+              <h2 className="text-lg font-semibold mb-4 dark:text-white">Branch Assignment</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Leave empty to specify branch in CSV file using the "branchCode" column
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Branch
+                </label>
+                <select
+                  value={importBranchId}
+                  onChange={(e) => setImportBranchId(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="">Use branchCode from CSV</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name} ({branch.code})
+                      {branch.isMain && ' - Main'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           {(importType === 'students' || importType === 'legacy') && academicYears.length > 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-6">

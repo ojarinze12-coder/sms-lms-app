@@ -463,5 +463,152 @@ The RLS will:
 
 ---
 
+## 22. Branch Management Implementation
+
+### Features Implemented
+- Bulk import with branch support for students, teachers, staff
+- Transfer settings in School Settings
+- Transfer page with bulk transfers (students, teachers, staff)
+- Individual transfer APIs for students, teachers, staff
+- Bulk transfer API
+- Dashboard branch filtering
+- Navigation menu item "Transfers" under Reports & Settings
+
+### Files Created/Modified
+
+| Component | Files |
+|-----------|-------|
+| Import API | `src/app/api/sms/import/route.ts` |
+| Import UI | `src/app/(dashboard)/sms/import/page.tsx` |
+| Transfer Settings Schema | `prisma/schema.prisma` (added fields) |
+| Settings API | `src/app/api/school/settings/route.ts` |
+| Settings UI | `src/app/(dashboard)/school/settings/page.tsx` |
+| Student Transfer API | `src/app/api/sms/students/[id]/transfer/route.ts` |
+| Teacher Transfer API | `src/app/api/sms/teachers/[id]/transfer/route.ts` |
+| Staff Transfer API | `src/app/api/sms/staff/[id]/transfer/route.ts` |
+| Bulk Transfer API | `src/app/api/sms/students/transfer-bulk/route.ts` |
+| Bulk Teacher Transfer API | `src/app/api/sms/teachers/transfer-bulk/route.ts` |
+| Bulk Staff Transfer API | `src/app/api/sms/staff/transfer-bulk/route.ts` |
+| Transfer Page | `src/app/(dashboard)/school/transfers/page.tsx` |
+| Dashboard API | `src/app/api/school/dashboard/route.ts` |
+| Navigation | `src/app/(dashboard)/school/layout.tsx` |
+
+### Database Changes (prisma/schema.prisma)
+```prisma
+// Transfer Settings
+allowStudentTransfers         Boolean    @default(true)
+requireFeesPaidForTransfer    Boolean    @default(true)
+requireActiveEnrollmentForTransfer Boolean   @default(true)
+allowStaffTransfers            Boolean    @default(true)
+requireFeesPaidForStaffTransfer Boolean    @default(false)
+transferNotificationsEmail    String?
+```
+
+### API Endpoints
+- `POST /api/sms/students/[id]/transfer` - Individual student transfer
+- `POST /api/sms/teachers/[id]/transfer` - Individual teacher transfer  
+- `POST /api/sms/staff/[id]/transfer` - Individual staff transfer
+- `POST /api/sms/students/transfer-bulk` - Bulk student transfer
+- `POST /api/sms/teachers/transfer-bulk` - Bulk teacher transfer
+- `POST /api/sms/staff/transfer-bulk` - Bulk staff transfer
+
+### Status
+✅ Implemented - Working
+
+---
+
+## 23. Promotion Enrollment System
+
+### Features Implemented
+- Promotion settings in School Settings
+- Promotion page with class selection dialog
+- Preview eligible students before promotion
+- Bulk promote to next higher class
+- Reads minimum pass score from grading scales
+- Validates fees, attendance, results
+
+### Files Created
+
+| Component | Files |
+|-----------|-------|
+| Promotion Settings Schema | `prisma/schema.prisma` (added fields) |
+| Promotion Settings API | `src/app/api/sms/promotion-settings/route.ts` |
+| Promotion Settings UI | `src/app/(dashboard)/school/settings/page.tsx` |
+| Promotion API | `src/app/api/sms/students/promote-bulk/route.ts` |
+| Promotion Page | `src/app/(dashboard)/school/promotions/page.tsx` |
+| Academic Classes API | `src/app/api/sms/academic-classes/route.ts` |
+| Navigation | `src/app/(dashboard)/school/layout.tsx` |
+| Academics Page | `src/app/(dashboard)/school/academics/page.tsx` |
+
+### Database Changes (prisma/schema.prisma)
+```prisma
+// Promotion Settings
+promotionEnabled            Boolean    @default(true)
+promotionRequireFeesPaid   Boolean    @default(true)
+promotionMinAttendance    Float      @default(75.0)
+promotionAutoEnroll      Boolean    @default(true)
+```
+
+### API Endpoints
+- `GET /api/sms/promotion-settings` - Get promotion settings
+- `PUT /api/sms/promotion-settings` - Update promotion settings
+- `GET /api/sms/students/promote-bulk?sourceClassId=...` - Preview eligible students
+- `POST /api/sms/students/promote-bulk` - Run bulk promotion
+
+### Status
+⚠️ Partially Working - Issues to Fix
+
+---
+
+## 24. Issues to Fix
+
+### Critical (Blocking)
+| Issue | Location | Status |
+|-------|---------|--------|
+| Save Transfer Settings returns 500 | `/api/school/settings` PUT | ❌ Not working |
+| Save Promotion Settings returns 500 | `/api/sms/promotion-settings` PUT | ❌ Not working |
+
+### Medium Priority
+| Issue | Location | Status |
+|-------|---------|--------|
+| Dark mode theming broken | Promotions page | ❌ Not working |
+| Student table names not visible | Promotions page | ❌ Not working |
+| 0 eligible students shown | Promotions preview | ⚠️ Unclear |
+
+### Root Cause Analysis
+
+**500 Errors on Save Buttons:**
+- Likely Prisma schema mismatch or auth issue
+- Debug logging added to APIs
+
+**Dark Mode Issues:**
+- Promotions page missing `dark:` Tailwind classes
+- Table headers, buttons, dialogs need dark mode styling
+
+**0 Eligible Students:**
+- May be correct if students don't meet criteria (fees, attendance, results)
+- Need to verify preview API returns correct data in console
+
+---
+
+## 25. Fix Plan
+
+### Phase 1: Fix 500 Errors (Priority)
+1. Debug `/api/school/settings` PUT endpoint
+2. Debug `/api/sms/promotion-settings` PUT endpoint  
+3. Check Prisma schema matches API expectations
+
+### Phase 2: Fix Dark Mode
+1. Add `dark:` classes to promotions page
+2. Fix table, buttons, dialog styling
+3. Test in dark/light mode
+
+### Phase 3: Verify Promotion Flow
+1. Check console logs for enrollment count
+2. Test with different classes
+3. Verify eligibility criteria logic
+
+---
+
 ## Date Updated
-April 15, 2026
+April 17, 2026

@@ -31,6 +31,10 @@ export default function AcademicsPage() {
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Timetable</h3>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">Manage class schedules</p>
         </a>
+        <a href="/school/promotions" className="bg-white dark:bg-gray-800 p-6 rounded-xl border dark:border-gray-700 hover:shadow-md transition-shadow">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Promotions</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">Bulk promote students to next class</p>
+        </a>
       </div>
     </div>
   );

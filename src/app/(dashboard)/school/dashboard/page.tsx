@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useBranch } from '@/lib/hooks/use-branch';
 
 interface Stats {
   students: number;
@@ -19,6 +20,7 @@ interface RecentActivity {
 }
 
 export default function SchoolDashboardPage() {
+  const { selectedBranch } = useBranch();
   const [stats, setStats] = useState<Stats>({
     students: 0,
     teachers: 0,
@@ -40,7 +42,14 @@ export default function SchoolDashboardPage() {
           headers['Authorization'] = `Bearer ${token}`;
         }
         
-        const res = await fetch('/api/school/dashboard', {
+        const params = new URLSearchParams();
+        if (selectedBranch?.id) {
+          params.set('branchId', selectedBranch.id);
+        }
+        
+        const url = `/api/school/dashboard${params.toString() ? '?' + params.toString() : ''}`;
+        
+        const res = await fetch(url, {
           credentials: 'include',
           headers: Object.keys(headers).length > 0 ? headers : undefined,
         });
@@ -60,7 +69,7 @@ export default function SchoolDashboardPage() {
       }
     }
     fetchDashboardData();
-  }, []);
+  }, [selectedBranch]);
 
   const statCards = [
     { label: 'Total Students', value: stats.students, icon: '👨‍🎓', color: 'blue' },

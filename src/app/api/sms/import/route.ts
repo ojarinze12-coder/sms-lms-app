@@ -31,6 +31,39 @@ export async function POST(request: NextRequest) {
     const lines = text.split('\n').filter(line => line.trim());
     const headers = lines[0].split(',').map(h => h.trim());
     
+    let branchId: string | null = null;
+    const branchIdParam = formData.get('branchId') as string;
+    const branchCodeParam = formData.get('branchCode') as string;
+    
+    if (branchIdParam) {
+      branchId = branchIdParam;
+    } else if (branchCodeParam) {
+      const branch = await prisma.branch.findFirst({
+        where: { code: branchCodeParam, tenantId },
+      });
+      if (branch) {
+        branchId = branch.id;
+      } else {
+        return NextResponse.json(
+          { error: `Branch with code '${branchCodeParam}' not found` },
+          { status: 400 }
+        );
+      }
+    } else {
+      const branchIdx = headers.findIndex(h => h.toLowerCase() === 'branchcode');
+      if (branchIdx !== -1) {
+        const codeFromCsv = lines[1]?.split(',')[branchIdx]?.trim();
+        if (codeFromCsv) {
+          const branch = await prisma.branch.findFirst({
+            where: { code: codeFromCsv, tenantId },
+          });
+          if (branch) {
+            branchId = branch.id;
+          }
+        }
+      }
+    }
+
     const results = { success: 0, failed: 0, skipped: 0, errors: [] as string[] };
 
     for (let i = 1; i < lines.length; i++) {
@@ -64,22 +97,31 @@ export async function POST(request: NextRequest) {
 
           const studentId = record.studentId || `STU/${Date.now()}-${i}`;
           
-          const student = await prisma.student.create({
-            data: {
-              studentId,
-              firstName: record.firstName,
-              lastName: record.lastName,
-              middleName: record.middleName,
-              gender: record.gender?.toUpperCase(),
-              email: record.email,
-              phone: record.phone,
-              address: record.address,
-              stateOfOrigin: record.stateOfOrigin,
-              lgaOfOrigin: record.lgaOfOrigin,
-              tenantId,
-              status: 'ACTIVE',
-            },
-          });
+          let studentBranchId = branchId;
+            if (!studentBranchId && record.branchCode) {
+              const branch = await prisma.branch.findFirst({
+                where: { code: record.branchCode, tenantId },
+              });
+              studentBranchId = branch?.id || null;
+            }
+            
+            const student = await prisma.student.create({
+              data: {
+                studentId,
+                firstName: record.firstName,
+                lastName: record.lastName,
+                middleName: record.middleName,
+                gender: record.gender?.toUpperCase(),
+                email: record.email,
+                phone: record.phone,
+                address: record.address,
+                stateOfOrigin: record.stateOfOrigin,
+                lgaOfOrigin: record.lgaOfOrigin,
+                tenantId,
+                status: 'ACTIVE',
+                branchId: studentBranchId,
+              },
+            });
 
           if (autoEnroll && classId && academicYearId) {
             await prisma.enrollment.create({
@@ -124,6 +166,14 @@ export async function POST(request: NextRequest) {
             departmentId = dept?.id || null;
           }
 
+          let teacherBranchId = branchId;
+          if (!teacherBranchId && record.branchCode) {
+            const branch = await prisma.branch.findFirst({
+              where: { code: record.branchCode, tenantId },
+            });
+            teacherBranchId = branch?.id || null;
+          }
+
           const employeeId = record.employeeId || `EMP/${Date.now()}-${i}`;
           
           await prisma.teacher.create({
@@ -140,6 +190,7 @@ export async function POST(request: NextRequest) {
               departmentId,
               tenantId,
               status: 'ACTIVE',
+              branchId: teacherBranchId,
             },
           });
           results.success++;
@@ -193,6 +244,14 @@ export async function POST(request: NextRequest) {
           
           const category = categoryMap[record.category?.toLowerCase()] || record.category?.toUpperCase() || 'OTHER';
 
+          let staffBranchId = branchId;
+          if (!staffBranchId && record.branchCode) {
+            const branch = await prisma.branch.findFirst({
+              where: { code: record.branchCode, tenantId },
+            });
+            staffBranchId = branch?.id || null;
+          }
+
           const employeeId = record.employeeId || `STF/${Date.now()}-${i}`;
           
           await prisma.staff.create({
@@ -207,6 +266,7 @@ export async function POST(request: NextRequest) {
               position: record.designation,
               tenantId,
               status: 'ACTIVE',
+              branchId: staffBranchId,
             },
           });
           results.success++;

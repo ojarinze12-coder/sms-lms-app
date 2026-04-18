@@ -39,6 +39,16 @@ export async function GET() {
         themeMode: settings?.themeMode || 'SYSTEM',
         aiEnabled: settings?.aiEnabled || false,
         openRouterModel: settings?.openRouterModel || 'qwen/qwen3-coder:free',
+        allowStudentTransfers: settings?.allowStudentTransfers ?? true,
+        requireFeesPaidForTransfer: settings?.requireFeesPaidForTransfer ?? true,
+        requireActiveEnrollmentForTransfer: settings?.requireActiveEnrollmentForTransfer ?? true,
+        allowStaffTransfers: settings?.allowStaffTransfers ?? true,
+        requireFeesPaidForStaffTransfer: settings?.requireFeesPaidForStaffTransfer ?? false,
+        transferNotificationsEmail: settings?.transferNotificationsEmail || '',
+        promotionEnabled: settings?.promotionEnabled ?? true,
+        promotionRequireFeesPaid: settings?.promotionRequireFeesPaid ?? true,
+        promotionMinAttendance: settings?.promotionMinAttendance ?? 75,
+        promotionAutoEnroll: settings?.promotionAutoEnroll ?? true,
       },
     });
   } catch (error) {
@@ -48,24 +58,25 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  let authUser;
   try {
-    const authUser = await getAuthUser();
-    console.log('[School Settings PUT] authUser:', authUser);
-    
-    if (!authUser) {
-      console.log('[School Settings PUT] No auth user found');
-      return NextResponse.json({ error: 'Unauthorized - No session found' }, { status: 401 });
-    }
-    
-    if (!authUser.tenantId) {
-      console.log('[School Settings PUT] No tenantId for user:', authUser.userId);
-      return NextResponse.json({ error: 'Unauthorized - No school associated with account' }, { status: 401 });
-    }
+    authUser = await getAuthUser();
+  } catch (e) {
+    return NextResponse.json({ error: 'Auth error: ' + String(e) }, { status: 401 });
+  }
+  
+  if (!authUser) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  if (!authUser.tenantId) {
+    return NextResponse.json({ error: 'No tenant associated' }, { status: 401 });
+  }
 
+  try {
     const tenantId = authUser.tenantId;
-    console.log('[School Settings PUT] Saving for tenant:', tenantId);
-    
     const body = await req.json();
+    console.log('[Settings PUT] Body keys:', Object.keys(body));
     const { schoolName, email, phone, address, timezone, dateFormat, gradingScale, currency, brandColor, logo, themeMode, aiEnabled, openRouterApiKey, openRouterModel } = body;
 
     await prisma.tenant.update({
@@ -90,26 +101,48 @@ export async function PUT(req: NextRequest) {
       },
     });
 
+    const promotionMinAttendance = Number(body.promotionMinAttendance) || 75;
+
     await prisma.tenantSettings.upsert({
       where: { tenantId },
       update: {
-        themeMode,
-        aiEnabled,
+        themeMode: themeMode || 'SYSTEM',
+        aiEnabled: aiEnabled ?? false,
         openRouterApiKey,
         openRouterModel,
+        allowStudentTransfers: body.allowStudentTransfers ?? true,
+        requireFeesPaidForTransfer: body.requireFeesPaidForTransfer ?? true,
+        requireActiveEnrollmentForTransfer: body.requireActiveEnrollmentForTransfer ?? true,
+        allowStaffTransfers: body.allowStaffTransfers ?? true,
+        requireFeesPaidForStaffTransfer: body.requireFeesPaidForStaffTransfer ?? false,
+        transferNotificationsEmail: body.transferNotificationsEmail || null,
+        promotionEnabled: body.promotionEnabled ?? true,
+        promotionRequireFeesPaid: body.promotionRequireFeesPaid ?? true,
+        promotionMinAttendance,
+        promotionAutoEnroll: body.promotionAutoEnroll ?? true,
       },
       create: {
         tenantId,
-        themeMode,
-        aiEnabled,
+        themeMode: themeMode || 'SYSTEM',
+        aiEnabled: aiEnabled ?? false,
         openRouterApiKey,
         openRouterModel,
+        allowStudentTransfers: body.allowStudentTransfers ?? true,
+        requireFeesPaidForTransfer: body.requireFeesPaidForTransfer ?? true,
+        requireActiveEnrollmentForTransfer: body.requireActiveEnrollmentForTransfer ?? true,
+        allowStaffTransfers: body.allowStaffTransfers ?? true,
+        requireFeesPaidForStaffTransfer: body.requireFeesPaidForStaffTransfer ?? false,
+        transferNotificationsEmail: body.transferNotificationsEmail || null,
+        promotionEnabled: body.promotionEnabled ?? true,
+        promotionRequireFeesPaid: body.promotionRequireFeesPaid ?? true,
+        promotionMinAttendance,
+        promotionAutoEnroll: body.promotionAutoEnroll ?? true,
       },
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving settings:', error);
-    return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed: ' + error.message }, { status: 500 });
   }
 }

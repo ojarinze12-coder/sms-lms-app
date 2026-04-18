@@ -52,6 +52,22 @@ interface AISettings {
   openRouterModel: string;
 }
 
+interface TransferSettings {
+  allowStudentTransfers: boolean;
+  requireFeesPaidForTransfer: boolean;
+  requireActiveEnrollmentForTransfer: boolean;
+  allowStaffTransfers: boolean;
+  requireFeesPaidForStaffTransfer: boolean;
+  transferNotificationsEmail: string;
+}
+
+interface PromotionSettings {
+  promotionEnabled: boolean;
+  promotionRequireFeesPaid: boolean;
+  promotionMinAttendance: number;
+  promotionAutoEnroll: boolean;
+}
+
 interface Branch {
   id: string;
   name: string;
@@ -97,6 +113,20 @@ export default function SettingsPage() {
     openRouterApiKey: '',
     openRouterModel: 'qwen/qwen3-coder:free',
   });
+  const [transferSettings, setTransferSettings] = useState<TransferSettings>({
+    allowStudentTransfers: true,
+    requireFeesPaidForTransfer: true,
+    requireActiveEnrollmentForTransfer: true,
+    allowStaffTransfers: true,
+    requireFeesPaidForStaffTransfer: false,
+    transferNotificationsEmail: '',
+  });
+  const [promotionSettings, setPromotionSettings] = useState<PromotionSettings>({
+    promotionEnabled: true,
+    promotionRequireFeesPaid: true,
+    promotionMinAttendance: 75,
+    promotionAutoEnroll: true,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -125,10 +155,11 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       const timestamp = Date.now();
-      const [settingsRes, paymentRes, branchesRes] = await Promise.all([
+      const [settingsRes, paymentRes, branchesRes, promotionRes] = await Promise.all([
         authFetch(`/api/school/settings?_t=${timestamp}`),
         authFetch(`/api/school/payment-gateways?_t=${timestamp}`),
-        authFetch(`/api/sms/branches`)
+        authFetch(`/api/sms/branches`),
+        authFetch(`/api/sms/promotion-settings`)
       ]);
       
       if (settingsRes.ok) {
@@ -140,7 +171,31 @@ export default function SettingsPage() {
             openRouterApiKey: data.settings.openRouterApiKey || '',
             openRouterModel: data.settings.openRouterModel || 'qwen/qwen3-coder:free',
           });
+          setTransferSettings({
+            allowStudentTransfers: data.settings.allowStudentTransfers ?? true,
+            requireFeesPaidForTransfer: data.settings.requireFeesPaidForTransfer ?? true,
+            requireActiveEnrollmentForTransfer: data.settings.requireActiveEnrollmentForTransfer ?? true,
+            allowStaffTransfers: data.settings.allowStaffTransfers ?? true,
+            requireFeesPaidForStaffTransfer: data.settings.requireFeesPaidForStaffTransfer ?? false,
+            transferNotificationsEmail: data.settings.transferNotificationsEmail || '',
+          });
+          setPromotionSettings({
+            promotionEnabled: data.settings.promotionEnabled ?? true,
+            promotionRequireFeesPaid: data.settings.promotionRequireFeesPaid ?? true,
+            promotionMinAttendance: data.settings.promotionMinAttendance ?? 75,
+            promotionAutoEnroll: data.settings.promotionAutoEnroll ?? true,
+          });
         }
+      }
+
+      if (promotionRes.ok) {
+        const promoData = await promotionRes.json();
+        setPromotionSettings({
+          promotionEnabled: promoData.promotionEnabled ?? true,
+          promotionRequireFeesPaid: promoData.promotionRequireFeesPaid ?? true,
+          promotionMinAttendance: promoData.promotionMinAttendance ?? 75,
+          promotionAutoEnroll: promoData.promotionAutoEnroll ?? true,
+        });
       }
       
       if (branchesRes.ok) {
@@ -213,6 +268,63 @@ export default function SettingsPage() {
     } catch (err) {
       console.error('Failed to save AI settings:', err);
       setError('Failed to save AI settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveTransferSettings = async () => {
+    setSaving(true);
+    setError('');
+    setSaved(false);
+    try {
+      const res = await authFetch('/api/school/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          allowStudentTransfers: transferSettings.allowStudentTransfers,
+          requireFeesPaidForTransfer: transferSettings.requireFeesPaidForTransfer,
+          requireActiveEnrollmentForTransfer: transferSettings.requireActiveEnrollmentForTransfer,
+          allowStaffTransfers: transferSettings.allowStaffTransfers,
+          requireFeesPaidForStaffTransfer: transferSettings.requireFeesPaidForStaffTransfer,
+          transferNotificationsEmail: transferSettings.transferNotificationsEmail,
+        }),
+      });
+
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        const data = await res.json();
+        setError('Error: ' + (data.error || 'Failed'));
+      }
+    } catch (err) {
+      setError('Error: ' + String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSavePromotionSettings = async () => {
+    setSaving(true);
+    setError('');
+    setSaved(false);
+    try {
+      const res = await authFetch('/api/sms/promotion-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(promotionSettings),
+      });
+
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        const data = await res.json();
+        setError('Error: ' + (data.error || 'Failed to save'));
+      }
+    } catch (err) {
+      setError('Error: ' + String(err));
     } finally {
       setSaving(false);
     }
@@ -397,6 +509,8 @@ export default function SettingsPage() {
           <TabsTrigger value="ai">AI Features</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="branches">Branches</TabsTrigger>
+          <TabsTrigger value="transfers">Transfers</TabsTrigger>
+          <TabsTrigger value="promotions">Promotions</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -1190,6 +1304,146 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        <TabsContent value="transfers">
+          <Card>
+            <CardHeader>
+              <CardTitle>Transfer Settings</CardTitle>
+              <CardDescription>Configure how students and staff can transfer between branches</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-4">Student Transfers</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={transferSettings.allowStudentTransfers}
+                      onCheckedChange={(checked) => setTransferSettings({ ...transferSettings, allowStudentTransfers: checked })}
+                    />
+                    <span className="text-sm">Allow students to transfer between branches</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={transferSettings.requireFeesPaidForTransfer}
+                      onCheckedChange={(checked) => setTransferSettings({ ...transferSettings, requireFeesPaidForTransfer: checked })}
+                    />
+                    <span className="text-sm">Require all fees to be paid before transfer</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={transferSettings.requireActiveEnrollmentForTransfer}
+                      onCheckedChange={(checked) => setTransferSettings({ ...transferSettings, requireActiveEnrollmentForTransfer: checked })}
+                    />
+                    <span className="text-sm">Require active enrollment in current academic year</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium mb-4">Teacher & Staff Transfers</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={transferSettings.allowStaffTransfers}
+                      onCheckedChange={(checked) => setTransferSettings({ ...transferSettings, allowStaffTransfers: checked })}
+                    />
+                    <span className="text-sm">Allow teachers and staff to transfer between branches</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={transferSettings.requireFeesPaidForStaffTransfer}
+                      onCheckedChange={(checked) => setTransferSettings({ ...transferSettings, requireFeesPaidForStaffTransfer: checked })}
+                    />
+                    <span className="text-sm">Require all fees to be paid before staff transfer</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium mb-4">Notifications</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Notification Email</label>
+                  <Input
+                    value={transferSettings.transferNotificationsEmail}
+                    onChange={(e) => setTransferSettings({ ...transferSettings, transferNotificationsEmail: e.target.value })}
+                    placeholder="admin@school.com"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Email address to receive transfer notifications</p>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSaveTransferSettings} disabled={saving}>
+                  {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Transfer Settings'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="promotions">
+          <Card>
+            <CardHeader>
+              <CardTitle>Promotion Settings</CardTitle>
+              <CardDescription>Configure bulk student promotion criteria</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={promotionSettings.promotionEnabled}
+                  onCheckedChange={(checked) => setPromotionSettings({ ...promotionSettings, promotionEnabled: checked })}
+                />
+                <span className="text-sm">Enable bulk promotion feature</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={promotionSettings.promotionRequireFeesPaid}
+                  onCheckedChange={(checked) => setPromotionSettings({ ...promotionSettings, promotionRequireFeesPaid: checked })}
+                />
+                <span className="text-sm">Require all fees to be paid before promotion</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={promotionSettings.promotionAutoEnroll}
+                  onCheckedChange={(checked) => setPromotionSettings({ ...promotionSettings, promotionAutoEnroll: checked })}
+                />
+                <span className="text-sm">Auto-enroll eligible students (vs. manual confirmation)</span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Minimum Attendance (%)
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={promotionSettings.promotionMinAttendance}
+                  onChange={(e) => setPromotionSettings({ ...promotionSettings, promotionMinAttendance: parseFloat(e.target.value) })}
+                  placeholder="75"
+                />
+                <p className="text-xs text-gray-500 mt-1">Students must meet this attendance percentage to be promoted</p>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="font-medium mb-2">Promotion Criteria Used</h3>
+                <ul className="text-sm text-gray-500 space-y-1">
+                  <li>• Pass score: From grading scale (min passing grade)</li>
+                  <li>• Attendance: {promotionSettings.promotionMinAttendance}% minimum</li>
+                  <li>• Fees: {promotionSettings.promotionRequireFeesPaid ? 'Required' : 'Not required'}</li>
+                </ul>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSavePromotionSettings} disabled={saving}>
+                  {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Promotion Settings'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );

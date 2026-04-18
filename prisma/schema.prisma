@@ -612,6 +612,20 @@ model TenantSettings {
   openRouterApiKey           String?    // Per-tenant API key (encrypted)
   openRouterModel            String?    @default("qwen/qwen3-coder:free")
 
+  // Transfer Settings
+  allowStudentTransfers         Boolean    @default(true)
+  requireFeesPaidForTransfer    Boolean    @default(true)
+  requireActiveEnrollmentForTransfer Boolean   @default(true)
+  allowStaffTransfers            Boolean    @default(true)
+  requireFeesPaidForStaffTransfer Boolean    @default(false)
+  transferNotificationsEmail    String?
+
+  // Promotion Settings
+  promotionEnabled            Boolean    @default(true)
+  promotionRequireFeesPaid   Boolean    @default(true)
+  promotionMinAttendance    Float      @default(75.0)  // Percentage
+  promotionAutoEnroll      Boolean    @default(true)
+
   @@map("tenant_settings")
 }
 

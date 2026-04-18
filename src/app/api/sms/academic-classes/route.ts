@@ -44,26 +44,12 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: { level: 'asc' },
       take: 50,
-      include: {
-        subjects: {
-          select: { id: true },
-          where: { isActive: true }
-        },
-        department: {
-          select: { id: true, name: true, code: true }
-        },
-        classTeacher: {
-          select: { id: true, firstName: true, lastName: true, employeeId: true, position: true }
-        },
-        formMaster: {
-          select: { id: true, firstName: true, lastName: true, employeeId: true, position: true }
-        },
-        caregiver: {
-          select: { id: true, firstName: true, lastName: true, employeeId: true, category: true }
-        },
-        branch: {
-          select: { id: true, name: true, code: true }
-        }
+      select: {
+        id: true,
+        name: true,
+        level: true,
+        tierId: true,
+        academicYearId: true,
       }
     });
     
@@ -71,8 +57,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: classes, pagination: { page: 1, limit: 10, total: classes.length } });
   } catch (error: any) {
-    console.error('Error fetching classes:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[CLASSES] Full error:', error);
+    return NextResponse.json({ 
+      error: 'Server error', 
+      details: error.message || String(error),
+      name: error.name,
+      message: error.message
+    }, { status: 500 });
   }
 }
 
