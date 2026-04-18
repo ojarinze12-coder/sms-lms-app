@@ -22,7 +22,7 @@ async function getMinPassScore(tenantId: string): Promise<number> {
   return 50;
 }
 
-async function checkEligibility(studentId: string, settings: any, minScore: number, classId: string): Promise<{ eligible: boolean; reasons: string[]}> {
+async function checkEligibility(studentId: string, settings: any, minScore: number, classId: string, academicYearId: string): Promise<{ eligible: boolean; reasons: string[]}> {
   const reasons: string[] = [];
   
   const currentEnrollment = await prisma.enrollment.findFirst({
@@ -38,7 +38,11 @@ async function checkEligibility(studentId: string, settings: any, minScore: numb
 
   if (settings.promotionRequireFeesPaid) {
     const unpaidFees = await prisma.feePayment.findFirst({
-      where: { studentId, status: { in: ['PENDING', 'PARTIAL'] } },
+      where: { 
+        studentId, 
+        status: { in: ['PENDING', 'PARTIAL'] },
+        academicYearId,
+      },
     });
     if (unpaidFees) {
       reasons.push('Has unpaid fees');
@@ -60,7 +64,7 @@ async function checkEligibility(studentId: string, settings: any, minScore: numb
   }
 
   const results = await prisma.result.findMany({
-    where: { studentId },
+    where: { studentId, academicYearId },
   });
   console.log(`[Eligibility] Student ${studentId}: results count=${results.length}, minScore=${minScore}`);
 
@@ -108,9 +112,16 @@ export async function GET(req: NextRequest) {
     const tierId = sourceClass.tierId;
     const level = sourceClass.level || 0;
 
-    const settings = await prisma.tenantSettings.findUnique({
+    const dbSettings = await prisma.tenantSettings.findUnique({
       where: { tenantId: authUser.tenantId },
     });
+
+    const settings = {
+      promotionEnabled: dbSettings?.promotionEnabled ?? true,
+      promotionRequireFeesPaid: dbSettings?.promotionRequireFeesPaid ?? true,
+      promotionMinAttendance: dbSettings?.promotionMinAttendance ?? 75,
+      promotionAutoEnroll: dbSettings?.promotionAutoEnroll ?? true,
+    };
 
     const minScore = await getMinPassScore(authUser.tenantId);
 
@@ -130,6 +141,19 @@ export async function GET(req: NextRequest) {
       select: { id: true, name: true, level: true },
     });
 
+    if (targetClasses.length === 0) {
+      console.log('[PROMOTION] No target classes found for level:', level + 1);
+      return NextResponse.json({
+        sourceClass: { id: sourceClass.id, name: sourceClass.name },
+        targetClasses: [],
+        suggestedTarget: null,
+        minPassScore: minScore,
+        preview: [],
+        summary: { total: 0, eligible: 0, ineligible: 0 },
+        message: 'No target class found for the next level. Please create the destination class first.',
+      });
+    }
+
     const suggestedTarget = targetClasses[0];
 
     const enrollments = await prisma.enrollment.findMany({
@@ -141,14 +165,25 @@ export async function GET(req: NextRequest) {
 
 const preview = await Promise.all(
     enrollments.map(async (enrollment) => {
-        const { eligible, reasons } = await checkEligibility(enrollment.studentId, settings, minScore, sourceClassId);
-        return {
-          studentId: enrollment.studentId,
-          studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
-          studentIdno: enrollment.student.studentId,
-          eligible,
-          reasons,
-        };
+        try {
+          const { eligible, reasons } = await checkEligibility(enrollment.studentId, settings, minScore, sourceClassId, sourceClass.academicYearId);
+          return {
+            studentId: enrollment.studentId,
+            studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+            studentIdno: enrollment.student.studentId,
+            eligible,
+            reasons,
+          };
+        } catch (e: any) {
+          console.error(`Eligibility check error for student ${enrollment.studentId}:`, e);
+          return {
+            studentId: enrollment.studentId,
+            studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+            studentIdno: enrollment.student.studentId,
+            eligible: false,
+            reasons: [`Error: ${e.message}`],
+          };
+        }
       })
     );
 
@@ -164,9 +199,10 @@ const preview = await Promise.all(
         ineligible: preview.filter(p => !p.eligible).length,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Promotion preview error:', error);
-    return NextResponse.json({ error: 'Failed to generate preview' }, { status: 500 });
+    const message = error?.message || error?.toString() || 'Unknown error';
+    return NextResponse.json({ error: `Failed to generate preview: ${message}` }, { status: 500 });
   }
 }
 
@@ -222,7 +258,7 @@ export async function POST(req: NextRequest) {
 
     for (const enrollment of enrollments) {
       try {
-        const { eligible, reasons } = await checkEligibility(enrollment.studentId, settings, minScore, sourceClassId);
+        const { eligible, reasons } = await checkEligibility(enrollment.studentId, settings, minScore, sourceClassId, sourceClass.academicYearId);
 
         if (!eligible) {
           results.skipped++;

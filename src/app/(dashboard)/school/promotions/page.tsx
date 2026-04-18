@@ -37,6 +37,7 @@ export default function PromotionsPage() {
     if (!sourceClass) return;
     setLoading(true);
     setError('');
+    setPreview([]);
     try {
       const params = new URLSearchParams({ sourceClassId: sourceClass.id });
       if (targetClassId) params.set('targetClassId', targetClassId);
@@ -48,7 +49,12 @@ export default function PromotionsPage() {
       const d = await res.json();
       console.log('Preview response:', d);
       if (res.ok) {
-        setPreview(d.preview || []);
+        if (d.message && d.preview?.length === 0) {
+          setError(d.message);
+          setPreview([]);
+        } else {
+          setPreview(d.preview || []);
+        }
       } else {
         setError(d.error || 'Preview failed');
       }
@@ -90,6 +96,7 @@ export default function PromotionsPage() {
     setTargetClassId('');
     setPreview([]);
     setResult(null);
+    setError('');
     setShowClassDialog(false);
   };
 
