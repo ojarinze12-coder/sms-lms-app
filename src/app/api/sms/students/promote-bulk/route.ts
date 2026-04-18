@@ -41,7 +41,7 @@ async function checkEligibility(studentId: string, settings: any, minScore: numb
       where: { 
         studentId, 
         status: 'PENDING',
-        academicYearId,
+        feeStructure: { academicYearId },
       },
     });
     if (unpaidFees) {
