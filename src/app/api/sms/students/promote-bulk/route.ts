@@ -40,7 +40,7 @@ async function checkEligibility(studentId: string, settings: any, minScore: numb
     const unpaidFees = await prisma.feePayment.findFirst({
       where: { 
         studentId, 
-        status: { in: ['PENDING', 'PARTIAL'] },
+        status: 'PENDING',
         academicYearId,
       },
     });
