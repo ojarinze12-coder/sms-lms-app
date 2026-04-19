@@ -37,13 +37,21 @@ async function checkEligibility(studentId: string, settings: any, minScore: numb
   }
 
   if (settings.promotionRequireFeesPaid) {
+    const feeStructures = await prisma.feeStructure.findMany({
+      where: { academicYearId },
+      select: { id: true },
+    });
+    
+    const feeStructureIds = feeStructures.map(fs => fs.id);
+    
     const unpaidFees = await prisma.feePayment.findFirst({
       where: { 
         studentId, 
         status: 'PENDING',
-        feeStructure: { academicYearId },
+        feeId: { in: feeStructureIds },
       },
     });
+    
     if (unpaidFees) {
       reasons.push('Has unpaid fees');
     }
