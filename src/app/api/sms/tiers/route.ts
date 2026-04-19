@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const branchId = searchParams.get('branchId');
+    const academicYearId = searchParams.get('academicYearId');
     const tenantId = user.tenantId;
 
     const whereClause: any = { tenantId };
@@ -33,12 +34,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Get class counts per tier, filtered by branch
+    // Get class counts per tier, filtered by branch and academic year
     const tierIds = tiers.map(t => t.id);
     const classCounts = await prisma.academicClass.groupBy({
       by: ['tierId'],
       where: {
         tierId: { in: tierIds },
+        ...(academicYearId ? { academicYearId } : {}),
         ...(branchId ? { branchId: { in: [branchId, null] } } : {}),
       },
       _count: true,

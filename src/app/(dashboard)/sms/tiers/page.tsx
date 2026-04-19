@@ -5,6 +5,12 @@ import { authFetch } from '@/lib/auth-fetch';
 import { TIER_TEMPLATE_OPTIONS } from '@/lib/constants/tiers';
 import { useBranch } from '@/lib/hooks/use-branch';
 
+interface AcademicYear {
+  id: string;
+  name: string;
+  isActive?: boolean;
+}
+
 interface Tier {
   id: string;
   name: string;
@@ -20,6 +26,8 @@ interface Tier {
 
 export default function TiersPage() {
   const { selectedBranch } = useBranch();
+  const [years, setYears] = useState<AcademicYear[]>([]);
+  const [selectedYearId, setSelectedYearId] = useState<string>('');
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -37,14 +45,44 @@ export default function TiersPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadTiers();
-  }, [selectedBranch]);
+    loadYears();
+  }, []);
+
+  useEffect(() => {
+    if (selectedYearId) {
+      loadTiers();
+    }
+  }, [selectedYearId, selectedBranch]);
+
+  const loadYears = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const url = '/api/sms/academic-years' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
+      const data = await res.json();
+      const yearList = data.years || [];
+      setYears(yearList);
+      if (yearList.length > 0) {
+        const activeYear = yearList.find((y: AcademicYear) => y.isActive);
+        setSelectedYearId(activeYear?.id || yearList[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load years:', err);
+      setLoading(false);
+    }
+  };
 
   const loadTiers = async () => {
     try {
       const params = new URLSearchParams();
       if (selectedBranch) {
         params.set('branchId', selectedBranch.id);
+      }
+      if (selectedYearId) {
+        params.set('academicYearId', selectedYearId);
       }
       const url = '/api/sms/tiers' + (params.toString() ? '?' + params.toString() : '');
       const res = await authFetch(url);
@@ -217,6 +255,24 @@ export default function TiersPage() {
             Add Tier
           </button>
         </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Select Academic Year
+        </label>
+        <select
+          value={selectedYearId}
+          onChange={(e) => setSelectedYearId(e.target.value)}
+          className="w-full max-w-md px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+        >
+          <option value="">Select a year...</option>
+          {years.map((year) => (
+            <option key={year.id} value={year.id}>
+              {year.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {tiers.length === 0 ? (
