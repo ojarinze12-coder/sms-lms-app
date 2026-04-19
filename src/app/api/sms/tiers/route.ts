@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = { tenantId };
     if (branchId) {
-      whereClause.OR = [
-        { branchId },
-        { branchId: null },
-      ];
+      whereClause.branchId = { in: [branchId, null] };
     }
 
     const tiers = await prisma.tier.findMany({
@@ -31,7 +28,6 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             departments: true,
-            classes: true,
           },
         },
       },
