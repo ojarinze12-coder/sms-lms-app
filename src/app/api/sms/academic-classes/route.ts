@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
         level: true,
         tierId: true,
         academicYearId: true,
+        subjects: { select: { id: true } },
       }
     });
     

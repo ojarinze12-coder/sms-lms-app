@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             departments: true,
+            classes: true,
           },
         },
       },
