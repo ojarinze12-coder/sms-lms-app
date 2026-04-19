@@ -429,6 +429,7 @@ model AcademicClass {
   formMaster    Teacher?        @relation("FormMasterClasses", fields: [formMasterId], references: [id])
   caregiver     Staff?          @relation("CaregiverClasses", fields: [caregiverId], references: [id])
   branch        Branch?        @relation(fields: [branchId], references: [id])
+  tier          Tier?          @relation(fields: [tierId], references: [id])
 
   @@unique([academicYearId, name, stream], map: "academic_classes_academicYearId_name_stream_unique")
   @@index([academicYearId], map: "idx_academic_classes_academic_year")
@@ -475,6 +476,7 @@ model Tier {
   createdAt DateTime? @default(now()) @db.Timestamptz(6)
   updatedAt DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
   badges    Badge[]
+  classes      AcademicClass[]
   departments Department[]
   tierCurriculum TierCurriculum?
   branch    Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)

@@ -33,7 +33,27 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ data: tiers });
+    // Get class counts per tier, filtered by branch
+    const tierIds = tiers.map(t => t.id);
+    const classCounts = await prisma.academicClass.groupBy({
+      by: ['tierId'],
+      where: {
+        tierId: { in: tierIds },
+        ...(branchId ? { branchId: { in: [branchId, null] } } : {}),
+      },
+      _count: true,
+    });
+
+    const classCountMap = new Map(classCounts.map(c => [c.tierId, c._count]));
+    const tiersWithClassCount = tiers.map(tier => ({
+      ...tier,
+      _count: {
+        ...tier._count,
+        classes: classCountMap.get(tier.id) || 0,
+      },
+    }));
+
+    return NextResponse.json({ data: tiersWithClassCount });
   } catch (error) {
     console.error('Error fetching tiers:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
