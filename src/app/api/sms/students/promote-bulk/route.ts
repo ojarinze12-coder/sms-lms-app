@@ -72,11 +72,14 @@ async function checkEligibility(studentId: string, settings: any, minScore: numb
   }
 
   const results = await prisma.result.findMany({
-    where: { studentId, academicYearId },
+    where: { 
+      studentId,
+      exam: { term: { academicYearId } },
+    },
   });
   console.log(`[Eligibility] Student ${studentId}: results count=${results.length}, minScore=${minScore}`);
 
-  const failedSubjects = results.filter((r: any) => r.totalScore < minScore);
+  const failedSubjects = results.filter((r: any) => r.score < minScore);
   if (failedSubjects.length > 0) {
     reasons.push(`${failedSubjects.length} subject(s) below passing score`);
   }
