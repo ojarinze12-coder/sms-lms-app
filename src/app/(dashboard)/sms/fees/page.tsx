@@ -97,14 +97,23 @@ export default function FeesPage() {
 
   async function fetchFeeStructures() {
     try {
+      setLoading(true);
       const params = new URLSearchParams();
       if (selectedBranch) params.set('branchId', selectedBranch.id);
       const url = '/api/sms/fees' + (params.toString() ? '?' + params.toString() : '');
       const res = await authFetch(url);
+      if (!res.ok) {
+        console.error('Fee structures API error:', res.status);
+        setFeeStructures([]);
+        return;
+      }
       const data = await res.json();
-      setFeeStructures(data.feeStructures || []);
+      setFeeStructures(Array.isArray(data.feeStructures) ? data.feeStructures : []);
     } catch (err) {
       console.error('Failed to fetch fees:', err);
+      setFeeStructures([]);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -114,6 +123,11 @@ export default function FeesPage() {
       if (selectedBranch) params.set('branchId', selectedBranch.id);
       const url = '/api/sms/fees/payments' + (params.toString() ? '?' + params.toString() : '');
       const res = await authFetch(url);
+      if (!res.ok) {
+        console.error('Payments API error:', res.status);
+        setPayments([]);
+        return;
+      }
       const data = await res.json();
       setPayments(Array.isArray(data.payments) ? data.payments : []);
     } catch (err) {
@@ -125,10 +139,17 @@ export default function FeesPage() {
   async function fetchAcademicYears() {
     try {
       const res = await authFetch('/api/sms/academic-years');
+      if (!res.ok) {
+        console.error('Academic years API error:', res.status);
+        setAcademicYears([]);
+        return;
+      }
       const data = await res.json();
-      setAcademicYears(data || []);
+      const years = data?.years || data || [];
+      setAcademicYears(Array.isArray(years) ? years : []);
     } catch (err) {
       console.error('Failed to fetch academic years:', err);
+      setAcademicYears([]);
     }
   }
 
