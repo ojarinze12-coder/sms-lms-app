@@ -16,12 +16,14 @@ export async function GET(request: NextRequest) {
     const classId = searchParams.get('classId');
     const type = searchParams.get('type');
     const branchId = searchParams.get('branchId');
+    const tierId = searchParams.get('tierId');
 
     const where: any = { tenantId: user.tenantId };
     
     if (academicYearId) where.academicYearId = academicYearId;
     if (type) where.type = type;
     if (branchId) where.branchId = branchId;
+    if (tierId) where.tierId = tierId;
 
     const feeStructures = await prisma.feeStructure.findMany({
       where,
@@ -29,6 +31,9 @@ export async function GET(request: NextRequest) {
         academicYear: true,
         term: true,
         branch: {
+          select: { id: true, name: true, code: true }
+        },
+        tier: {
           select: { id: true, name: true, code: true }
         },
       },
@@ -62,6 +67,7 @@ export async function POST(request: NextRequest) {
       academicYearId,
       termId,
       branchId,
+      tierId,
     } = body;
 
     if (!name || !amount || !academicYearId || !type) {
@@ -84,6 +90,7 @@ export async function POST(request: NextRequest) {
         academicYearId,
         termId: termId || null,
         branchId: branchId || null,
+        tierId: tierId || null,
         tenantId: user.tenantId,
       },
     });

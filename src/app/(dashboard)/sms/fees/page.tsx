@@ -46,6 +46,16 @@ interface FeeStructure {
   academicYear: {
     name: string;
   };
+  branch?: {
+    id: string;
+    name: string;
+    code: string;
+  };
+  tier?: {
+    id: string;
+    name: string;
+    code: string;
+  };
 }
 
 interface Payment {
@@ -71,15 +81,33 @@ interface AcademicYear {
   isActive: boolean;
 }
 
+interface Tier {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface Student {
+  id: string;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+}
+
 export default function FeesPage() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { selectedBranch } = useBranch();
+  const { selectedBranch, branches } = useBranch();
   const [feeStructures, setFeeStructures] = useState<FeeStructure[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
+  const [tiers, setTiers] = useState<Tier[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [newFee, setNewFee] = useState({
     name: '',
     amount: '',
@@ -87,12 +115,24 @@ export default function FeesPage() {
     category: 'MANDATORY',
     academicYearId: '',
     dueDate: '',
+    branchId: '',
+    tierId: '',
+  });
+
+  const [paymentForm, setPaymentForm] = useState({
+    studentId: '',
+    feeId: '',
+    amount: '',
+    method: 'CASH',
+    transactionId: '',
+    notes: '',
   });
 
   useEffect(() => {
     fetchFeeStructures();
     fetchPayments();
     fetchAcademicYears();
+    fetchTiers();
   }, [selectedBranch]);
 
   async function fetchFeeStructures() {
@@ -153,6 +193,94 @@ export default function FeesPage() {
     }
   }
 
+  async function fetchTiers() {
+    try {
+      const params = new URLSearchParams();
+      if (selectedBranch) params.set('branchId', selectedBranch.id);
+      const url = '/api/sms/tiers' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
+      if (!res.ok) {
+        console.error('Tiers API error:', res.status);
+        setTiers([]);
+        return;
+      }
+      const data = await res.json();
+      const tierList = data.tiers || [];
+      setTiers(Array.isArray(tierList) ? tierList : []);
+    } catch (err) {
+      console.error('Failed to fetch tiers:', err);
+      setTiers([]);
+    }
+  }
+
+  async function fetchStudents(search: string = '') {
+    try {
+      const params = new URLSearchParams();
+      if (selectedBranch) params.set('branchId', selectedBranch.id);
+      if (search) params.set('search', search);
+      params.set('limit', '50');
+      const url = '/api/sms/students?' + params.toString();
+      const res = await authFetch(url);
+      if (!res.ok) {
+        console.error('Students API error:', res.status);
+        setStudents([]);
+        return;
+      }
+      const data = await res.json();
+      const studentList = data.students || data || [];
+      setStudents(Array.isArray(studentList) ? studentList : []);
+    } catch (err) {
+      console.error('Failed to fetch students:', err);
+      setStudents([]);
+    }
+  }
+
+  async function recordPayment() {
+    if (!paymentForm.studentId || !paymentForm.feeId || !paymentForm.amount) {
+      toast({ variant: 'destructive', description: 'Please fill in student, fee structure, and amount' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await authFetch('/api/sms/fees/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'record',
+          studentId: paymentForm.studentId,
+          feeId: paymentForm.feeId,
+          amount: parseFloat(paymentForm.amount),
+          method: paymentForm.method,
+          transactionId: paymentForm.transactionId || null,
+          status: 'COMPLETED',
+          gatewayResponse: { manual: true },
+        }),
+      });
+
+      const data = await res.json();
+      if (data.payment) {
+        toast({ description: 'Payment recorded successfully' });
+        setShowPaymentDialog(false);
+        setPaymentForm({
+          studentId: '',
+          feeId: '',
+          amount: '',
+          method: 'CASH',
+          transactionId: '',
+          notes: '',
+        });
+        fetchPayments();
+      } else {
+        toast({ variant: 'destructive', description: data.error || 'Failed to record payment' });
+      }
+    } catch (err) {
+      toast({ variant: 'destructive', description: 'Failed to record payment' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function createFeeStructure() {
     if (!newFee.name || !newFee.amount || !newFee.academicYearId) {
       toast({ variant: 'destructive', description: 'Please fill in all required fields' });
@@ -171,6 +299,8 @@ export default function FeesPage() {
           category: newFee.category,
           academicYearId: newFee.academicYearId,
           dueDate: newFee.dueDate || null,
+          branchId: newFee.branchId || null,
+          tierId: newFee.tierId || null,
         }),
       });
 
@@ -185,6 +315,8 @@ export default function FeesPage() {
           category: 'MANDATORY',
           academicYearId: '',
           dueDate: '',
+          branchId: '',
+          tierId: '',
         });
         fetchFeeStructures();
       } else {
@@ -232,18 +364,109 @@ export default function FeesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Fee Management</h1>
           <p className="text-gray-500 dark:text-gray-400">Manage school fees, payments, and generate invoices</p>
         </div>
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Fee Structure
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={showPaymentDialog} onOpenChange={(open) => { setShowPaymentDialog(open); if (open) fetchStudents(); }}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Receipt className="w-4 h-4 mr-2" />
+                Make Fee Payment
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Make Fee Payment</DialogTitle>
+                <DialogDescription>Record a manual fee payment (Cash, Cheque, Bank Transfer)</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Student</label>
+                  <Select value={paymentForm.studentId} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, studentId: v }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Search and select student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students.map((student) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.lastName} {student.firstName} ({student.studentId})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Fee Structure</label>
+                  <Select value={paymentForm.feeId} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, feeId: v }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select fee structure" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {feeStructures.map((fee) => (
+                        <SelectItem key={fee.id} value={fee.id}>
+                          {fee.name} - {formatCurrency(fee.amount)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Amount (₦)</label>
+                    <Input 
+                      type="number"
+                      placeholder="50000"
+                      value={paymentForm.amount}
+                      onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Payment Method</label>
+                    <Select value={paymentForm.method} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, method: v }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                        <SelectItem value="CHEQUE">Cheque</SelectItem>
+                        <SelectItem value="POS">POS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Transaction Reference</label>
+                  <Input 
+                    placeholder="e.g., Cheque No, Teller No, Transfer Ref"
+                    value={paymentForm.transactionId}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, transactionId: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Notes (Optional)</label>
+                  <Input 
+                    placeholder="Any additional notes"
+                    value={paymentForm.notes}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, notes: e.target.value }))}
+                  />
+                </div>
+                <Button onClick={recordPayment} disabled={loading} className="w-full">
+                  {loading ? 'Recording...' : 'Record Payment'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Fee Structure
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Fee Structure</DialogTitle>
@@ -311,6 +534,36 @@ export default function FeesPage() {
                     value={newFee.dueDate}
                     onChange={(e) => setNewFee(prev => ({ ...prev, dueDate: e.target.value }))}
                   />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Branch</label>
+                  <Select value={newFee.branchId} onValueChange={(v) => setNewFee(prev => ({ ...prev, branchId: v }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select branch (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Branches</SelectItem>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Tier</label>
+                  <Select value={newFee.tierId} onValueChange={(v) => setNewFee(prev => ({ ...prev, tierId: v }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select tier (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Tiers</SelectItem>
+                      {tiers.map((tier) => (
+                        <SelectItem key={tier.id} value={tier.id}>{tier.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <Button onClick={createFeeStructure} disabled={loading} className="w-full">
@@ -389,10 +642,11 @@ export default function FeesPage() {
               <TableRow className="dark:border-gray-700">
                 <TableHead className="dark:text-gray-300">Fee Name</TableHead>
                 <TableHead className="dark:text-gray-300">Type</TableHead>
+                <TableHead className="dark:text-gray-300">Tier</TableHead>
+                <TableHead className="dark:text-gray-300">Branch</TableHead>
                 <TableHead className="dark:text-gray-300">Amount</TableHead>
                 <TableHead className="dark:text-gray-300">Due Date</TableHead>
                 <TableHead className="dark:text-gray-300">Academic Year</TableHead>
-                <TableHead className="dark:text-gray-300">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -402,19 +656,16 @@ export default function FeesPage() {
                   <TableCell>
                     <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">{feeTypeLabels[fee.type] || fee.type}</Badge>
                   </TableCell>
+                  <TableCell className="dark:text-gray-300">{fee.tier?.name || '-'}</TableCell>
+                  <TableCell className="dark:text-gray-300">{fee.branch?.name || '-'}</TableCell>
                   <TableCell className="dark:text-gray-300">{formatCurrency(fee.amount)}</TableCell>
                   <TableCell className="dark:text-gray-300">{fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : '-'}</TableCell>
                   <TableCell className="dark:text-gray-300">{fee.academicYear?.name}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <Receipt className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))}
               {feeStructures.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4 text-gray-500 dark:text-gray-400">
+                  <TableCell colSpan={7} className="text-center py-4 text-gray-500 dark:text-gray-400">
                     No fee structures created yet
                   </TableCell>
                 </TableRow>

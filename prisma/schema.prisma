@@ -479,6 +479,7 @@ model Tier {
   classes      AcademicClass[]
   departments Department[]
   tierCurriculum TierCurriculum?
+  feeStructures FeeStructure[]
   branch    Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, code], map: "tiers_tenantId_code_unique")
@@ -1171,16 +1172,19 @@ model FeeStructure {
   termId         String?      @db.Uuid
   tenantId       String       @db.Uuid
   branchId       String?      @db.Uuid
+  tierId         String?      @db.Uuid
   createdAt      DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
   payments       FeePayment[]
   academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
   term           Term?        @relation(fields: [termId], references: [id])
   branch         Branch?      @relation(fields: [branchId], references: [id])
+  tier           Tier?        @relation(fields: [tierId], references: [id])
 
   @@index([academicYearId], map: "idx_fee_structures_academic_year")
   @@index([tenantId], map: "idx_fee_structures_tenant")
   @@index([branchId], map: "idx_fee_structures_branch")
+  @@index([tierId], map: "idx_fee_structures_tier")
   @@map("fee_structures")
 }
 
