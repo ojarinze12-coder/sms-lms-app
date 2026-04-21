@@ -110,11 +110,15 @@ export default function FeesPage() {
 
   async function fetchPayments() {
     try {
-      const res = await authFetch('/api/sms/fees/payments');
+      const params = new URLSearchParams();
+      if (selectedBranch) params.set('branchId', selectedBranch.id);
+      const url = '/api/sms/fees/payments' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
       const data = await res.json();
-      setPayments(data.payments || []);
+      setPayments(Array.isArray(data.payments) ? data.payments : []);
     } catch (err) {
       console.error('Failed to fetch payments:', err);
+      setPayments([]);
     }
   }
 
