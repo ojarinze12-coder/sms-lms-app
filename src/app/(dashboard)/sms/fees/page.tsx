@@ -195,7 +195,7 @@ export default function FeesPage() {
         return;
       }
       const data = await res.json();
-      setTiers(Array.isArray(data.tiers) ? data.tiers : []);
+      setTiers(Array.isArray(data.data) ? data.data : []);
     } catch (err) {
       console.error('Failed to fetch tiers:', err);
       setTiers([]);
@@ -526,12 +526,12 @@ export default function FeesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Branch</label>
-                  <Select value={newFee.branchId} onValueChange={(v) => setNewFee(prev => ({ ...prev, branchId: v }))}>
+                  <Select value={newFee.branchId || 'all'} onValueChange={(v) => setNewFee(prev => ({ ...prev, branchId: v === 'all' ? '' : v }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select branch (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Branches</SelectItem>
+                      <SelectItem value="all">All Branches</SelectItem>
                       {branches.map((branch) => (
                         <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
                       ))}
@@ -540,12 +540,12 @@ export default function FeesPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">Tier</label>
-                  <Select value={newFee.tierId} onValueChange={(v) => setNewFee(prev => ({ ...prev, tierId: v }))}>
+                  <Select value={newFee.tierId || 'all'} onValueChange={(v) => setNewFee(prev => ({ ...prev, tierId: v === 'all' ? '' : v }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select tier (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Tiers</SelectItem>
+                      <SelectItem value="all">All Tiers</SelectItem>
                       {tiers.map((tier) => (
                         <SelectItem key={tier.id} value={tier.id}>{tier.name}</SelectItem>
                       ))}
