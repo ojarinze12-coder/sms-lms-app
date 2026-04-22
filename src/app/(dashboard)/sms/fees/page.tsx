@@ -46,16 +46,6 @@ interface FeeStructure {
   academicYear: {
     name: string;
   };
-  branch?: {
-    id: string;
-    name: string;
-    code: string;
-  };
-  tier?: {
-    id: string;
-    name: string;
-    code: string;
-  };
 }
 
 interface Payment {
@@ -205,19 +195,17 @@ export default function FeesPage() {
         return;
       }
       const data = await res.json();
-      const tierList = data.tiers || [];
-      setTiers(Array.isArray(tierList) ? tierList : []);
+      setTiers(Array.isArray(data.tiers) ? data.tiers : []);
     } catch (err) {
       console.error('Failed to fetch tiers:', err);
       setTiers([]);
     }
   }
 
-  async function fetchStudents(search: string = '') {
+  async function fetchStudents() {
     try {
       const params = new URLSearchParams();
       if (selectedBranch) params.set('branchId', selectedBranch.id);
-      if (search) params.set('search', search);
       params.set('limit', '50');
       const url = '/api/sms/students?' + params.toString();
       const res = await authFetch(url);
@@ -227,57 +215,10 @@ export default function FeesPage() {
         return;
       }
       const data = await res.json();
-      const studentList = data.students || data || [];
-      setStudents(Array.isArray(studentList) ? studentList : []);
+      setStudents(Array.isArray(data.students) ? data.students : []);
     } catch (err) {
       console.error('Failed to fetch students:', err);
       setStudents([]);
-    }
-  }
-
-  async function recordPayment() {
-    if (!paymentForm.studentId || !paymentForm.feeId || !paymentForm.amount) {
-      toast({ variant: 'destructive', description: 'Please fill in student, fee structure, and amount' });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await authFetch('/api/sms/fees/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'record',
-          studentId: paymentForm.studentId,
-          feeId: paymentForm.feeId,
-          amount: parseFloat(paymentForm.amount),
-          method: paymentForm.method,
-          transactionId: paymentForm.transactionId || null,
-          status: 'COMPLETED',
-          gatewayResponse: { manual: true },
-        }),
-      });
-
-      const data = await res.json();
-      if (data.payment) {
-        toast({ description: 'Payment recorded successfully' });
-        setShowPaymentDialog(false);
-        setPaymentForm({
-          studentId: '',
-          feeId: '',
-          amount: '',
-          method: 'CASH',
-          transactionId: '',
-          notes: '',
-        });
-        fetchPayments();
-      } else {
-        toast({ variant: 'destructive', description: data.error || 'Failed to record payment' });
-      }
-    } catch (err) {
-      toast({ variant: 'destructive', description: 'Failed to record payment' });
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -324,6 +265,52 @@ export default function FeesPage() {
       }
     } catch (err) {
       toast({ variant: 'destructive', description: 'Failed to create fee structure' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function recordPayment() {
+    if (!paymentForm.studentId || !paymentForm.feeId || !paymentForm.amount) {
+      toast({ variant: 'destructive', description: 'Please fill in student, fee structure, and amount' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await authFetch('/api/sms/fees/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'record',
+          studentId: paymentForm.studentId,
+          feeId: paymentForm.feeId,
+          amount: parseFloat(paymentForm.amount),
+          method: paymentForm.method,
+          transactionId: paymentForm.transactionId || null,
+          status: 'COMPLETED',
+          gatewayResponse: { manual: true },
+        }),
+      });
+
+      const data = await res.json();
+      if (data.payment) {
+        toast({ description: 'Payment recorded successfully' });
+        setShowPaymentDialog(false);
+        setPaymentForm({
+          studentId: '',
+          feeId: '',
+          amount: '',
+          method: 'CASH',
+          transactionId: '',
+          notes: '',
+        });
+        fetchPayments();
+      } else {
+        toast({ variant: 'destructive', description: data.error || 'Failed to record payment' });
+      }
+    } catch (err) {
+      toast({ variant: 'destructive', description: 'Failed to record payment' });
     } finally {
       setLoading(false);
     }
@@ -467,7 +454,7 @@ export default function FeesPage() {
                 Add Fee Structure
               </Button>
             </DialogTrigger>
-          <DialogContent>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Fee Structure</DialogTitle>
               <DialogDescription>Add a new fee type for the academic year</DialogDescription>
@@ -573,6 +560,7 @@ export default function FeesPage() {
           </DialogContent>
         </Dialog>
       </div>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -656,8 +644,8 @@ export default function FeesPage() {
                   <TableCell>
                     <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">{feeTypeLabels[fee.type] || fee.type}</Badge>
                   </TableCell>
-                  <TableCell className="dark:text-gray-300">{fee.tier?.name || '-'}</TableCell>
-                  <TableCell className="dark:text-gray-300">{fee.branch?.name || '-'}</TableCell>
+                  <TableCell className="dark:text-gray-300">{(fee as any).tier?.name || '-'}</TableCell>
+                  <TableCell className="dark:text-gray-300">{(fee as any).branch?.name || '-'}</TableCell>
                   <TableCell className="dark:text-gray-300">{formatCurrency(fee.amount)}</TableCell>
                   <TableCell className="dark:text-gray-300">{fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : '-'}</TableCell>
                   <TableCell className="dark:text-gray-300">{fee.academicYear?.name}</TableCell>
