@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
+import { URLSearchParams } from 'url';
 
 export async function GET(request: Request) {
   try {
@@ -10,12 +11,40 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get('branchId');
+
+    const whereClause: any = { tenantId: authUser.tenantId };
+
+    if (branchId && branchId !== 'all') {
+      whereClause.branchId = branchId;
+    } else if (authUser.branchId && authUser.role !== 'SUPER_ADMIN') {
+      whereClause.branchId = authUser.branchId;
+    }
+
     const users = await prisma.user.findMany({
-      where: { tenantId: authUser.tenantId },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ users });
+    const usersWithBranch = await Promise.all(
+      users.map(async (user) => {
+        let branch = null;
+        if (user.branchId) {
+          branch = await prisma.branch.findUnique({
+            where: { id: user.branchId },
+            select: { id: true, name: true },
+          });
+        }
+        return {
+          ...user,
+          branchId: user.branchId,
+          branch,
+        };
+      })
+    );
+
+    return NextResponse.json({ users: usersWithBranch });
   } catch (error) {
     console.error('Failed to fetch users:', error);
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
@@ -31,7 +60,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { email, password, firstName, lastName, role } = body;
+    const { email, password, firstName, lastName, role, branchId } = body;
 
     if (!email || !password || !role) {
       return NextResponse.json({ error: 'Email, password, and role are required' }, { status: 400 });
@@ -48,6 +77,11 @@ export async function POST(request: Request) {
     const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    let userBranchId = branchId;
+    if (!userBranchId && authUser.branchId) {
+      userBranchId = authUser.branchId;
+    }
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -56,6 +90,7 @@ export async function POST(request: Request) {
         lastName,
         role,
         tenantId: authUser.tenantId,
+        branchId: userBranchId,
       },
     });
 

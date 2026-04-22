@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email },
-      include: { tenant: true },
+      include: { tenant: true, branch: true },
     });
 
     if (!user || !user.password) {
@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       tenantId: user.tenantId || undefined,
+      branchId: user.branchId || undefined,
       role: user.role,
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
         lastName: user.lastName,
         role: user.role,
         tenant: user.tenant,
+        branch: user.branch,
       },
       token: token,
     };

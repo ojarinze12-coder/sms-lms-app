@@ -179,6 +179,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       tenantId: user.tenantId || undefined,
+      branchId: user.branchId || undefined,
       role: user.role,
       tokenVersion: user.tokenVersion,
     });

@@ -29,6 +29,8 @@ interface SchoolUser {
   firstName: string | null;
   lastName: string | null;
   role: string;
+  branchId: string | null;
+  branch?: { id: string; name: string } | null;
   isActive: boolean;
   lastLogin: string | null;
   createdAt: string;
@@ -40,10 +42,13 @@ export default function SchoolUsersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [branchFilter, setBranchFilter] = useState('all');
+  const [branches, setBranches] = useState<{id: string; name: string}[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<SchoolUser | null>(null);
   const [editRole, setEditRole] = useState('');
+  const [editBranchId, setEditBranchId] = useState('');
   const [showEditRoleModal, setShowEditRoleModal] = useState(false);
   const [resettingPassword, setResettingPassword] = useState<string | null>(null);
   const [newUser, setNewUser] = useState({
@@ -52,6 +57,7 @@ export default function SchoolUsersPage() {
     firstName: '',
     lastName: '',
     role: 'TEACHER',
+    branchId: '',
   });
 
   useEffect(() => {
@@ -60,16 +66,34 @@ export default function SchoolUsersPage() {
     
     if (authUser?.tenantId) {
       fetchUsers();
+      fetchBranches();
     } else {
       setLoading(false);
     }
   }, [authLoading, authUser]);
 
+  const fetchBranches = async () => {
+    try {
+      const res = await authFetch('/api/sms/branches');
+      if (res.ok) {
+        const data = await res.json();
+        setBranches(data.branches || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch branches:', error);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await authFetch('/api/school/users');
+      const params = new URLSearchParams();
+      if (branchFilter !== 'all') {
+        params.set('branchId', branchFilter);
+      }
+      const url = `/api/school/users${params.toString() ? '?' + params.toString() : ''}`;
+      const res = await authFetch(url);
       if (!res.ok) {
         const err = await res.json();
         console.error('Failed to fetch users:', err);
@@ -105,6 +129,7 @@ export default function SchoolUsersPage() {
           firstName: '',
           lastName: '',
           role: 'TEACHER',
+          branchId: '',
         });
       }
     } catch (error) {
@@ -131,6 +156,7 @@ export default function SchoolUsersPage() {
   const handleEditRole = (user: SchoolUser) => {
     setEditingUser(user);
     setEditRole(user.role);
+    setEditBranchId(user.branchId || '');
     setShowEditRoleModal(true);
   };
 
@@ -140,7 +166,7 @@ export default function SchoolUsersPage() {
       const res = await authFetch(`/api/school/users/${editingUser.id}/update-role`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: editRole }),
+        body: JSON.stringify({ role: editRole, branchId: editBranchId || null }),
       });
       
       if (res.ok) {
@@ -231,6 +257,17 @@ export default function SchoolUsersPage() {
                   className="pl-9 w-64"
                 />
               </div>
+              <Select value={branchFilter} onValueChange={(v) => { setBranchFilter(v); fetchUsers(); }}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Filter by branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Branches</SelectItem>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Filter by role" />
@@ -257,6 +294,7 @@ export default function SchoolUsersPage() {
               <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">User</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Branch</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Role</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Last Login</th>
@@ -267,7 +305,7 @@ export default function SchoolUsersPage() {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                       No users found
                     </td>
                   </tr>
@@ -288,6 +326,11 @@ export default function SchoolUsersPage() {
                             <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {user.branch?.name || '-'}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         {getRoleBadge(user.role)}
@@ -399,6 +442,20 @@ export default function SchoolUsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Branch</label>
+                  <Select value={newUser.branchId} onValueChange={(v) => setNewUser({ ...newUser, branchId: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select branch (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Branch</SelectItem>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex gap-2 pt-4">
                   <Button type="submit" className="flex-1">
                     Create User
@@ -439,6 +496,20 @@ export default function SchoolUsersPage() {
                       <SelectItem value="TEACHER">Teacher</SelectItem>
                       <SelectItem value="PARENT">Parent</SelectItem>
                       <SelectItem value="STUDENT">Student</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Branch</label>
+                  <Select value={editBranchId} onValueChange={setEditBranchId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select branch (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Branch</SelectItem>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

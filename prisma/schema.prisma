@@ -9,148 +9,152 @@ datasource db {
 }
 
 model Tenant {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  slug       String   @unique
-  domain     String?
-  status     String   @default("ACTIVE")
-  brandColor String   @default("#1a56db")
-  logo       String?
-  config     Json     @default("{}")
-  createdAt  DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  plan       String   @default("FREE")
-  ownerId    String?  @db.Uuid  // Groups multiple schools under one owner
-  users      User[]
-  courses    Course[]
-  supportTickets SupportTicket[]
-  messageCampaigns MessageCampaign[]
-  ptaNotices PtaNotice[]
-  conversations Conversation[]
-  hostels    Hostel[]
-  documents  Document[]
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  slug               String             @unique
+  domain             String?
+  status             String             @default("ACTIVE")
+  brandColor         String             @default("#1a56db")
+  logo               String?
+  config             Json               @default("{}")
+  createdAt          DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  plan               String             @default("FREE")
+  ownerId            String?            @db.Uuid // Groups multiple schools under one owner
+  users              User[]
+  courses            Course[]
+  supportTickets     SupportTicket[]
+  messageCampaigns   MessageCampaign[]
+  ptaNotices         PtaNotice[]
+  conversations      Conversation[]
+  hostels            Hostel[]
+  documents          Document[]
   documentCategories DocumentCategory[]
-  subscriptions Subscription[]
-  announcements Announcement[]
-  branches   Branch[]
-  
+  subscriptions      Subscription[]
+  announcements      Announcement[]
+  branches           Branch[]
+
   @@index([ownerId], map: "idx_tenants_owner")
   @@map("tenants")
 }
 
 model Branch {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name     String
-  code     String   // "MAIN", "CAMPUS-A", "CAMPUS-B", etc.
-  address  String?
-  phone   String?
-  email   String?
-  isActive Boolean  @default(true)
-  isMain   Boolean  @default(false)
-  tenantId String   @db.Uuid
+  name      String
+  code      String // "MAIN", "CAMPUS-A", "CAMPUS-B", etc.
+  address   String?
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true)
+  isMain    Boolean  @default(false)
+  tenantId  String   @db.Uuid
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  students Student[]
-  teachers Teacher[]
-  staff    Staff[]
-  classes  AcademicClass[]
-  enrollments Enrollment[]
-  attendances Attendance[]
-  feePayments FeePayment[]
-  results    Result[]
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  students       Student[]
+  teachers       Teacher[]
+  staff          Staff[]
+  classes        AcademicClass[]
+  enrollments    Enrollment[]
+  attendances    Attendance[]
+  feePayments    FeePayment[]
+  results        Result[]
   timetableSlots TimetableSlot[]
-  feeStructures FeeStructure[]
-  tiers    Tier[]
-  departments Department[]
-  academicYears AcademicYear[]
-  
+  feeStructures  FeeStructure[]
+  tiers          Tier[]
+  departments    Department[]
+  users          User[]
+  AcademicYear   AcademicYear[]
+
   @@unique([tenantId, code], map: "branches_tenantId_code_unique")
   @@index([tenantId], map: "idx_branches_tenant")
   @@map("branches")
 }
 
 model User {
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email               String    @unique
-  password            String?
-  firstName           String?
-  lastName            String?
-  role                UserRole  @default(TEACHER)
-  tenantId            String?   @db.Uuid
-  tokenVersion        Int       @default(1)
-  twoFactorSecret     String?
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                String             @unique
+  password             String?
+  firstName            String?
+  lastName             String?
+  role                 UserRole           @default(TEACHER)
+  tenantId             String?            @db.Uuid
+  branchId             String?            @db.Uuid
+  tokenVersion         Int                @default(1)
+  twoFactorSecret      String?
   twoFactorBackupCodes String?
-  twoFactorEnabled    Boolean   @default(false)
-  lastLoginAt         DateTime? @db.Timestamptz(6)
-  lastLoginIp         String?
-  failedLoginAttempts Int       @default(0)
-  lockedUntil         DateTime? @db.Timestamptz(6)
-  allowedIps          String?
-  isActive            Boolean   @default(true)
-  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt           DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
-  tenant              Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  reportGenerations  ReportGeneration[]
+  twoFactorEnabled     Boolean            @default(false)
+  lastLoginAt          DateTime?          @db.Timestamptz(6)
+  lastLoginIp          String?
+  failedLoginAttempts  Int                @default(0)
+  lockedUntil          DateTime?          @db.Timestamptz(6)
+  allowedIps           String?
+  isActive             Boolean            @default(true)
+  createdAt            DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  tenant               Tenant?            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch               Branch?            @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  reportGenerations    ReportGeneration[]
 
   @@index([tenantId])
+  @@index([branchId])
   @@map("users")
 }
 
 model Student {
-  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId           String
-  email               String?
-  firstName           String
-  lastName            String
-  middleName          String?
-  dateOfBirth         DateTime?            @db.Date
-  gender              Gender?
-  phone               String?
-  address             String?
-  stateOfOrigin       String?
-  lgaOfOrigin         String?
-  birthCertNo         String?
-  jambRegNo           String?
-  bloodGroup          String?
-  genotype            String?
-  allergies           String?
-  medicalConditions   String?
-  emergencyContact    String?
-  emergencyPhone      String?
-  photo               String?
-  status              StudentStatus        @default(ACTIVE)
-  tenantId            String               @db.Uuid
-  branchId            String?              @db.Uuid
-  createdAt           DateTime             @default(now()) @db.Timestamptz(6)
-  updatedAt           DateTime             @default(now()) @updatedAt @db.Timestamptz(6)
-  barcode             String?
-  biometricId         String?
-  cardExpiresAt       DateTime?            @db.Date
-  cardIssuedAt        DateTime?            @db.Timestamptz(6)
-  cardStatus          String               @default("NOT_ISSUED")
-  qrCodeData          String?
-  attendances         Attendance[]
-  enrollments         Enrollment[]
-  feePayments         FeePayment[]
-  libraryCirculations LibraryCirculation[]
-  parentStudents      ParentStudent[]
-  parents             Parent[]
-  results             Result[]
-  studentBadges       StudentBadge[]
-  studentCertificates StudentCertificate[]
-  reportCards        ReportCard[]
-  behaviorIncidents  BehaviorIncident[]
-  behaviorLogs       BehaviorLog[]
-  medicalRecords     StudentMedicalRecord[]
-  transcripts        Transcript[]
-  certificateIssuances CertificateIssuance[]
-  hostelAllocations  HostelAllocation[]
-  vaccinations       StudentVaccination[]
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId              String
+  email                  String?
+  firstName              String
+  lastName               String
+  middleName             String?
+  dateOfBirth            DateTime?               @db.Date
+  gender                 Gender?
+  phone                  String?
+  address                String?
+  stateOfOrigin          String?
+  lgaOfOrigin            String?
+  birthCertNo            String?
+  jambRegNo              String?
+  bloodGroup             String?
+  genotype               String?
+  allergies              String?
+  medicalConditions      String?
+  emergencyContact       String?
+  emergencyPhone         String?
+  photo                  String?
+  status                 StudentStatus           @default(ACTIVE)
+  tenantId               String                  @db.Uuid
+  branchId               String?                 @db.Uuid
+  createdAt              DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime                @default(now()) @updatedAt @db.Timestamptz(6)
+  barcode                String?
+  biometricId            String?
+  cardExpiresAt          DateTime?               @db.Date
+  cardIssuedAt           DateTime?               @db.Timestamptz(6)
+  cardStatus             String                  @default("NOT_ISSUED")
+  qrCodeData             String?
+  attendances            Attendance[]
+  enrollments            Enrollment[]
+  feePayments            FeePayment[]
+  libraryCirculations    LibraryCirculation[]
+  parentStudents         ParentStudent[]
+  parents                Parent[]
+  results                Result[]
+  studentBadges          StudentBadge[]
+  studentCertificates    StudentCertificate[]
+  reportCards            ReportCard[]
+  behaviorIncidents      BehaviorIncident[]
+  behaviorLogs           BehaviorLog[]
+  medicalRecords         StudentMedicalRecord[]
+  transcripts            Transcript[]
+  certificateIssuances   CertificateIssuance[]
+  hostelAllocations      HostelAllocation[]
+  vaccinations           StudentVaccination[]
   transportSubscriptions TransportSubscription[]
-  documents           Document[]
-  branch              Branch?             @relation(fields: [branchId], references: [id])
+  documents              Document[]
+  branch                 Branch?                 @relation(fields: [branchId], references: [id])
 
   @@unique([tenantId, studentId], map: "students_tenantId_studentId_unique")
   @@index([tenantId], map: "idx_students_tenant")
@@ -161,51 +165,51 @@ model Student {
 }
 
 model Teacher {
-  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  employeeId     String
-  email          String
-  firstName      String
-  lastName       String
-  specialty      String?
-  phone          String?
-  tenantId       String       @db.Uuid
-  branchId       String?      @db.Uuid
-  createdAt      DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
-  address        String?
-  bankAccount    String?
-  bankName       String?
-  bankSortCode   String?
-  bvn            String?
-  dateOfBirth    DateTime?    @db.Date
-  department     String?
-  employmentType String?
-  experience     Int?
-  gender         String?
-  joinDate       DateTime?    @db.Date
-  lgaOfOrigin    String?
-  nhfNumber      String?
-  pensionPin     String?
-  position       String?      // "HOD", "SENIOR_TEACHER", "FORM_MASTER", "CLASS_TEACHER"
-  departmentId   String?      @db.Uuid @map("department_id")  // For HOD - links to Department
-  qualification  String?
-  salary         Float?
-  stateOfOrigin  String?
-  status         String       @default("ACTIVE")
-  barcode        String?
-  biometricId    String?
-  cardExpiresAt  DateTime?    @db.Date
-  cardIssuedAt   DateTime?    @db.Timestamptz(6)
-  cardStatus     String       @default("NOT_ISSUED")
-  qrCodeData     String?
-  payrolls       Payroll[]
-  staffLeaves    StaffLeave[]
-  subjects       Subject[]
-  courses        Course[]
-  departmentRelation Department?  @relation("TeacherDepartments", fields: [departmentId], references: [id])
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId          String
+  email               String
+  firstName           String
+  lastName            String
+  specialty           String?
+  phone               String?
+  tenantId            String          @db.Uuid
+  branchId            String?         @db.Uuid
+  createdAt           DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
+  address             String?
+  bankAccount         String?
+  bankName            String?
+  bankSortCode        String?
+  bvn                 String?
+  dateOfBirth         DateTime?       @db.Date
+  department          String?
+  employmentType      String?
+  experience          Int?
+  gender              String?
+  joinDate            DateTime?       @db.Date
+  lgaOfOrigin         String?
+  nhfNumber           String?
+  pensionPin          String?
+  position            String? // "HOD", "SENIOR_TEACHER", "FORM_MASTER", "CLASS_TEACHER"
+  departmentId        String?         @map("department_id") @db.Uuid // For HOD - links to Department
+  qualification       String?
+  salary              Float?
+  stateOfOrigin       String?
+  status              String          @default("ACTIVE")
+  barcode             String?
+  biometricId         String?
+  cardExpiresAt       DateTime?       @db.Date
+  cardIssuedAt        DateTime?       @db.Timestamptz(6)
+  cardStatus          String          @default("NOT_ISSUED")
+  qrCodeData          String?
+  payrolls            Payroll[]
+  staffLeaves         StaffLeave[]
+  subjects            Subject[]
+  courses             Course[]
+  departmentRelation  Department?     @relation("TeacherDepartments", fields: [departmentId], references: [id])
   classTeacherClasses AcademicClass[] @relation("ClassTeacherClasses")
-  formMasterClasses AcademicClass[] @relation("FormMasterClasses")
-  branch        Branch?      @relation(fields: [branchId], references: [id])
+  formMasterClasses   AcademicClass[] @relation("FormMasterClasses")
+  branch              Branch?         @relation(fields: [branchId], references: [id])
 
   @@unique([tenantId, employeeId], map: "teachers_tenantId_employeeId_unique")
   @@index([tenantId], map: "idx_teachers_tenant")
@@ -215,46 +219,46 @@ model Teacher {
 }
 
 model Staff {
-  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  employeeId     String
-  email          String
-  firstName      String
-  lastName       String
-  category       StaffCategory       @default(OTHER)
-  phone          String?
-  dateOfBirth    DateTime?           @db.Date
-  gender         String?
-  address        String?
-  stateOfOrigin  String?
-  lgaOfOrigin    String?
-  photo          String?
-  qualification  String?
-  experience     Int?
-  joinDate       DateTime?           @db.Date
-  employmentType StaffEmploymentType @default(FULL_TIME)
-  department     String?
-  position       String?
-  salary         Float?
-  pensionPin     String?
-  nhfNumber      String?
-  bvn            String?
-  bankName       String?
-  bankAccount    String?
-  bankSortCode   String?
-  status         String              @default("ACTIVE")
-  tenantId       String              @db.Uuid
-  branchId       String?            @db.Uuid
-  createdAt      DateTime            @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
-  barcode        String?
-  biometricId    String?
-  cardExpiresAt  DateTime?           @db.Date
-  cardIssuedAt   DateTime?           @db.Timestamptz(6)
-  cardStatus     String              @default("NOT_ISSUED")
-  qrCodeData     String?
-  staffLeaves    StaffLeave[]
-  caregiverClasses AcademicClass[] @relation("CaregiverClasses")
-  branch        Branch?            @relation(fields: [branchId], references: [id])
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId       String
+  email            String
+  firstName        String
+  lastName         String
+  category         StaffCategory       @default(OTHER)
+  phone            String?
+  dateOfBirth      DateTime?           @db.Date
+  gender           String?
+  address          String?
+  stateOfOrigin    String?
+  lgaOfOrigin      String?
+  photo            String?
+  qualification    String?
+  experience       Int?
+  joinDate         DateTime?           @db.Date
+  employmentType   StaffEmploymentType @default(FULL_TIME)
+  department       String?
+  position         String?
+  salary           Float?
+  pensionPin       String?
+  nhfNumber        String?
+  bvn              String?
+  bankName         String?
+  bankAccount      String?
+  bankSortCode     String?
+  status           String              @default("ACTIVE")
+  tenantId         String              @db.Uuid
+  branchId         String?             @db.Uuid
+  createdAt        DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  barcode          String?
+  biometricId      String?
+  cardExpiresAt    DateTime?           @db.Date
+  cardIssuedAt     DateTime?           @db.Timestamptz(6)
+  cardStatus       String              @default("NOT_ISSUED")
+  qrCodeData       String?
+  staffLeaves      StaffLeave[]
+  caregiverClasses AcademicClass[]     @relation("CaregiverClasses")
+  branch           Branch?             @relation(fields: [branchId], references: [id])
 
   @@unique([tenantId, employeeId], map: "staff_tenantId_employeeId_unique")
   @@index([tenantId], map: "idx_staff_tenant")
@@ -355,26 +359,26 @@ model SiblingDiscount {
 }
 
 model AcademicYear {
-  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String
-  startDate       DateTime          @db.Timestamptz(6)
-  endDate         DateTime          @db.Timestamptz(6)
-  isActive        Boolean?          @default(false)
-  tenantId        String?           @db.Uuid
-  branchId        String?           @db.Uuid
-  createdAt       DateTime?         @default(now()) @db.Timestamptz(6)
-  updatedAt       DateTime?         @default(now()) @updatedAt @db.Timestamptz(6)
-  classes         AcademicClass[]
-  feeStructures   FeeStructure[]
-  SiblingDiscount SiblingDiscount[]
-  terms           Term[]
-  timetables      Timetable[]
-  transcripts     Transcript[]
-  certificateIssuances CertificateIssuance[]
-  applications    Application[]
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String
+  startDate              DateTime                @db.Timestamptz(6)
+  endDate                DateTime                @db.Timestamptz(6)
+  isActive               Boolean?                @default(false)
+  tenantId               String?                 @db.Uuid
+  branchId               String?                 @db.Uuid
+  createdAt              DateTime?               @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime?               @default(now()) @updatedAt @db.Timestamptz(6)
+  classes                AcademicClass[]
+  feeStructures          FeeStructure[]
+  SiblingDiscount        SiblingDiscount[]
+  terms                  Term[]
+  timetables             Timetable[]
+  transcripts            Transcript[]
+  certificateIssuances   CertificateIssuance[]
+  applications           Application[]
   transportSubscriptions TransportSubscription[]
-  hostelAllocations HostelAllocation[]
-  branch          Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  hostelAllocations      HostelAllocation[]
+  branch                 Branch?                 @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, name], map: "academic_years_tenantId_name_unique")
   @@index([tenantId], map: "idx_academic_years_tenant")
@@ -406,10 +410,10 @@ model AcademicClass {
   name           String
   level          Int
   capacity       Int?            @default(40)
-  stream         String?         // Stream identifier: "A", "B", "C", "D" or "SCI", "COMM", "ARTS", "TECH" etc.
-  classTeacherId String?         @db.Uuid @map("class_teacher_id")  // Class Teacher (Pre-Nursery, Nursery, Primary)
-  formMasterId   String?         @db.Uuid @map("form_master_id")  // Secondary Form Master (JSS, SSS)
-  caregiverId    String?         @db.Uuid @map("caregiver_id")  // Pre-Nursery/Nursery Care-giver
+  stream         String? // Stream identifier: "A", "B", "C", "D" or "SCI", "COMM", "ARTS", "TECH" etc.
+  classTeacherId String?         @map("class_teacher_id") @db.Uuid // Class Teacher (Pre-Nursery, Nursery, Primary)
+  formMasterId   String?         @map("form_master_id") @db.Uuid // Secondary Form Master (JSS, SSS)
+  caregiverId    String?         @map("caregiver_id") @db.Uuid // Pre-Nursery/Nursery Care-giver
   academicYearId String?         @db.Uuid
   tenantId       String?         @db.Uuid
   branchId       String?         @db.Uuid
@@ -424,12 +428,12 @@ model AcademicClass {
   subjects       Subject[]
   timetableSlots TimetableSlot[]
   transcripts    Transcript[]
-  applications  Application[]
-  classTeacher  Teacher?        @relation("ClassTeacherClasses", fields: [classTeacherId], references: [id])
-  formMaster    Teacher?        @relation("FormMasterClasses", fields: [formMasterId], references: [id])
-  caregiver     Staff?          @relation("CaregiverClasses", fields: [caregiverId], references: [id])
-  branch        Branch?        @relation(fields: [branchId], references: [id])
-  tier          Tier?          @relation(fields: [tierId], references: [id])
+  applications   Application[]
+  classTeacher   Teacher?        @relation("ClassTeacherClasses", fields: [classTeacherId], references: [id])
+  formMaster     Teacher?        @relation("FormMasterClasses", fields: [formMasterId], references: [id])
+  caregiver      Staff?          @relation("CaregiverClasses", fields: [caregiverId], references: [id])
+  branch         Branch?         @relation(fields: [branchId], references: [id])
+  tier           Tier?           @relation(fields: [tierId], references: [id])
 
   @@unique([academicYearId, name, stream], map: "academic_classes_academicYearId_name_stream_unique")
   @@index([academicYearId], map: "idx_academic_classes_academic_year")
@@ -465,22 +469,22 @@ model Subject {
 }
 
 model Tier {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String    @db.VarChar(255)
-  code      String    @db.VarChar(10)
-  alias     String?   @db.VarChar(255)
-  order     Int
-  isActive  Boolean?  @default(true)
-  tenantId  String    @db.Uuid
-  branchId  String?   @db.Uuid
-  createdAt DateTime? @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
-  badges    Badge[]
-  classes      AcademicClass[]
-  departments Department[]
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String          @db.VarChar(255)
+  code           String          @db.VarChar(10)
+  alias          String?         @db.VarChar(255)
+  order          Int
+  isActive       Boolean?        @default(true)
+  tenantId       String          @db.Uuid
+  branchId       String?         @db.Uuid
+  createdAt      DateTime?       @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime?       @default(now()) @updatedAt @db.Timestamptz(6)
+  badges         Badge[]
+  classes        AcademicClass[]
+  departments    Department[]
   tierCurriculum TierCurriculum?
-  feeStructures FeeStructure[]
-  branch    Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  feeStructures  FeeStructure[]
+  branch         Branch?         @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, code], map: "tiers_tenantId_code_unique")
   @@index([tenantId], map: "idx_tiers_tenant")
@@ -520,7 +524,7 @@ model TierCurriculum {
   createdAt  DateTime?  @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime?  @default(now()) @updatedAt @db.Timestamptz(6)
 
-  tier        Tier       @relation(fields: [tierId], references: [id])
+  tier Tier @relation(fields: [tierId], references: [id])
 
   @@index([tenantId], map: "idx_tier_curriculum_tenant")
   @@map("tier_curriculum")
@@ -589,45 +593,45 @@ model TenantSettings {
   ptaNoticesEnabled           Boolean    @default(true)
   regulatoryReportsEnabled    Boolean    @default(true)
   reportsEnabled              Boolean    @default(true)
-  virtualClassEnabled        Boolean    @default(true)
-  themeMode                  String     @default("SYSTEM") // LIGHT, DARK, SYSTEM
-  enableClassSections        Boolean    @default(false)
-  defaultSectionNaming       String     @default("A,B,C")
-  sectionsPerClass           Int        @default(2)
+  virtualClassEnabled         Boolean    @default(true)
+  themeMode                   String     @default("SYSTEM") // LIGHT, DARK, SYSTEM
+  enableClassSections         Boolean    @default(false)
+  defaultSectionNaming        String     @default("A,B,C")
+  sectionsPerClass            Int        @default(2)
 
   // Payment Gateway Configuration (School Fees)
-  paymentGatewayEnabled      Boolean    @default(false)
-  paymentGateway             String?    // 'PAYSTACK', 'FLUTTERWAVE'
-  paymentGatewaySecretKey    String?    // Encrypted
-  paymentGatewayPublicKey    String?
+  paymentGatewayEnabled       Boolean @default(false)
+  paymentGateway              String? // 'PAYSTACK', 'FLUTTERWAVE'
+  paymentGatewaySecretKey     String? // Encrypted
+  paymentGatewayPublicKey     String?
   paymentGatewayWebhookSecret String?
-  paymentDemoMode           Boolean    @default(false)
+  paymentDemoMode             Boolean @default(false)
 
   // Remita Configuration (Payroll)
-  remitaEnabled              Boolean    @default(false)
-  remitaMerchantId           String?
-  remitaApiKey               String?    // Encrypted
-  remitaServiceTypeId        String?
-  remitaEnvironment          String?    // 'DEMO', 'LIVE'
+  remitaEnabled       Boolean @default(false)
+  remitaMerchantId    String?
+  remitaApiKey        String? // Encrypted
+  remitaServiceTypeId String?
+  remitaEnvironment   String? // 'DEMO', 'LIVE'
 
   // AI Features Configuration
-  aiEnabled                  Boolean    @default(false)
-  openRouterApiKey           String?    // Per-tenant API key (encrypted)
-  openRouterModel            String?    @default("qwen/qwen3-coder:free")
+  aiEnabled        Boolean @default(false)
+  openRouterApiKey String? // Per-tenant API key (encrypted)
+  openRouterModel  String? @default("qwen/qwen3-coder:free")
 
   // Transfer Settings
-  allowStudentTransfers         Boolean    @default(true)
-  requireFeesPaidForTransfer    Boolean    @default(true)
-  requireActiveEnrollmentForTransfer Boolean   @default(true)
-  allowStaffTransfers            Boolean    @default(true)
-  requireFeesPaidForStaffTransfer Boolean    @default(false)
-  transferNotificationsEmail    String?
+  allowStudentTransfers              Boolean @default(true)
+  requireFeesPaidForTransfer         Boolean @default(true)
+  requireActiveEnrollmentForTransfer Boolean @default(true)
+  allowStaffTransfers                Boolean @default(true)
+  requireFeesPaidForStaffTransfer    Boolean @default(false)
+  transferNotificationsEmail         String?
 
   // Promotion Settings
-  promotionEnabled            Boolean    @default(true)
-  promotionRequireFeesPaid   Boolean    @default(true)
-  promotionMinAttendance    Float      @default(75.0)  // Percentage
-  promotionAutoEnroll      Boolean    @default(true)
+  promotionEnabled         Boolean @default(true)
+  promotionRequireFeesPaid Boolean @default(true)
+  promotionMinAttendance   Float   @default(75.0) // Percentage
+  promotionAutoEnroll      Boolean @default(true)
 
   @@map("tenant_settings")
 }
@@ -656,21 +660,21 @@ model Course {
 }
 
 model Lesson {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
-  content     Json      @default("{}")
-  type        String    @default("ARTICLE")
+  content     Json             @default("{}")
+  type        String           @default("ARTICLE")
   duration    Int?
-  order       Int       @default(0)
-  isPublished Boolean   @default(false)
-  isFree      Boolean   @default(false)
-  publishAt   DateTime? @db.Timestamptz(6)
-  courseId    String    @db.Uuid
-  subjectId   String?   @db.Uuid
-  createdById String?   @db.Uuid
-  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
-  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order       Int              @default(0)
+  isPublished Boolean          @default(false)
+  isFree      Boolean          @default(false)
+  publishAt   DateTime?        @db.Timestamptz(6)
+  courseId    String           @db.Uuid
+  subjectId   String?          @db.Uuid
+  createdById String?          @db.Uuid
+  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   resources   LessonResource[]
 
   @@index([courseId], map: "idx_lessons_course")
@@ -916,46 +920,46 @@ model ReportCard {
 }
 
 model Application {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationNo     String
-  firstName         String
-  lastName          String
-  middleName        String?
-  dateOfBirth       DateTime? @db.Date
-  gender            String?
-  phone             String
-  email             String?
-  address           String?
-  stateOfOrigin     String?
-  lgaOfOrigin       String?
-  birthCertNo       String?
-  previousSchool    String?
-  previousClass     String?
-  transferCert      String?
-  jambRegNo         String?
-  waecNo            String?
-  guardianName      String?
-  guardianPhone     String?
-  guardianEmail     String?
-  guardianRelation  String?
-  guardianAddress   String?
-  applyingClassId   String?   @db.Uuid
-  academicYearId    String?   @db.Uuid
-  status            String    @default("PENDING")
-  entranceExamScore Float?
-  entranceExamDate  DateTime? @db.Timestamptz(6)
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationNo        String
+  firstName            String
+  lastName             String
+  middleName           String?
+  dateOfBirth          DateTime? @db.Date
+  gender               String?
+  phone                String
+  email                String?
+  address              String?
+  stateOfOrigin        String?
+  lgaOfOrigin          String?
+  birthCertNo          String?
+  previousSchool       String?
+  previousClass        String?
+  transferCert         String?
+  jambRegNo            String?
+  waecNo               String?
+  guardianName         String?
+  guardianPhone        String?
+  guardianEmail        String?
+  guardianRelation     String?
+  guardianAddress      String?
+  applyingClassId      String?   @db.Uuid
+  academicYearId       String?   @db.Uuid
+  status               String    @default("PENDING")
+  entranceExamScore    Float?
+  entranceExamDate     DateTime? @db.Timestamptz(6)
   entranceExamLocation String?
-  interviewScore    Float?
-  interviewDate     DateTime? @db.Timestamptz(6)
-  interviewLocation String?
-  notes             String?
-  enrolledStudentId String?   @db.Uuid
-  tenantId          String    @db.Uuid
-  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt         DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  interviewScore       Float?
+  interviewDate        DateTime? @db.Timestamptz(6)
+  interviewLocation    String?
+  notes                String?
+  enrolledStudentId    String?   @db.Uuid
+  tenantId             String    @db.Uuid
+  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
-  applyingClass    AcademicClass?  @relation(fields: [applyingClassId], references: [id])
-  academicYear     AcademicYear?   @relation(fields: [academicYearId], references: [id])
+  applyingClass AcademicClass? @relation(fields: [applyingClassId], references: [id])
+  academicYear  AcademicYear?  @relation(fields: [academicYearId], references: [id])
 
   @@unique([tenantId, applicationNo], map: "applications_tenantId_applicationNo_unique")
   @@index([tenantId], map: "idx_applications_tenant")
@@ -1039,9 +1043,9 @@ model Subscription {
   tenantId             String?      @db.Uuid
   planId               String?      @db.Uuid
 
-  subscriptionPlan     SubscriptionPlan?   @relation(fields: [planId], references: [id])
-  tenant               Tenant?             @relation(fields: [tenantId], references: [id])
-  invoices             SubscriptionInvoice[]
+  subscriptionPlan SubscriptionPlan?     @relation(fields: [planId], references: [id])
+  tenant           Tenant?               @relation(fields: [tenantId], references: [id])
+  invoices         SubscriptionInvoice[]
 
   @@index([tenantId])
   @@index([planId])
@@ -1067,8 +1071,8 @@ model SubscriptionInvoice {
   subscriptionId     String?       @db.Uuid
   planId             String        @db.Uuid
 
-  subscription       Subscription?   @relation(fields: [subscriptionId], references: [id])
-  subscriptionPlan   SubscriptionPlan @relation(fields: [planId], references: [id])
+  subscription     Subscription?    @relation(fields: [subscriptionId], references: [id])
+  subscriptionPlan SubscriptionPlan @relation(fields: [planId], references: [id])
 
   @@index([tenantId], map: "idx_sub_invoices_tenant")
   @@index([status], map: "idx_sub_invoices_status")
@@ -1270,7 +1274,7 @@ model Announcement {
   createdAt   DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
 
-  tenant      Tenant          @relation(fields: [tenantId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId], map: "idx_announcements_tenant")
   @@index([isPublished], map: "idx_announcements_published")
@@ -1320,15 +1324,15 @@ model LibraryCirculation {
 }
 
 model TransportRoute {
-  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  description String?
-  fee         Float?
-  tenantId    String             @db.Uuid
-  createdAt   DateTime           @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
-  stops       TransportStop[]
-  vehicles    TransportVehicle[]
+  id            String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  description   String?
+  fee           Float?
+  tenantId      String                  @db.Uuid
+  createdAt     DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime                @default(now()) @updatedAt @db.Timestamptz(6)
+  stops         TransportStop[]
+  vehicles      TransportVehicle[]
   subscriptions TransportSubscription[]
 
   @@index([tenantId], map: "idx_transport_routes_tenant")
@@ -1352,17 +1356,17 @@ model TransportStop {
 }
 
 model TransportVehicle {
-  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  vehicleNo   String
-  model       String?
-  capacity    Int             @default(50)
-  driverName  String?
-  driverPhone String?
-  routeId     String?         @db.Uuid
-  tenantId    String          @db.Uuid
-  createdAt   DateTime        @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
-  route       TransportRoute? @relation(fields: [routeId], references: [id])
+  id            String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vehicleNo     String
+  model         String?
+  capacity      Int                     @default(50)
+  driverName    String?
+  driverPhone   String?
+  routeId       String?                 @db.Uuid
+  tenantId      String                  @db.Uuid
+  createdAt     DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime                @default(now()) @updatedAt @db.Timestamptz(6)
+  route         TransportRoute?         @relation(fields: [routeId], references: [id])
   subscriptions TransportSubscription[]
 
   @@unique([tenantId, vehicleNo], map: "transport_vehicles_tenantId_vehicleNo_unique")
@@ -1387,10 +1391,10 @@ model TransportSubscription {
   createdAt      DateTime? @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
 
-  student        Student       @relation(fields: [studentId], references: [id])
-  route          TransportRoute @relation(fields: [routeId], references: [id])
-  vehicle        TransportVehicle? @relation(fields: [vehicleId], references: [id])
-  academicYear  AcademicYear? @relation(fields: [academicYearId], references: [id])
+  student      Student           @relation(fields: [studentId], references: [id])
+  route        TransportRoute    @relation(fields: [routeId], references: [id])
+  vehicle      TransportVehicle? @relation(fields: [vehicleId], references: [id])
+  academicYear AcademicYear?     @relation(fields: [academicYearId], references: [id])
 
   @@index([studentId], map: "idx_transport_subscriptions_student")
   @@index([routeId], map: "idx_transport_subscriptions_route")
@@ -1510,23 +1514,23 @@ model OnboardingTask {
 }
 
 model SubscriptionPlan {
-  name         String   @unique
-  displayName  String
-  description  String?
-  monthlyPrice Float    @default(0)
-  yearlyPrice  Float    @default(0)
-  maxStudents  Int      @default(0)
-  maxTeachers  Int      @default(0)
-  maxStorageGB Int      @default(1)
-  maxAICalls   Int      @default(0)
-  features     Json     @default("{}")
-  isActive     Boolean  @default(true)
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String                @unique
+  displayName   String
+  description   String?
+  monthlyPrice  Float                 @default(0)
+  yearlyPrice   Float                 @default(0)
+  maxStudents   Int                   @default(0)
+  maxTeachers   Int                   @default(0)
+  maxStorageGB  Int                   @default(1)
+  maxAICalls    Int                   @default(0)
+  features      Json                  @default("{}")
+  isActive      Boolean               @default(true)
+  sortOrder     Int                   @default(0)
+  createdAt     DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime              @default(now()) @updatedAt @db.Timestamptz(6)
+  id            String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   subscriptions Subscription[]
-  invoices     SubscriptionInvoice[]
+  invoices      SubscriptionInvoice[]
 
   @@map("subscription_plans")
 }
@@ -1808,7 +1812,7 @@ model StudentMedicalRecord {
   createdAt      DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
-  student        Student   @relation(fields: [studentId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 
   @@index([studentId], map: "idx_medical_records_student")
   @@index([tenantId], map: "idx_medical_records_tenant")
@@ -1835,7 +1839,7 @@ model StudentVaccination {
   tenantId       String    @db.Uuid
   createdAt      DateTime  @default(now()) @db.Timestamptz(6)
 
-  student        Student   @relation(fields: [studentId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 
   @@index([studentId], map: "idx_vaccinations_student")
   @@map("student_vaccinations")
@@ -1885,7 +1889,7 @@ model BehaviorIncident {
   createdAt      DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
-  student        Student   @relation(fields: [studentId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 
   @@index([studentId], map: "idx_behavior_incidents_student")
   @@index([tenantId], map: "idx_behavior_incidents_tenant")
@@ -1906,7 +1910,7 @@ model BehaviorLog {
   tenantId     String   @db.Uuid
   createdAt    DateTime @default(now()) @db.Timestamptz(6)
 
-  student      Student  @relation(fields: [studentId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 
   @@index([studentId], map: "idx_behavior_log_student")
   @@map("behavior_logs")
@@ -1960,9 +1964,9 @@ model Transcript {
   createdAt      DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
-  student        Student       @relation(fields: [studentId], references: [id])
-  academicYear   AcademicYear  @relation(fields: [academicYearId], references: [id])
-  academicClass  AcademicClass? @relation(fields: [classId], references: [id])
+  student       Student        @relation(fields: [studentId], references: [id])
+  academicYear  AcademicYear   @relation(fields: [academicYearId], references: [id])
+  academicClass AcademicClass? @relation(fields: [classId], references: [id])
 
   @@index([studentId], map: "idx_transcripts_student")
   @@index([tenantId], map: "idx_transcripts_tenant")
@@ -1987,7 +1991,7 @@ model CertificateTemplate {
   createdAt      DateTime @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
-  issuances     CertificateIssuance[]
+  issuances CertificateIssuance[]
 
   @@index([tenantId], map: "idx_certificate_templates_tenant")
   @@map("certificate_templates")
@@ -2013,9 +2017,9 @@ model CertificateIssuance {
   createdAt      DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
-  student        Student         @relation(fields: [studentId], references: [id])
-  template       CertificateTemplate @relation(fields: [templateId], references: [id])
-  academicYear   AcademicYear?  @relation(fields: [academicYearId], references: [id])
+  student      Student             @relation(fields: [studentId], references: [id])
+  template     CertificateTemplate @relation(fields: [templateId], references: [id])
+  academicYear AcademicYear?       @relation(fields: [academicYearId], references: [id])
 
   @@map("certificate_issuances")
 }
@@ -2392,38 +2396,38 @@ enum ChatType {
 }
 
 model MessageCampaign {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  message     String
-  channels    String[] @default(["SMS"])
-  status      String   @default("DRAFT")
-  targetType  String   @default("ALL")
-  targetIds   String[] @default([])
-  totalRecipients Int   @default(0)
-  scheduledAt DateTime? @db.Timestamptz(6)
-  tenantId    String   @db.Uuid
-  createdById String?  @db.Uuid
-  sentAt      DateTime? @db.Timestamptz(6)
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  message         String
+  channels        String[]  @default(["SMS"])
+  status          String    @default("DRAFT")
+  targetType      String    @default("ALL")
+  targetIds       String[]  @default([])
+  totalRecipients Int       @default(0)
+  scheduledAt     DateTime? @db.Timestamptz(6)
+  tenantId        String    @db.Uuid
+  createdById     String?   @db.Uuid
+  sentAt          DateTime? @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  tenant          Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId])
   @@map("message_campaigns")
 }
 
 model PtaNotice {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
   content     String
   publishedAt DateTime? @db.Timestamptz(6)
-  tenantId    String   @db.Uuid
-  createdById String?  @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  
+  tenantId    String    @db.Uuid
+  createdById String?   @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
   @@index([tenantId])
   @@map("pta_notices")
 }
@@ -2460,58 +2464,58 @@ model VirtualClass {
 }
 
 model ReportTemplate {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  description String?
-  type        String   @default("GENERIC")
-  category    String?
-  content     Json     @default("{}")
-  isDefault   Boolean  @default(false)
-  isGlobal    Boolean  @default(false)
-  isRegulatory Boolean @default(false)
-  usageCount  Int      @default(0)
-  tenantId    String   @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  description  String?
+  type         String   @default("GENERIC")
+  category     String?
+  content      Json     @default("{}")
+  isDefault    Boolean  @default(false)
+  isGlobal     Boolean  @default(false)
+  isRegulatory Boolean  @default(false)
+  usageCount   Int      @default(0)
+  tenantId     String   @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
   generations ReportGeneration[]
-  
+
   @@index([tenantId])
   @@map("report_templates")
 }
 
 model ReportGeneration {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  templateId  String   @db.Uuid
-  parameters  Json     @default("{}")
-  format      String   @default("PDF")
-  status      String   @default("PENDING")
-  scheduledAt DateTime? @db.Timestamptz(6)
-  startedAt   DateTime? @db.Timestamptz(6)
-  completedAt DateTime? @db.Timestamptz(6)
-  error       String?
-  tenantId    String   @db.Uuid
-  generatedById String? @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId    String    @db.Uuid
+  parameters    Json      @default("{}")
+  format        String    @default("PDF")
+  status        String    @default("PENDING")
+  scheduledAt   DateTime? @db.Timestamptz(6)
+  startedAt     DateTime? @db.Timestamptz(6)
+  completedAt   DateTime? @db.Timestamptz(6)
+  error         String?
+  tenantId      String    @db.Uuid
+  generatedById String?   @db.Uuid
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
   template    ReportTemplate @relation(fields: [templateId], references: [id])
-  generatedBy User? @relation(fields: [generatedById], references: [id])
-  
+  generatedBy User?          @relation(fields: [generatedById], references: [id])
+
   @@index([tenantId])
   @@map("report_generations")
 }
 
 model Conversation {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type      String   @default("DIRECT")
-  lastMessageAt DateTime? @db.Timestamptz(6)
-  tenantId  String   @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  participants ConversationParticipant[]
-  messages  Message[]
+  id            String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type          String                    @default("DIRECT")
+  lastMessageAt DateTime?                 @db.Timestamptz(6)
+  tenantId      String                    @db.Uuid
+  createdAt     DateTime                  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime                  @default(now()) @updatedAt @db.Timestamptz(6)
+  tenant        Tenant                    @relation(fields: [tenantId], references: [id])
+  participants  ConversationParticipant[]
+  messages      Message[]
 
   @@index([tenantId])
   @@map("conversations")
@@ -2547,19 +2551,19 @@ model Message {
 }
 
 model LessonResource {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  url       String
-  type      String
-  order     Int      @default(0)
-  size      Int?
-  mimeType  String?
-  duration  Int?
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  url        String
+  type       String
+  order      Int      @default(0)
+  size       Int?
+  mimeType   String?
+  duration   Int?
   isExternal Boolean  @default(false)
-  lessonId  String   @db.Uuid
-  tenantId  String   @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId   String   @db.Uuid
+  tenantId   String   @db.Uuid
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@index([lessonId])
   @@index([tenantId])
@@ -2567,41 +2571,41 @@ model LessonResource {
 }
 
 model Hostel {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  type        String
-  address     String?
-  description String?
-  status      String   @default("ACTIVE")
-  totalBeds   Int      @default(0)
-  occupiedBeds Int     @default(0)
-  wardenName  String?
-  wardenPhone String?
-  tenantId    String   @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  rooms       HostelRoom[]
-  allocations HostelAllocation[]
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  type         String
+  address      String?
+  description  String?
+  status       String             @default("ACTIVE")
+  totalBeds    Int                @default(0)
+  occupiedBeds Int                @default(0)
+  wardenName   String?
+  wardenPhone  String?
+  tenantId     String             @db.Uuid
+  createdAt    DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  tenant       Tenant             @relation(fields: [tenantId], references: [id])
+  rooms        HostelRoom[]
+  allocations  HostelAllocation[]
 
   @@index([tenantId])
   @@map("hostels")
 }
 
 model HostelRoom {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  roomNo    String
-  floor     Int?
-  capacity  Int      @default(4)
-  status    String   @default("ACTIVE")
-  roomType  String?
-  amenities String?
-  hostelId  String   @db.Uuid
-  tenantId  String   @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  hostel   Hostel   @relation(fields: [hostelId], references: [id], onDelete: Cascade)
-  beds     HostelBed[]
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roomNo      String
+  floor       Int?
+  capacity    Int                @default(4)
+  status      String             @default("ACTIVE")
+  roomType    String?
+  amenities   String?
+  hostelId    String             @db.Uuid
+  tenantId    String             @db.Uuid
+  createdAt   DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
+  hostel      Hostel             @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+  beds        HostelBed[]
   allocations HostelAllocation[]
 
   @@index([hostelId])
@@ -2610,12 +2614,12 @@ model HostelRoom {
 }
 
 model HostelBed {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  bedNo     String
-  status    String   @default("AVAILABLE")
-  roomId    String   @db.Uuid
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  room      HostelRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bedNo       String
+  status      String             @default("AVAILABLE")
+  roomId      String             @db.Uuid
+  createdAt   DateTime           @default(now()) @db.Timestamptz(6)
+  room        HostelRoom         @relation(fields: [roomId], references: [id], onDelete: Cascade)
   allocations HostelAllocation[]
 
   @@index([roomId])
@@ -2623,24 +2627,24 @@ model HostelBed {
 }
 
 model HostelAllocation {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId   String   @db.Uuid
-  hostelId    String   @db.Uuid
-  roomId      String   @db.Uuid
-  bedId       String   @db.Uuid
-  academicYearId String? @db.Uuid
-  status      String   @default("ACTIVE")
-  startDate   DateTime @db.Date
-  endDate     DateTime? @db.Date
-  checkOutDate DateTime? @db.Date
-  tenantId    String   @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  hostel      Hostel   @relation(fields: [hostelId], references: [id])
-  room        HostelRoom @relation(fields: [roomId], references: [id])
-  bed         HostelBed @relation(fields: [bedId], references: [id])
-  student     Student @relation(fields: [studentId], references: [id])
-  academicYear AcademicYear? @relation(fields: [academicYearId], references: [id])
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId      String        @db.Uuid
+  hostelId       String        @db.Uuid
+  roomId         String        @db.Uuid
+  bedId          String        @db.Uuid
+  academicYearId String?       @db.Uuid
+  status         String        @default("ACTIVE")
+  startDate      DateTime      @db.Date
+  endDate        DateTime?     @db.Date
+  checkOutDate   DateTime?     @db.Date
+  tenantId       String        @db.Uuid
+  createdAt      DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+  hostel         Hostel        @relation(fields: [hostelId], references: [id])
+  room           HostelRoom    @relation(fields: [roomId], references: [id])
+  bed            HostelBed     @relation(fields: [bedId], references: [id])
+  student        Student       @relation(fields: [studentId], references: [id])
+  academicYear   AcademicYear? @relation(fields: [academicYearId], references: [id])
 
   @@index([tenantId])
   @@index([studentId])
@@ -2649,20 +2653,20 @@ model HostelAllocation {
 }
 
 model Document {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  url          String
-  type         String
-  status       String   @default("ACTIVE")
-  categoryId   String?  @db.Uuid
-  studentId    String?  @db.Uuid
-  expiryDate   DateTime? @db.Date
-  tenantId     String   @db.Uuid
-  createdAt    DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  category     DocumentCategory? @relation(fields: [categoryId], references: [id])
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
-  student      Student? @relation(fields: [studentId], references: [id])
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  url        String
+  type       String
+  status     String            @default("ACTIVE")
+  categoryId String?           @db.Uuid
+  studentId  String?           @db.Uuid
+  expiryDate DateTime?         @db.Date
+  tenantId   String            @db.Uuid
+  createdAt  DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+  category   DocumentCategory? @relation(fields: [categoryId], references: [id])
+  tenant     Tenant            @relation(fields: [tenantId], references: [id])
+  student    Student?          @relation(fields: [studentId], references: [id])
 
   @@index([tenantId])
   @@index([studentId])
@@ -2670,18 +2674,18 @@ model Document {
 }
 
 model DocumentCategory {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  displayName String?
-  description String?
-  requiredFor String[]
-  isRequired  Boolean  @default(false)
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  displayName  String?
+  description  String?
+  requiredFor  String[]
+  isRequired   Boolean    @default(false)
   expiryMonths Int?
-  tenantId    String   @db.Uuid
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  documents   Document[]
+  tenantId     String     @db.Uuid
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  documents    Document[]
 
   @@index([tenantId])
   @@map("document_categories")
@@ -2698,21 +2702,21 @@ enum ReportCategory {
 }
 
 model PlatformSettings {
-  id                      String   @id @default("platform")
-  paymentGatewayEnabled  Boolean  @default(false)
-  paymentGateway          String   @default("PAYSTACK") // 'PAYSTACK', 'FLUTTERWAVE'
-  paystackSecretKey       String?  // Encrypted
-  paystackPublicKey       String?
-  paystackWebhookSecret   String?
-  flutterwaveSecretKey    String?  // Encrypted
-  flutterwavePublicKey    String?
+  id                       String   @id @default("platform")
+  paymentGatewayEnabled    Boolean  @default(false)
+  paymentGateway           String   @default("PAYSTACK") // 'PAYSTACK', 'FLUTTERWAVE'
+  paystackSecretKey        String? // Encrypted
+  paystackPublicKey        String?
+  paystackWebhookSecret    String?
+  flutterwaveSecretKey     String? // Encrypted
+  flutterwavePublicKey     String?
   flutterwaveWebhookSecret String?
-  demoMode               Boolean  @default(false)
-  remitaMerchantId        String?
-  remitaApiKey            String?  // Encrypted
-  remitaServiceTypeId     String?
-  createdAt               DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt               DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  demoMode                 Boolean  @default(false)
+  remitaMerchantId         String?
+  remitaApiKey             String? // Encrypted
+  remitaServiceTypeId      String?
+  createdAt                DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt                DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   @@map("platform_settings")
 }

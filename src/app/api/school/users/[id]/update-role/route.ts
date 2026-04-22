@@ -14,15 +14,20 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { role } = body;
+    const { role, branchId } = body;
 
     if (!role) {
       return NextResponse.json({ error: 'Role is required' }, { status: 400 });
     }
 
+    const updateData: any = { role };
+    if (branchId !== undefined) {
+      updateData.branchId = branchId;
+    }
+
     const user = await prisma.user.update({
       where: { id: params.id },
-      data: { role },
+      data: updateData,
     });
 
     return NextResponse.json({ user });

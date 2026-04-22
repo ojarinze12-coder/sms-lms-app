@@ -34,6 +34,7 @@ export async function GET() {
         lastName: authUser.lastName,
         role: authUser.role,
         tenantId: authUser.tenantId,
+        branchId: authUser.branchId,
       }
     });
   } catch (error) {
