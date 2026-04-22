@@ -98,6 +98,8 @@ export default function FeesPage() {
   const [loading, setLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [dialogBranchId, setDialogBranchId] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
   const [newFee, setNewFee] = useState({
     name: '',
     amount: '',
@@ -112,9 +114,12 @@ export default function FeesPage() {
   const [paymentForm, setPaymentForm] = useState({
     studentId: '',
     feeId: '',
+    feeType: '',
     amount: '',
     method: 'CASH',
+    branchId: '',
     transactionId: '',
+    paidAt: new Date().toISOString().split('T')[0],
     notes: '',
   });
 
@@ -202,10 +207,11 @@ export default function FeesPage() {
     }
   }
 
-  async function fetchStudents() {
+  async function fetchStudents(search: string = '') {
     try {
       const params = new URLSearchParams();
       if (selectedBranch) params.set('branchId', selectedBranch.id);
+      if (search) params.set('search', search);
       params.set('limit', '50');
       const url = '/api/sms/students?' + params.toString();
       const res = await authFetch(url);
@@ -271,8 +277,8 @@ export default function FeesPage() {
   }
 
   async function recordPayment() {
-    if (!paymentForm.studentId || !paymentForm.feeId || !paymentForm.amount) {
-      toast({ variant: 'destructive', description: 'Please fill in student, fee structure, and amount' });
+    if (!paymentForm.studentId || !paymentForm.feeType || !paymentForm.amount) {
+      toast({ variant: 'destructive', description: 'Please fill in student, fee type, and amount' });
       return;
     }
 
@@ -284,9 +290,11 @@ export default function FeesPage() {
         body: JSON.stringify({
           action: 'record',
           studentId: paymentForm.studentId,
-          feeId: paymentForm.feeId,
+          feeType: paymentForm.feeType,
           amount: parseFloat(paymentForm.amount),
           method: paymentForm.method,
+          branchId: paymentForm.branchId || null,
+          paidAt: paymentForm.paidAt,
           transactionId: paymentForm.transactionId || null,
           status: 'COMPLETED',
           gatewayResponse: { manual: true },
@@ -300,9 +308,12 @@ export default function FeesPage() {
         setPaymentForm({
           studentId: '',
           feeId: '',
+          feeType: '',
           amount: '',
           method: 'CASH',
+          branchId: '',
           transactionId: '',
+          paidAt: new Date().toISOString().split('T')[0],
           notes: '',
         });
         fetchPayments();
@@ -357,7 +368,7 @@ export default function FeesPage() {
           <p className="text-gray-500 dark:text-gray-400">Manage school fees, payments, and generate invoices</p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={showPaymentDialog} onOpenChange={(open) => { setShowPaymentDialog(open); if (open) fetchStudents(); }}>
+          <Dialog open={showPaymentDialog} onOpenChange={(open) => { setShowPaymentDialog(open); if (open) { setStudentSearch(''); fetchStudents(); } }}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Receipt className="w-4 h-4 mr-2" />
@@ -372,9 +383,17 @@ export default function FeesPage() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Student</label>
+                  <Input 
+                    placeholder="Search by name or student ID..."
+                    value={studentSearch}
+                    onChange={(e) => {
+                      setStudentSearch(e.target.value);
+                      fetchStudents(e.target.value);
+                    }}
+                  />
                   <Select value={paymentForm.studentId} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, studentId: v }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Search and select student" />
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Select student" />
                     </SelectTrigger>
                     <SelectContent>
                       {students.map((student) => (
@@ -386,16 +405,36 @@ export default function FeesPage() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Fee Structure</label>
-                  <Select value={paymentForm.feeId} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, feeId: v }))}>
+                  <label className="text-sm font-medium mb-2 block">Fee Type</label>
+                  <Select value={paymentForm.feeType} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, feeType: v }))}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select fee structure" />
+                      <SelectValue placeholder="Select fee type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {feeStructures.map((fee) => (
-                        <SelectItem key={fee.id} value={fee.id}>
-                          {fee.name} - {formatCurrency(fee.amount)}
-                        </SelectItem>
+                      <SelectItem value="TUITION">Tuition</SelectItem>
+                      <SelectItem value="REGISTRATION">Registration</SelectItem>
+                      <SelectItem value="EXAM">Exam</SelectItem>
+                      <SelectItem value="TRANSPORT">Transport</SelectItem>
+                      <SelectItem value="HOSTEL">Hostel</SelectItem>
+                      <SelectItem value="LIBRARY">Library</SelectItem>
+                      <SelectItem value="UNIFORM">Uniform</SelectItem>
+                      <SelectItem value="LEVY">Levy</SelectItem>
+                      <SelectItem value="BOOK">Books</SelectItem>
+                      <SelectItem value="PTA">PTA</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Branch</label>
+                  <Select value={paymentForm.branchId || 'all'} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, branchId: v === 'all' ? '' : v }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Branches</SelectItem>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -411,19 +450,27 @@ export default function FeesPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Payment Method</label>
-                    <Select value={paymentForm.method} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, method: v }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="CASH">Cash</SelectItem>
-                        <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                        <SelectItem value="CHEQUE">Cheque</SelectItem>
-                        <SelectItem value="POS">POS</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium mb-2 block">Payment Date</label>
+                    <Input 
+                      type="date"
+                      value={paymentForm.paidAt}
+                      onChange={(e) => setPaymentForm(prev => ({ ...prev, paidAt: e.target.value }))}
+                    />
                   </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Payment Method</label>
+                  <Select value={paymentForm.method} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, method: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CASH">Cash</SelectItem>
+                      <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                      <SelectItem value="CHEQUE">Cheque</SelectItem>
+                      <SelectItem value="POS">POS</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">Transaction Reference</label>
@@ -526,7 +573,22 @@ export default function FeesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Branch</label>
-                  <Select value={newFee.branchId || 'all'} onValueChange={(v) => setNewFee(prev => ({ ...prev, branchId: v === 'all' ? '' : v }))}>
+                  <Select value={newFee.branchId || 'all'} onValueChange={async (v) => {
+                    const branchId = v === 'all' ? '' : v;
+                    setNewFee(prev => ({ ...prev, branchId, tierId: '' }));
+                    try {
+                      const params = new URLSearchParams();
+                      if (branchId) params.set('branchId', branchId);
+                      const url = '/api/sms/tiers' + (params.toString() ? '?' + params.toString() : '');
+                      const res = await authFetch(url);
+                      if (res.ok) {
+                        const data = await res.json();
+                        setTiers(Array.isArray(data.data) ? data.data : []);
+                      }
+                    } catch (err) {
+                      console.error('Failed to fetch tiers:', err);
+                    }
+                  }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select branch (optional)" />
                     </SelectTrigger>
