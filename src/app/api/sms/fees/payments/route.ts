@@ -216,7 +216,7 @@ async function initializePayment(
       studentId,
       feeId,
       tenantId: user.tenantId,
-      branchId: null,
+      branchId: student.branchId,
     },
   });
 
