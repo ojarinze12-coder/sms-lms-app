@@ -57,7 +57,7 @@ export default function SchoolUsersPage() {
     firstName: '',
     lastName: '',
     role: 'TEACHER',
-    branchId: '',
+    branchId: 'none',
   });
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function SchoolUsersPage() {
           firstName: '',
           lastName: '',
           role: 'TEACHER',
-          branchId: '',
+          branchId: 'none',
         });
       }
     } catch (error) {
@@ -156,7 +156,7 @@ export default function SchoolUsersPage() {
   const handleEditRole = (user: SchoolUser) => {
     setEditingUser(user);
     setEditRole(user.role);
-    setEditBranchId(user.branchId || '');
+    setEditBranchId(user.branchId || 'none');
     setShowEditRoleModal(true);
   };
 
@@ -166,7 +166,7 @@ export default function SchoolUsersPage() {
       const res = await authFetch(`/api/school/users/${editingUser.id}/update-role`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: editRole, branchId: editBranchId || null }),
+        body: JSON.stringify({ role: editRole, branchId: editBranchId === 'none' ? null : editBranchId }),
       });
       
       if (res.ok) {
@@ -262,7 +262,7 @@ export default function SchoolUsersPage() {
                   <SelectValue placeholder="Filter by branch" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Branches</SelectItem>
+                  <SelectItem name="all">All Branches</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
                   ))}
@@ -449,7 +449,7 @@ export default function SchoolUsersPage() {
                       <SelectValue placeholder="Select branch (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Branch</SelectItem>
+                      <SelectItem value="none">No Branch</SelectItem>
                       {branches.map((branch) => (
                         <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
                       ))}
@@ -506,7 +506,7 @@ export default function SchoolUsersPage() {
                       <SelectValue placeholder="Select branch (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Branch</SelectItem>
+                      <SelectItem value="none">No Branch</SelectItem>
                       {branches.map((branch) => (
                         <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
                       ))}

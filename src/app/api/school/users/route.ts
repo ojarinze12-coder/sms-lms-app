@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
     if (branchId && branchId !== 'all') {
       whereClause.branchId = branchId;
-    } else if (authUser.branchId && authUser.role !== 'SUPER_ADMIN') {
+    } else if (authUser.branchId && authUser.role !== 'SUPER_ADMIN' && branchId !== 'all') {
       whereClause.branchId = authUser.branchId;
     }
 
@@ -77,8 +77,10 @@ export async function POST(request: Request) {
     const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    let userBranchId = branchId;
-    if (!userBranchId && authUser.branchId) {
+    let userBranchId: string | null = null;
+    if (branchId && branchId !== 'none') {
+      userBranchId = branchId;
+    } else if (!branchId && authUser.branchId) {
       userBranchId = authUser.branchId;
     }
 
