@@ -16,12 +16,8 @@ export async function GET(request: Request) {
 
     const whereClause: any = { tenantId: authUser.tenantId };
 
-    const isAllBranches = !branchId || branchId === 'all';
-    
-    if (!isAllBranches) {
+    if (branchId && branchId !== 'all') {
       whereClause.branchId = branchId;
-    } else if (authUser.branchId && authUser.role !== 'SUPER_ADMIN') {
-      whereClause.branchId = authUser.branchId;
     }
 
     const users = await prisma.user.findMany({
