@@ -32,6 +32,8 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const branchId = searchParams.get('branchId');
     const tierId = searchParams.get('tierId');
+    const search = searchParams.get('search');
+    const limit = searchParams.get('limit');
 
     const where: any = { tenantId };
     if (classId) {
@@ -52,6 +54,13 @@ export async function GET(request: NextRequest) {
         }
       };
     }
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { studentId: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     const students = await prisma.student.findMany({
       where,
@@ -65,6 +74,7 @@ export async function GET(request: NextRequest) {
         branch: true,
       },
       orderBy: { createdAt: 'desc' },
+      take: limit ? parseInt(limit) : undefined,
     });
 
     return NextResponse.json({ students });

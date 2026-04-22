@@ -386,35 +386,48 @@ export default function FeesPage() {
                 <div className="relative">
                   <label className="text-sm font-medium mb-2 block">Student</label>
                   <Input 
-                    placeholder="Type to search student by name or ID..."
+                    placeholder="Type student name or ID to search..."
                     value={studentSearch}
                     onChange={(e) => {
                       setStudentSearch(e.target.value);
-                      if (e.target.value.length >= 2) {
+                      if (e.target.value.length >= 1) {
                         fetchStudents(e.target.value);
+                      } else {
+                        setStudents([]);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (studentSearch.length >= 1 && students.length > 0) {
+                        // Show dropdown on focus if already searched
                       }
                     }}
                   />
-                  {studentSearch.length >= 2 && students.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                      {students.map((student) => (
-                        <div
-                          key={student.id}
-                          className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white"
-                          onClick={() => {
-                            setPaymentForm(prev => ({ ...prev, studentId: student.id }));
-                            setStudentSearch(`${student.lastName} ${student.firstName} (${student.studentId})`);
-                            setStudents([]);
-                          }}
-                        >
-                          {student.lastName} {student.firstName} ({student.studentId})
-                        </div>
-                      ))}
+                  {studentSearch.length >= 1 && students.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {students
+                        .filter(s => 
+                          `${s.lastName} ${s.firstName} ${s.studentId}`.toLowerCase().includes(studentSearch.toLowerCase())
+                        )
+                        .slice(0, 20)
+                        .map((student) => (
+                          <div
+                            key={student.id}
+                            className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white text-sm"
+                            onClick={() => {
+                              setPaymentForm(prev => ({ ...prev, studentId: student.id }));
+                              setStudentSearch(`${student.lastName} ${student.firstName} (${student.studentId})`);
+                              setStudents([]);
+                            }}
+                          >
+                            <span className="font-medium">{student.lastName} {student.firstName}</span>
+                            <span className="text-gray-500 dark:text-gray-400 ml-2">({student.studentId})</span>
+                          </div>
+                        ))}
                     </div>
                   )}
-                  {studentSearch.length >= 2 && students.length === 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-md shadow-lg px-3 py-2 text-gray-500 dark:text-gray-400">
-                      No students found
+                  {studentSearch.length >= 1 && students.length === 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-md shadow-lg px-3 py-2 text-gray-500 dark:text-gray-400 text-sm">
+                      Searching...
                     </div>
                   )}
                 </div>
