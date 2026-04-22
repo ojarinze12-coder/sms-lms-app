@@ -13,6 +13,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { authFetch } from '@/lib/auth-fetch';
 import { 
   UserPlus, 
   Search, 
@@ -64,7 +65,7 @@ export default function SchoolUsersPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/school/users');
+      const res = await authFetch('/api/school/users');
       if (!res.ok) {
         const err = await res.json();
         console.error('Failed to fetch users:', err);
@@ -85,7 +86,7 @@ export default function SchoolUsersPage() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/school/users', {
+      const res = await authFetch('/api/school/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser),
@@ -109,7 +110,7 @@ export default function SchoolUsersPage() {
 
   const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      const res = await fetch(`/api/school/users/${userId}/toggle-status`, {
+      const res = await authFetch(`/api/school/users/${userId}/toggle-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentStatus }),

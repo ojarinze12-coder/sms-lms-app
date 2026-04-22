@@ -315,7 +315,6 @@ export default function DashboardLayout({
                     )}
                     <div className="flex flex-col">
                       <span className="text-lg font-bold text-gray-800 dark:text-white">{schoolName}</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">School Dashboard</span>
                     </div>
                     <BranchSelector />
                   </>
