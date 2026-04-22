@@ -42,6 +42,10 @@ export default function SchoolUsersPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<SchoolUser | null>(null);
+  const [editRole, setEditRole] = useState('');
+  const [showEditRoleModal, setShowEditRoleModal] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState<string | null>(null);
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
@@ -124,6 +128,46 @@ export default function SchoolUsersPage() {
     }
   };
 
+  const handleEditRole = (user: SchoolUser) => {
+    setEditingUser(user);
+    setEditRole(user.role);
+    setShowEditRoleModal(true);
+  };
+
+  const handleSaveRole = async () => {
+    if (!editingUser || !editRole) return;
+    try {
+      const res = await authFetch(`/api/school/users/${editingUser.id}/update-role`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: editRole }),
+      });
+      
+      if (res.ok) {
+        fetchUsers();
+        setShowEditRoleModal(false);
+        setEditingUser(null);
+      }
+    } catch (error) {
+      console.error('Failed to update role:', error);
+    }
+  };
+
+  const handleResetPassword = async (userId: string) => {
+    if (!confirm('Are you sure you want to reset this user\'s password to default?')) return;
+    try {
+      const res = await authFetch(`/api/school/users/${userId}/reset-password`, {
+        method: 'POST',
+      });
+      
+      if (res.ok) {
+        alert('Password has been reset to default. User will be notified.');
+      }
+    } catch (error) {
+      console.error('Failed to reset password:', error);
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,8 +208,8 @@ export default function SchoolUsersPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-gray-600">Manage school users and their access</p>
+          <h1 className="text-2xl font-bold dark:text-white">User Management</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage school users and their access</p>
         </div>
         <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2">
           <UserPlus className="w-4 h-4" />
@@ -210,38 +254,38 @@ export default function SchoolUsersPage() {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">User</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Role</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Last Login</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Created</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">Actions</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">User</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Role</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Last Login</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Created</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-500 dark:text-gray-400">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                       No users found
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 font-medium text-sm">
+                          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">
                               {user.firstName?.[0] || user.email[0].toUpperCase()}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium dark:text-white">
                               {user.firstName} {user.lastName}
                             </p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                           </div>
                         </div>
                       </td>
@@ -253,14 +297,28 @@ export default function SchoolUsersPage() {
                           {user.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                         {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
+                      <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditRole(user)}
+                          >
+                            Edit Role
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleResetPassword(user.id)}
+                          >
+                            Reset Password
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -350,6 +408,49 @@ export default function SchoolUsersPage() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Role Modal */}
+      {showEditRoleModal && editingUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Edit User Role</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">User: {editingUser.email}</p>
+                  <label className="block text-sm font-medium mb-2">Select Role *</label>
+                  <Select value={editRole} onValueChange={setEditRole}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ADMIN">School Admin</SelectItem>
+                      <SelectItem value="PRINCIPAL">Principal</SelectItem>
+                      <SelectItem value="VICE_PRINCIPAL">Vice Principal</SelectItem>
+                      <SelectItem value="ACADEMIC_ADMIN">Academic Admin</SelectItem>
+                      <SelectItem value="FINANCE_ADMIN">Finance Admin</SelectItem>
+                      <SelectItem value="BURSAR">Bursar</SelectItem>
+                      <SelectItem value="TEACHER">Teacher</SelectItem>
+                      <SelectItem value="PARENT">Parent</SelectItem>
+                      <SelectItem value="STUDENT">Student</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button onClick={handleSaveRole} className="flex-1">
+                    Save Changes
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowEditRoleModal(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
