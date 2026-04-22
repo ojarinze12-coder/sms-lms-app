@@ -16,9 +16,11 @@ export async function GET(request: Request) {
 
     const whereClause: any = { tenantId: authUser.tenantId };
 
-    if (branchId && branchId !== 'all') {
+    const isAllBranches = !branchId || branchId === 'all';
+    
+    if (!isAllBranches) {
       whereClause.branchId = branchId;
-    } else if (authUser.branchId && authUser.role !== 'SUPER_ADMIN' && branchId !== 'all') {
+    } else if (authUser.branchId && authUser.role !== 'SUPER_ADMIN') {
       whereClause.branchId = authUser.branchId;
     }
 
