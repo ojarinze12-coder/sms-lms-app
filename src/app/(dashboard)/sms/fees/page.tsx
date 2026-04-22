@@ -305,6 +305,8 @@ export default function FeesPage() {
       if (data.payment) {
         toast({ description: 'Payment recorded successfully' });
         setShowPaymentDialog(false);
+        setStudentSearch('');
+        setStudents([]);
         setPaymentForm({
           studentId: '',
           feeId: '',
@@ -375,34 +377,46 @@ export default function FeesPage() {
                 Make Fee Payment
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Make Fee Payment</DialogTitle>
                 <DialogDescription>Record a manual fee payment (Cash, Cheque, Bank Transfer)</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
+                <div className="relative">
                   <label className="text-sm font-medium mb-2 block">Student</label>
                   <Input 
-                    placeholder="Search by name or student ID..."
+                    placeholder="Type to search student by name or ID..."
                     value={studentSearch}
                     onChange={(e) => {
                       setStudentSearch(e.target.value);
-                      fetchStudents(e.target.value);
+                      if (e.target.value.length >= 2) {
+                        fetchStudents(e.target.value);
+                      }
                     }}
                   />
-                  <Select value={paymentForm.studentId} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, studentId: v }))}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select student" />
-                    </SelectTrigger>
-                    <SelectContent>
+                  {studentSearch.length >= 2 && students.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
                       {students.map((student) => (
-                        <SelectItem key={student.id} value={student.id}>
+                        <div
+                          key={student.id}
+                          className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white"
+                          onClick={() => {
+                            setPaymentForm(prev => ({ ...prev, studentId: student.id }));
+                            setStudentSearch(`${student.lastName} ${student.firstName} (${student.studentId})`);
+                            setStudents([]);
+                          }}
+                        >
                           {student.lastName} {student.firstName} ({student.studentId})
-                        </SelectItem>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  )}
+                  {studentSearch.length >= 2 && students.length === 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-md shadow-lg px-3 py-2 text-gray-500 dark:text-gray-400">
+                      No students found
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">Fee Type</label>
