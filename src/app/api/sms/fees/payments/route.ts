@@ -278,35 +278,42 @@ async function recordPayment(user: any, body: any) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
-    const { action, paymentId, status, amount, transactionId, gatewayResponse } = body;
+    const { action, paymentId, status, amount, transactionId, gatewayResponse, referenceNo } = body;
 
     if (action === 'verify') {
-      const payment = await prisma.feePayment.findFirst({
-        where: { id: paymentId, tenantId: user.tenantId },
-        include: {
-          student: {
-            include: { parents: true },
+      const user = await requireAuth(request);
+      
+      let payment;
+      
+      if (paymentId) {
+        payment = await prisma.feePayment.findFirst({
+          where: { id: paymentId, tenantId: user?.tenantId },
+          include: {
+            student: {
+              include: { parents: true },
+            },
+            feeStructure: true,
           },
-          feeStructure: true,
-        },
-      });
+        });
+      } else if (referenceNo) {
+        payment = await prisma.feePayment.findFirst({
+          where: { referenceNo },
+        });
+      }
 
       if (!payment || !payment.referenceNo) {
         return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
       }
 
       const reference = payment.referenceNo;
-
       let verified = false;
       let gatewayData: any = null;
 
-      if (payment.paymentGateway === 'PAYSTACK') {
+      if (payment.paymentGateway === 'DEMO') {
+        verified = true;
+        gatewayData = { demo: true, message: 'Demo payment verified' };
+      } else if (payment.paymentGateway === 'PAYSTACK') {
         const response = await paystack.verifyPayment(reference);
         verified = response.data.status === 'success';
         gatewayData = response.data;
@@ -318,10 +325,10 @@ export async function PUT(request: NextRequest) {
 
       if (verified) {
         await prisma.feePayment.update({
-          where: { id: paymentId },
+          where: { id: payment.id },
           data: {
             status: 'COMPLETED',
-            transactionId: gatewayData?.id?.toString() || transactionId,
+            transactionId: gatewayData?.id?.toString() || transactionId || 'DEMO-' + Date.now(),
             gatewayResponse: gatewayData,
             paidAt: new Date(),
           },
@@ -331,6 +338,11 @@ export async function PUT(request: NextRequest) {
       }
 
       return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
+    }
+
+    const user = await requireAuth(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (action === 'update') {

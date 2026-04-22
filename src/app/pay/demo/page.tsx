@@ -25,17 +25,26 @@ export default function DemoPaymentPage() {
   const handlePayment = async () => {
     setProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(async () => {
-      try {
-        // In a real scenario, this would call an API to record the demo payment
+    try {
+      const res = await fetch('/api/sms/fees/payments', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          referenceNo: ref,
+        }),
+      });
+      
+      if (res.ok) {
         setStatus('success');
-      } catch (error) {
+      } else {
         setStatus('failed');
-      } finally {
-        setProcessing(false);
       }
-    }, 2000);
+    } catch (error) {
+      setStatus('failed');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const formatAmount = (amt: string) => {
