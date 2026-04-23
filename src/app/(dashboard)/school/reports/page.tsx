@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { BackButton } from '@/components/BackButton';
 
 interface AnalyticsData {
   overview: {
@@ -55,6 +56,7 @@ export default function AnalyticsPage() {
 
   return (
     <div>
+      <BackButton href="/school/dashboard" label="Back to Dashboard" />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics & Reports</h1>

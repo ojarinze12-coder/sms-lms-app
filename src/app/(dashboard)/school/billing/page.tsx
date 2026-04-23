@@ -7,39 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Receipt, 
-  Search, 
-  Download,
-  Eye,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  CreditCard,
-  Building
-} from 'lucide-react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from '@/components/ui/select';
+import { BackButton } from '@/components/BackButton';
 
 interface Invoice {
   id: string;
@@ -190,6 +164,7 @@ export default function TenantInvoicesPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+      <BackButton href="/school/dashboard" label="Back to Dashboard" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Subscription Invoices</h1>

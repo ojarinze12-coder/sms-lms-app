@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { BackButton } from '@/components/BackButton';
 import { 
   Ticket, 
   Plus, 
@@ -199,6 +200,7 @@ export default function SchoolSupportPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/dashboard" label="Back to Dashboard" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Support Tickets</h1>

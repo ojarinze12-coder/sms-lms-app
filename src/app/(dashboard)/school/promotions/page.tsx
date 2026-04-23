@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { BackButton } from '@/components/BackButton';
 
 function getAuthHeaders() {
   if (typeof window === 'undefined') return {};
@@ -102,6 +103,7 @@ export default function PromotionsPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <BackButton href="/school/academics" label="Back to Academics" />
       <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Promotions</h1>

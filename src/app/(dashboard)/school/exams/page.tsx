@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { BackButton } from '@/components/BackButton';
 
 interface Grade {
   letter: string;
@@ -194,6 +195,7 @@ export default function GradingScalesPage() {
 
   return (
     <div>
+      <BackButton href="/school/academics" label="Back to Academics" />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Grading Scales</h1>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { BackButton } from '@/components/BackButton';
 
 interface Class {
   id: string;
@@ -173,6 +174,7 @@ export default function TimetablePage() {
 
   return (
     <div>
+      <BackButton href="/school/academics" label="Back to Academics" />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Timetable Management</h1>

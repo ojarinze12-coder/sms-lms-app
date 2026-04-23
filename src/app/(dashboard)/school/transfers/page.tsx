@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
+import { BackButton } from '@/components/BackButton';
 import { useBranch } from '@/lib/hooks/use-branch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -173,6 +174,7 @@ export default function TransfersPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/dashboard" label="Back to Dashboard" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Branch Transfers</h1>
