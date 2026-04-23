@@ -121,8 +121,8 @@ export default function AttendancePage() {
     try {
       setLoading(true);
       const [studentsRes, attendanceRes] = await Promise.all([
-        fetch(`/api/sms/students?classId=${selectedClass}`),
-        fetch(`/api/sms/attendance?classId=${selectedClass}&date=${selectedDate}`)
+        authFetch(`/api/sms/students?classId=${selectedClass}`),
+        authFetch(`/api/sms/attendance?classId=${selectedClass}&date=${selectedDate}`)
       ]);
       
       if (!studentsRes.ok || !attendanceRes.ok) {
