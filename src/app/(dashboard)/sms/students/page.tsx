@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Download, FileSpreadsheet, FileText, Filter } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
+import { BackButton } from '@/components/BackButton';
 
 interface Student {
   id: string;
@@ -263,6 +264,7 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/people/students" label="Back to People" />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Students</h1>

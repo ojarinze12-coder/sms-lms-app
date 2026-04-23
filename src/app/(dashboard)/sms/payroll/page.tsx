@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BackButton } from '@/components/BackButton';
 import { 
   Dialog, 
   DialogContent, 
@@ -172,6 +173,7 @@ export default function PayrollPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/sms/hr" label="Back to HR Dashboard" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Payroll Management</h1>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { BackButton } from '@/components/BackButton';
 import { 
   Select, 
   SelectContent, 
@@ -232,6 +233,7 @@ export default function SchoolUsersPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/people" label="Back to People" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">User Management</h1>

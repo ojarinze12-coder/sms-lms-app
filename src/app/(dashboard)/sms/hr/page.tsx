@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
+import { BackButton } from '@/components/BackButton';
 import Link from 'next/link';
 import { 
   Users, 
@@ -170,6 +171,7 @@ export default function HRDashboard() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/hr" label="Back to HR" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">HR & Payroll Dashboard</h1>

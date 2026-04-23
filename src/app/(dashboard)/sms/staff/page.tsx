@@ -6,6 +6,7 @@ import { useBranch } from '@/lib/hooks/use-branch';
 import { UserPlus, Download, FileSpreadsheet, FileText, Filter } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
+import { BackButton } from '@/components/BackButton';
 import { 
   Dialog, 
   DialogContent, 
@@ -225,6 +226,7 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/people/staff" label="Back to People" />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Non-Teaching Staff</h1>

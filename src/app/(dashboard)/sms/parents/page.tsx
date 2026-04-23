@@ -5,6 +5,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BackButton } from '@/components/BackButton';
 import { Label } from '@/components/ui/label';
 import { 
   Table, 
@@ -157,6 +158,7 @@ export default function ParentsPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/people/parents" label="Back to People" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Parent Links</h1>

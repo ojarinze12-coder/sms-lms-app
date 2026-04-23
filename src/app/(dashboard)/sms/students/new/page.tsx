@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Select, 
@@ -97,13 +98,8 @@ export default function NewStudentPage() {
 
   return (
     <div className="max-w-4xl">
+      <BackButton href="/sms/students" label="Back to Students" />
       <div className="mb-6">
-        <Link
-          href="/sms/students"
-          className="text-sm text-gray-600 hover:text-gray-900"
-        >
-          ← Back to Students
-        </Link>
         <h1 className="text-2xl font-bold mt-2">Add New Student</h1>
         <p className="text-gray-500">Enter student details including Nigerian-specific information</p>
       </div>

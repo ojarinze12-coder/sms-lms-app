@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -233,6 +234,7 @@ export default function LeavesPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/sms/hr" label="Back to HR Dashboard" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Leave Management</h1>

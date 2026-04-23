@@ -6,6 +6,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useBranch } from '@/lib/hooks/use-branch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -364,6 +365,7 @@ export default function FeesPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/finance" label="Back to Finance" />
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Fee Management</h1>
