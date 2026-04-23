@@ -98,7 +98,7 @@ export default function NewStudentPage() {
 
   return (
     <div className="max-w-4xl">
-      <BackButton href="/sms/students" label="Back to Students" />
+      <BackButton href="/school/dashboard" label="Back to Dashboard" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold mt-2">Add New Student</h1>
         <p className="text-gray-500">Enter student details including Nigerian-specific information</p>

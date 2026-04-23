@@ -233,7 +233,7 @@ export default function SchoolUsersPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton href="/school/people" label="Back to People" />
+      <BackButton href="/school/dashboard" label="Back to Dashboard" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">User Management</h1>

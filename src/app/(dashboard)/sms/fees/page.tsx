@@ -365,7 +365,7 @@ export default function FeesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton href="/school/finance" label="Back to Finance" />
+      <BackButton href="/school/dashboard" label="Back to Dashboard" />
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Fee Management</h1>

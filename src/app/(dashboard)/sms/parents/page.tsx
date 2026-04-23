@@ -158,7 +158,7 @@ export default function ParentsPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton href="/school/people/parents" label="Back to People" />
+      <BackButton href="/school/dashboard" label="Back to Dashboard" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Parent Links</h1>
