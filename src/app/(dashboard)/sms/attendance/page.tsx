@@ -95,36 +95,52 @@ export default function AttendancePage() {
 
   async function fetchClasses() {
     try {
+      setLoading(true);
       const params = new URLSearchParams();
       if (selectedBranch) {
         params.set('branchId', selectedBranch.id);
       }
       const url = '/api/sms/academic-classes' + (params.toString() ? '?' + params.toString() : '');
       const res = await authFetch(url);
+      if (!res.ok) {
+        console.error('Failed to fetch classes:', res.status);
+        setClasses([]);
+        return;
+      }
       const data = await res.json();
-      setClasses(data.data || data || []);
+      setClasses(Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []));
     } catch (err) {
       console.error('Failed to fetch classes:', err);
+      setClasses([]);
+    } finally {
+      setLoading(false);
     }
   }
 
   async function fetchStudentsAndAttendance() {
     try {
+      setLoading(true);
       const [studentsRes, attendanceRes] = await Promise.all([
         fetch(`/api/sms/students?classId=${selectedClass}`),
         fetch(`/api/sms/attendance?classId=${selectedClass}&date=${selectedDate}`)
       ]);
       
+      if (!studentsRes.ok || !attendanceRes.ok) {
+        console.error('API error:', studentsRes.status, attendanceRes.status);
+        return;
+      }
+      
       const studentsData = await studentsRes.json();
       const attendanceData = await attendanceRes.json();
       
-      setStudents(studentsData || []);
-      setAttendanceList(attendanceData.attendance || []);
+      const studentsList = Array.isArray(studentsData) ? studentsData : (Array.isArray(studentsData?.students) ? studentsData.students : []);
+      setStudents(studentsList);
+      setAttendanceList(Array.isArray(attendanceData?.attendance) ? attendanceData.attendance : []);
       
       const existingAttendance: Record<string, string> = {};
-      const studentIdsInClass = new Set((studentsData || []).map((s: Student) => s.id));
+      const studentIdsInClass = new Set(studentsList.map((s: Student) => s.id));
       
-      (studentsData || []).forEach((s: Student) => {
+      studentsList.forEach((s: Student) => {
         existingAttendance[s.id] = 'PRESENT';
       });
       
@@ -137,6 +153,8 @@ export default function AttendancePage() {
       setAttendance(existingAttendance);
     } catch (err) {
       console.error('Failed to fetch data:', err);
+    } finally {
+      setLoading(false);
     }
   }
 
