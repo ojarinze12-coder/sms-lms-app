@@ -52,13 +52,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Student record not found. Please contact admin.' }, { status: 404 });
     }
 
+    console.log('[portal] Step 4 - Fetching enrollments...');
+
+    // Simplified enrollment query first
     const enrollments = await prisma.enrollment.findMany({
       where: { studentId: student.id },
-      include: {
+      select: {
+        id: true,
+        status: true,
         academicClass: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            level: true,
+            stream: true,
             subjects: {
-              include: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
                 teacher: { select: { firstName: true, lastName: true } }
               }
             }
@@ -160,6 +172,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching student portal data:', error);
-    return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
+    return NextResponse.json({ error: 'Failed to fetch data', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
