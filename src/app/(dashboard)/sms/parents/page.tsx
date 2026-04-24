@@ -36,7 +36,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const APPROVE_URL = String.raw`/api/sms/parents/approve`;
+const APPROVE_URL = typeof window !== 'undefined' 
+    ? `${window.location.origin}/api/sms/parents/approve` 
+    : '/api/sms/parents/approve';
 
 interface ParentLink {
   id: string;
