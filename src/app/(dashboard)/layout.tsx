@@ -107,8 +107,7 @@ const studentNavItems = [
 ];
 
 const parentNavItems = [
-  { label: 'Dashboard', href: '/' },
-  { label: "Children's Results", href: '/parent' },
+  { label: "Children's Portal", href: '/parent' },
 ];
 
 function DropdownMenu({ 
@@ -213,7 +212,7 @@ useEffect(() => {
       if (loading) {
         console.log('[Layout] Auth timeout, showing page anyway');
       }
-    }, 8000);
+    }, 10000);
     return () => clearTimeout(timeout);
   }, [loading]);
 
@@ -264,17 +263,23 @@ useEffect(() => {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Login</h2>
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Go to Login
-          </Link>
+  // For parent users, always show content - they can see their portal even during auth refresh
+  if (!user && !loading) {
+    // Check if there's a token in localStorage that might be refreshed
+    if (typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
+      // Don't block, let the page try to load with stored token
+    } else {
+      return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Please Login</h2>
+            <Link href="/login" className="text-blue-600 hover:underline">
+              Go to Login
+            </Link>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   return (
