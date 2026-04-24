@@ -208,12 +208,12 @@ export default function DashboardLayout({
   const isStudent = role === 'STUDENT';
   const isParent = role === 'PARENT';
 
-  useEffect(() => {
+useEffect(() => {
     const timeout = setTimeout(() => {
       if (loading) {
         console.log('[Layout] Auth timeout, showing page anyway');
       }
-    }, 5000);
+    }, 8000);
     return () => clearTimeout(timeout);
   }, [loading]);
 

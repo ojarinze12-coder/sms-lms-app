@@ -38,9 +38,26 @@ export function useAuth(): UseAuthReturn {
     
     async function checkAuth() {
       try {
-        // Get token from localStorage as fallback
         const localToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
         
+        if (localToken) {
+          // First verify the local token
+          const verifyRes = await fetch('/api/auth/verify', {
+            headers: { 'Authorization': `Bearer ${localToken}` },
+            credentials: 'include',
+          });
+          
+          if (verifyRes.ok && mounted) {
+            const verifyData = await verifyRes.json();
+            if (verifyData.user) {
+              setUser(verifyData.user as AuthUser);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+        
+        // Fall back to /api/auth/me
         const headers: Record<string, string> = {};
         if (localToken) {
           headers['Authorization'] = `Bearer ${localToken}`;
@@ -57,23 +74,8 @@ export function useAuth(): UseAuthReturn {
           const data = await res.json();
           if (data.user) {
             setUser(data.user as AuthUser);
-            // If token in response, store it
             if (data.token) {
               localStorage.setItem('auth_token', data.token);
-            }
-          }
-        } else {
-          // Try to use localStorage token as last resort
-          if (localToken) {
-            const authRes = await fetch('/api/auth/verify', {
-              headers: { 'Authorization': `Bearer ${localToken}` },
-              credentials: 'include',
-            });
-            if (authRes.ok) {
-              const authData = await authRes.json();
-              if (authData.user) {
-                setUser(authData.user as AuthUser);
-              }
             }
           }
         }
