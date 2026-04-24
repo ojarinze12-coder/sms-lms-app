@@ -30,7 +30,8 @@ import OverviewTab from '@/components/parent/OverviewTab';
 import FeesTab from '@/components/parent/FeesTab';
 import AttendanceTab from '@/components/parent/AttendanceTab';
 import AnnouncementsTab from '@/components/parent/AnnouncementsTab';
-import { authFetch } from '@/lib/auth-fetch';
+
+const API_BASE = '/api/sms';
 
 export default function ParentPortalPage() {
   const [loading, setLoading] = useState(true);
@@ -50,8 +51,12 @@ export default function ParentPortalPage() {
 
   const loadPortalData = async () => {
     try {
-      const res = await authFetch('/api/sms/parents');
-      const data = await res.json();
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(API_BASE + '/parents', {
+        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include'
+      });
+      const result = await res.json();
       
       if (res.status === 401) {
         setError('Session expired. Please login again.');
@@ -60,13 +65,13 @@ export default function ParentPortalPage() {
       }
       
       if (!res.ok) {
-        setError(data.error || 'Failed to load portal data');
+        setError(result.error || 'Failed to load portal data');
         return;
       }
       
-      setData(data);
-      if (data.children.length > 0) {
-        setSelectedChildId(data.children[0].id);
+      setData(result);
+      if (result.children.length > 0) {
+        setSelectedChildId(result.children[0].id);
       }
     } catch (err) {
       setError('Failed to load portal data');
@@ -75,8 +80,6 @@ export default function ParentPortalPage() {
     }
   };
 
-const API_BASE = '/api/sms';
-
   const handleLinkStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     setLinking(true);
@@ -84,18 +87,27 @@ const API_BASE = '/api/sms';
     setLinkSuccess('');
 
     try {
-      const res = await authFetch(API_BASE + '/parents/link-student', {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(API_BASE + '/parents/link-student', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
         body: JSON.stringify({ studentId, relationship })
       });
       const result = await res.json();
 
       if (res.status === 201 && result.error?.includes('created')) {
         setLinkSuccess('Setting up your account...');
-        const retryRes = await authFetch(API_BASE + '/parents/link-student', {
+        const retryRes = await fetch(API_BASE + '/parents/link-student', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          credentials: 'include',
           body: JSON.stringify({ studentId, relationship })
         });
         const retryResult = await retryRes.json();
@@ -148,8 +160,8 @@ const API_BASE = '/api/sms';
   if (error) {
     return (
       <div className="max-w-2xl mx-auto mt-8 p-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-800 mb-4">{error}</p>
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+          <p className="text-yellow-800 dark:text-yellow-200 mb-4">{error}</p>
           <button 
             onClick={() => window.location.href = '/login'}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -164,13 +176,13 @@ const API_BASE = '/api/sms';
   if (!data || data.children.length === 0) {
     return (
       <div className="max-w-2xl mx-auto mt-8">
-        <div className="bg-white rounded-xl border p-8 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-8 text-center">
           <GraduationCap className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Welcome to Parent Portal</h2>
-          <p className="text-gray-600 mb-4">
+          <h2 className="text-xl font-semibold mb-2 dark:text-white">Welcome to Parent Portal</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
             No children are linked to your account. 
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Your email: {data?.parent?.email}
           </p>
           
@@ -205,21 +217,21 @@ const API_BASE = '/api/sms';
 
       {/* Pending Approvals */}
       {pendingChildren.length > 0 && (
-        <Card className="border-yellow-300 bg-yellow-50">
+        <Card className="border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-yellow-800 flex items-center gap-2">
+            <CardTitle className="text-yellow-800 dark:text-yellow-200 flex items-center gap-2">
               Pending Link Requests
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {pendingChildren.map((child) => (
-                <div key={child.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                <div key={child.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700">
                   <div>
-                    <p className="font-medium">{child.firstName} {child.lastName}</p>
-                    <p className="text-sm text-gray-500">ID: {child.studentId}</p>
+                    <p className="font-medium dark:text-white">{child.firstName} {child.lastName}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">ID: {child.studentId}</p>
                   </div>
-                  <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
+                  <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 rounded-full text-sm">
                     Pending Approval
                   </span>
                 </div>
@@ -231,16 +243,16 @@ const API_BASE = '/api/sms';
 
       {/* Child Selector */}
       {approvedChildren.length > 0 && (
-        <div className="bg-white rounded-xl border p-3 md:p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-3 md:p-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Viewing Profile For:
               </label>
               <select
                 value={selectedChildId}
                 onChange={(e) => setSelectedChildId(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-sm"
+                className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-gray-100"
               >
                 {approvedChildren.map((child) => (
                   <option key={child.id} value={child.id}>
@@ -310,36 +322,36 @@ const API_BASE = '/api/sms';
       )}
 
       {viewMode === 'results' && (
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">Exam Results</CardTitle>
+            <CardTitle className="flex items-center gap-2 dark:text-white">Exam Results</CardTitle>
           </CardHeader>
           <CardContent>
             {data.results.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No exam results found</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No exam results found</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[500px]">
-                  <thead className="border-b">
+                  <thead className="border-b dark:border-gray-700">
                     <tr>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Exam</th>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Subject</th>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Term</th>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Score</th>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Status</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Exam</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Subject</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Term</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Score</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.results.map((result) => (
-                      <tr key={result.id} className="border-b">
-                        <td className="py-3 px-2 font-medium whitespace-nowrap">{result.exam?.title}</td>
-                        <td className="py-3 px-2 whitespace-nowrap">{result.exam?.subject?.name}</td>
-                        <td className="py-3 px-2 text-sm whitespace-nowrap">{result.exam?.term?.name}</td>
-                        <td className="py-3 px-2 whitespace-nowrap">
+                      <tr key={result.id} className="border-b dark:border-gray-700">
+                        <td className="py-3 px-2 font-medium whitespace-nowrap dark:text-white">{result.exam?.title}</td>
+                        <td className="py-3 px-2 whitespace-nowrap dark:text-gray-300">{result.exam?.subject?.name}</td>
+                        <td className="py-3 px-2 text-sm whitespace-nowrap dark:text-gray-400">{result.exam?.term?.name}</td>
+                        <td className="py-3 px-2 whitespace-nowrap dark:text-white">
                           <span className="font-bold">{result.percentage?.toFixed(1)}%</span>
                         </td>
                         <td className="py-3 px-2 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${result.status === 'GRADED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${result.status === 'GRADED' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}>
                             {result.status}
                           </span>
                         </td>
@@ -354,32 +366,32 @@ const API_BASE = '/api/sms';
       )}
 
       {viewMode === 'report-cards' && (
-        <Card>
+        <Card className="dark:bg-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">Report Cards</CardTitle>
+            <CardTitle className="flex items-center gap-2 dark:text-white">Report Cards</CardTitle>
           </CardHeader>
           <CardContent>
             {data.reportCards.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No report cards found</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No report cards found</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[400px]">
-                  <thead className="border-b">
+                  <thead className="border-b dark:border-gray-700">
                     <tr>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Term</th>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Academic Year</th>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Total Score</th>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Average</th>
-                      <th className="text-left py-3 px-2 whitespace-nowrap">Grade</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Term</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Academic Year</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Total Score</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Average</th>
+                      <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Grade</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.reportCards.map((card) => (
-                      <tr key={card.id} className="border-b">
-                        <td className="py-3 px-2 whitespace-nowrap">{card.term?.name}</td>
-                        <td className="py-3 px-2 text-sm whitespace-nowrap">{card.term?.academic_years?.name}</td>
-                        <td className="py-3 px-2 whitespace-nowrap">{card.totalScore?.toFixed(1)}</td>
-                        <td className="py-3 px-2 whitespace-nowrap">{card.average?.toFixed(1)}%</td>
+                      <tr key={card.id} className="border-b dark:border-gray-700">
+                        <td className="py-3 px-2 whitespace-nowrap dark:text-gray-300">{card.term?.name}</td>
+                        <td className="py-3 px-2 text-sm whitespace-nowrap dark:text-gray-400">{card.term?.academic_years?.name}</td>
+                        <td className="py-3 px-2 whitespace-nowrap dark:text-white">{card.totalScore?.toFixed(1)}</td>
+                        <td className="py-3 px-2 whitespace-nowrap dark:text-white">{card.average?.toFixed(1)}%</td>
                         <td className="py-3 px-2 whitespace-nowrap">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getGradeColor(card.grade)}`}>
                             {card.grade}
