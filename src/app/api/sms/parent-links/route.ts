@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest) {
     console.log('[parent-links PATCH] Finding request:', requestId);
     const existingRequest = await prisma.parentStudent.findUnique({
       where: { id: requestId },
-      include: { student: true }
+      include: { student: true, parent: true }
     });
 
     console.log('[parent-links PATCH] Found request:', existingRequest ? 'yes' : 'no');
