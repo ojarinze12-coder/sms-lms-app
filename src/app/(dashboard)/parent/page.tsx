@@ -92,9 +92,8 @@ const API_BASE = '/api/sms';
       const result = await res.json();
 
       if (res.status === 201 && result.error?.includes('created')) {
-        // Parent record was just created, retry the link request
         setLinkSuccess('Setting up your account...');
-        const retryRes = await authFetch(linkUrl, {
+        const retryRes = await authFetch(API_BASE + '/parents/link-student', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ studentId, relationship })
@@ -283,6 +282,8 @@ const API_BASE = '/api/sms';
         feeStats={feeStats}
         attendanceStats={attendanceStats}
         announcementsCount={data.announcements.length}
+        resultsCount={data.results.length}
+        reportCardsCount={data.reportCards.length}
       />
 
       {/* Tab Content */}
