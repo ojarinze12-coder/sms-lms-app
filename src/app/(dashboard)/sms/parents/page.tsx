@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authFetch } from '@/lib/auth-fetch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,10 +34,6 @@ import {
   Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-const APPROVE_URL = typeof window !== 'undefined' 
-    ? `${window.location.origin}/api/sms/parents/approve` 
-    : '/api/sms/parents/approve';
 
 interface ParentLink {
   id: string;
@@ -77,7 +72,7 @@ export default function ParentsPage() {
   const fetchLinks = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const res = await fetch('/api/sms/parents/approve', {
+      const res = await fetch('/api/sms/parent-links', {
         headers: { 'Authorization': `Bearer ${token}` },
         credentials: 'include'
       });
@@ -93,11 +88,11 @@ export default function ParentsPage() {
   };
 
   const handleApprove = async (requestId: string) => {
-    if (actionLoading) return; // Prevent double invocation
+    if (actionLoading) return;
     setActionLoading(requestId);
     try {
       const token = localStorage.getItem('auth_token');
-      const res = await fetch('/api/sms/parents/approve', {
+      const res = await fetch('/api/sms/parent-links', {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
@@ -122,11 +117,11 @@ export default function ParentsPage() {
   };
 
   const handleReject = async (requestId: string) => {
-    if (actionLoading) return; // Prevent double invocation
+    if (actionLoading) return;
     setActionLoading(requestId);
     try {
       const token = localStorage.getItem('auth_token');
-      const res = await fetch('/api/sms/parents/approve', {
+      const res = await fetch('/api/sms/parent-links', {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
