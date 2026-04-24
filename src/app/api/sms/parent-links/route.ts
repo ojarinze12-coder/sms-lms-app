@@ -4,6 +4,7 @@ import { getAuthUser } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
   const authUser = await getAuthUser();
+  console.log('[parent-links GET] Auth:', authUser);
   
   if (!authUser || !authUser.tenantId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,6 +31,8 @@ export async function GET(request: NextRequest) {
       where.studentId = studentId;
     }
 
+    console.log('[parent-links GET] Query where:', where);
+
     const requests = await prisma.parentStudent.findMany({
       where,
       include: {
@@ -38,6 +41,8 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    console.log('[parent-links GET] Found requests:', requests.length);
 
     const formatted = requests.map(r => ({
       id: r.id,
@@ -66,19 +71,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ requests: formatted });
   } catch (error) {
     console.error('Get linking requests error:', error);
-    return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
+    console.error('Error details:', (error as Error).message, (error as Error).stack);
+    return NextResponse.json({ error: 'Failed to fetch requests: ' + (error as Error).message }, { status: 500 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   const authUser = await getAuthUser();
+  console.log('[parent-links PATCH] Auth:', authUser);
+  console.log('[parent-links PATCH] Role:', authUser?.role, 'TenantId:', authUser?.tenantId);
   
   if (!authUser || !authUser.tenantId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   if (!['SUPER_ADMIN', 'ADMIN', 'PRINCIPAL', 'ACADEMIC_ADMIN'].includes(authUser.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden - Role: ' + authUser.role }, { status: 403 });
   }
 
   try {
