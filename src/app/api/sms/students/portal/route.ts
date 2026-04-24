@@ -14,51 +14,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[portal] authUser:', JSON.stringify(authUser));
-    
-    // First try to find student by userId in student table
-    let student = await prisma.student.findFirst({
+    // Find student by userId or email within the same tenant - restore working lookup
+    const student = await prisma.student.findFirst({
       where: {
-        userId: authUser.userId
+        OR: [
+          { userId: authUser.userId },
+          { email: authUser.email },
+        ],
+        tenantId: authUser.tenantId
       }
     });
 
-    // If not found by userId, try by email
-    if (!student && authUser.email) {
-      student = await prisma.student.findFirst({
-        where: {
-          email: authUser.email
-        }
-      });
-    }
-
-    // If still not found, try by studentId field (the ID number)
-    if (!student && authUser.userId) {
-      student = await prisma.student.findFirst({
-        where: {
-          studentId: authUser.userId
-        }
-      });
-    }
-
-    // Last resort: try by user's firstName + lastName combination with same tenant
-    if (!student && authUser.firstName && authUser.lastName) {
-      student = await prisma.student.findFirst({
-        where: {
-          firstName: { mode: 'insensitive', equals: authUser.firstName },
-          lastName: { mode: 'insensitive', equals: authUser.lastName },
-          tenantId: authUser.tenantId
-        }
-      });
-    }
-
     if (!student) {
-      console.log('[portal] Student not found for userId:', authUser.userId, 'email:', authUser.email);
       return NextResponse.json({ error: 'Student record not found. Please contact admin.' }, { status: 404 });
     }
 
-    console.log('[portal] Found student:', student.id, student.studentId, 'tenantId:', student.tenantId);
-
+    // Fetch grading scale from school settings
     const settings = await prisma.tenantSettings.findUnique({
       where: { tenantId: authUser.tenantId },
       select: { gradingScale: true }
@@ -74,6 +45,7 @@ export async function GET(request: NextRequest) {
       gradingScale = scales.find((s: any) => s.name === settings.gradingScale) || scales.find((s: any) => s.isDefault) || scales[0] || null;
     }
 
+    // Filter by student's branch
     const branchFilter = student.branchId ? { branchId: student.branchId } : {};
 
     const enrollments = await prisma.enrollment.findMany({
