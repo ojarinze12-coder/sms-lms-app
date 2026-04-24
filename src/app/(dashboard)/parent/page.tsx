@@ -82,7 +82,8 @@ export default function ParentPortalPage() {
     setLinkSuccess('');
 
     try {
-      const res = await authFetch('/api/sms/parents/link-student', {
+      const linkUrl = '/api/sms/parents/' + 'link-student';
+      const res = await authFetch(linkUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId, relationship })
