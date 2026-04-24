@@ -75,15 +75,16 @@ export default function ParentPortalPage() {
     }
   };
 
-const handleLinkStudent = async (e: React.FormEvent) => {
+const API_BASE = '/api/sms';
+
+  const handleLinkStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     setLinking(true);
     setLinkError('');
     setLinkSuccess('');
 
     try {
-      const linkUrl = '/api/sms/parents/' + 'link-student';
-      const res = await authFetch(linkUrl, {
+      const res = await authFetch(API_BASE + '/parents/link-student', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentId, relationship })
