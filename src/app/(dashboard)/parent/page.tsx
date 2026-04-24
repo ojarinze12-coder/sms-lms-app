@@ -75,7 +75,7 @@ export default function ParentPortalPage() {
     }
   };
 
-  const handleLinkStudent = async (e: React.FormEvent) => {
+const handleLinkStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     setLinking(true);
     setLinkError('');
@@ -90,8 +90,36 @@ export default function ParentPortalPage() {
       });
       const result = await res.json();
 
+      if (res.status === 201 && result.error?.includes('created')) {
+        // Parent record was just created, retry the link request
+        setLinkSuccess('Setting up your account...');
+        const retryRes = await authFetch(linkUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentId, relationship })
+        });
+        const retryResult = await retryRes.json();
+        
+        if (!retryRes.ok) {
+          setLinkError(retryResult.error || 'Failed to link student');
+          setLinking(false);
+          return;
+        }
+        
+        setLinkSuccess(retryResult.message || 'Student linked successfully!');
+        setStudentId('');
+        setRelationship('GUARDIAN');
+        setTimeout(() => {
+          setLinkSuccess('');
+          loadPortalData();
+        }, 3000);
+        setLinking(false);
+        return;
+      }
+
       if (!res.ok) {
         setLinkError(result.error || 'Failed to link student');
+        setLinking(false);
         return;
       }
 
@@ -99,7 +127,6 @@ export default function ParentPortalPage() {
       setStudentId('');
       setRelationship('GUARDIAN');
       setTimeout(() => {
-        setStudentId('');
         setLinkSuccess('');
         loadPortalData();
       }, 3000);

@@ -33,11 +33,41 @@ export async function POST(request: NextRequest) {
     });
 
     if (!parent || !parent.tenantId) {
+      // Create parent record if it doesn't exist
+      let tenantId = authUser.tenantId || null;
+      
+      if (!tenantId) {
+        // Try to find a default tenant
+        const defaultTenant = await prisma.tenant.findFirst();
+        if (!defaultTenant) {
+          return NextResponse.json(
+            { error: 'No school found' },
+            { status: 404 }
+          );
+        }
+        tenantId = defaultTenant.id;
+      }
+
+      const newParent = await prisma.parent.create({
+        data: {
+          firstName: authUser.firstName || '',
+          lastName: authUser.lastName || '',
+          email: authUser.email,
+          userId: authUser.userId,
+          tenantId: tenantId,
+          relationship: 'GUARDIAN',
+          isPrimaryContact: true,
+          approvalStatus: 'APPROVED'
+        }
+      });
+
       return NextResponse.json(
-        { error: 'Parent record not found' },
-        { status: 404 }
+        { error: 'Parent account created. Please try linking again.' },
+        { status: 201 }
       );
     }
+
+    console.log('[link-student] Found parent:', parent.id);
 
     const siblingDiscount = await prisma.siblingDiscount.findFirst({
       where: { tenantId: parent.tenantId, isActive: true }
