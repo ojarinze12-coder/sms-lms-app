@@ -9,18 +9,29 @@ export async function POST(request: NextRequest) {
 
     // Handle Student Login (restored from working version 0ad0526)
     if (loginType === 'student' && studentId) {
+      // Make studentId lookup flexible - case-insensitive and partial match
       const student = await prisma.student.findFirst({
         where: {
           OR: [
-            { studentId: studentId },
-            { email: studentId }
+            { studentId: { mode: 'insensitive', equals: studentId.trim() } },
+            { studentId: { mode: 'insensitive', contains: studentId.trim() } },
+            { email: { mode: 'insensitive', equals: studentId.trim() } }
           ]
         }
       });
 
-      if (!student || !student.userId) {
+      console.log('[login] Student lookup - input:', studentId, 'found:', student?.studentId, 'userId:', student?.userId);
+
+      if (!student) {
         return NextResponse.json(
           { error: 'Student account not found. Please contact your school administrator.' },
+          { status: 401 }
+        );
+      }
+
+      if (!student.userId) {
+        return NextResponse.json(
+          { error: 'Student account not linked. Please contact your school administrator.' },
           { status: 401 }
         );
       }
