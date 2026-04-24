@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_BASE = '/api/sms';
+const APPROVE_URL = String.raw`/api/sms/parents/approve`;
 
 interface ParentLink {
   id: string;
@@ -74,7 +74,7 @@ export default function ParentsPage() {
 
   const fetchLinks = async () => {
     try {
-      const res = await authFetch(API_BASE + '/parents/approve');
+      const res = await authFetch(APPROVE_URL);
       if (res.ok) {
         const data = await res.json();
         setLinks(data.requests || []);
@@ -89,7 +89,7 @@ export default function ParentsPage() {
   const handleApprove = async (requestId: string) => {
     setActionLoading(requestId);
     try {
-      const res = await authFetch(API_BASE + '/parents/approve', {
+      const res = await authFetch(APPROVE_URL, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requestId, action: 'approve' })
@@ -112,7 +112,7 @@ export default function ParentsPage() {
   const handleReject = async (requestId: string) => {
     setActionLoading(requestId);
     try {
-      const res = await authFetch(API_BASE + '/parents/approve', {
+      const res = await authFetch(APPROVE_URL, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requestId, action: 'reject' })
