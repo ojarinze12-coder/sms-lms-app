@@ -14,11 +14,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // First try to find student by userId, otherwise by email
+    console.log('[portal] authUser:', JSON.stringify(authUser));
+    
+    // First try to find student by userId in student table
     let student = await prisma.student.findFirst({
       where: {
-        userId: authUser.userId,
-        tenantId: authUser.tenantId
+        userId: authUser.userId
       }
     });
 
@@ -26,25 +27,37 @@ export async function GET(request: NextRequest) {
     if (!student && authUser.email) {
       student = await prisma.student.findFirst({
         where: {
-          email: authUser.email,
-          tenantId: authUser.tenantId
+          email: authUser.email
         }
       });
     }
 
-    // If still not found, try by studentId field
+    // If still not found, try by studentId field (the ID number)
     if (!student && authUser.userId) {
       student = await prisma.student.findFirst({
         where: {
-          studentId: authUser.userId,
+          studentId: authUser.userId
+        }
+      });
+    }
+
+    // Last resort: try by user's firstName + lastName combination with same tenant
+    if (!student && authUser.firstName && authUser.lastName) {
+      student = await prisma.student.findFirst({
+        where: {
+          firstName: { mode: 'insensitive', equals: authUser.firstName },
+          lastName: { mode: 'insensitive', equals: authUser.lastName },
           tenantId: authUser.tenantId
         }
       });
     }
 
     if (!student) {
+      console.log('[portal] Student not found for userId:', authUser.userId, 'email:', authUser.email);
       return NextResponse.json({ error: 'Student record not found. Please contact admin.' }, { status: 404 });
     }
+
+    console.log('[portal] Found student:', student.id, student.studentId, 'tenantId:', student.tenantId);
 
     const settings = await prisma.tenantSettings.findUnique({
       where: { tenantId: authUser.tenantId },
