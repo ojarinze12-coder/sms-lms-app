@@ -33,6 +33,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (!parent || !parent.tenantId) {
+      console.log('[link-student] No parent record found, creating one...');
+      console.log('[link-student] Auth user details:', {
+        userId: authUser.userId,
+        email: authUser.email,
+        tenantId: authUser.tenantId,
+        role: authUser.role
+      });
+      
       // Create parent record if it doesn't exist
       let tenantId = authUser.tenantId || null;
       
@@ -83,6 +91,8 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    console.log('[link-student] Student search:', { studentId, parentTenantId: parent.tenantId, found: !!student });
+    
     if (!student) {
       return NextResponse.json(
         { error: 'Student not found. Please check the student ID and try again.' },
@@ -116,15 +126,27 @@ export async function POST(request: NextRequest) {
 
     const finalIsPrimaryContact = isPrimaryContact !== false && otherParentLinks.length === 0;
 
+    console.log('[link-student] Creating link with data:', {
+      parentId: parent.id,
+      studentId: student.id,
+      tenantId: parent.tenantId,
+      relationship: relationship || parent.relationship || 'GUARDIAN',
+      isPrimaryContact: finalIsPrimaryContact,
+      approvalStatus
+    });
+
     const studentLink = await prisma.parentStudent.create({
       data: {
         parentId: parent.id,
         studentId: student.id,
+        tenantId: parent.tenantId,
         relationship: relationship || parent.relationship || 'GUARDIAN',
         isPrimaryContact: finalIsPrimaryContact,
         approvalStatus
       }
     });
+
+    console.log('[link-student] Successfully created link:', studentLink.id);
 
     return NextResponse.json({
       message: linkingMode === 'AUTO_APPROVE' 
@@ -143,7 +165,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Link student error:', error);
     return NextResponse.json(
-      { error: 'Failed to link student' },
+      { error: 'Failed to link student: ' + (error as Error).message },
       { status: 500 }
     );
   }
