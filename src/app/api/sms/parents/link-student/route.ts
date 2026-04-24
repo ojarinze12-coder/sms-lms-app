@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     const existingLink = await prisma.parentStudent.findUnique({
       where: {
-        parent_student_unique: {
+        parentId_studentId: {
           parentId: parent.id,
           studentId: student.id
         }
