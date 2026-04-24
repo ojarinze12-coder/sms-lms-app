@@ -18,17 +18,49 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      if (!student || !student.userId) {
+      if (!student) {
         return NextResponse.json(
           { error: 'Student account not found. Please contact your school administrator.' },
           { status: 401 }
         );
       }
 
-      const user = await prisma.user.findUnique({
-        where: { id: student.userId },
-        include: { tenant: true, branch: true }
-      });
+      // If student has no userId linked, create one or find by email
+      let user = student.userId 
+        ? await prisma.user.findUnique({ where: { id: student.userId }, include: { tenant: true, branch: true } })
+        : null;
+
+      // If no user linked, try to find by student's email
+      if (!user && student.email) {
+        user = await prisma.user.findFirst({
+          where: { email: student.email },
+          include: { tenant: true, branch: true }
+        });
+      }
+
+      // If still no user, create one for this student
+      if (!user) {
+        const { hashPassword } = await import('@/lib/auth');
+        const defaultPassword = 'school123';
+        user = await prisma.user.create({
+          data: {
+            email: student.email || `${student.studentId}@sms.local`,
+            password: hashPassword(defaultPassword),
+            firstName: student.firstName,
+            lastName: student.lastName,
+            role: 'STUDENT',
+            tenantId: student.tenantId,
+            branchId: student.branchId,
+          },
+          include: { tenant: true, branch: true }
+        });
+        // Link the user to student
+        await prisma.student.update({
+          where: { id: student.id },
+          data: { userId: user.id }
+        });
+        console.log('[login] Created user account for existing student:', student.studentId);
+      }
 
       if (!user || !user.password) {
         return NextResponse.json(

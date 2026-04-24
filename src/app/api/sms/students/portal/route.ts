@@ -14,15 +14,33 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const student = await prisma.student.findFirst({
+    // First try to find student by userId, otherwise by email
+    let student = await prisma.student.findFirst({
       where: {
-        OR: [
-          { userId: authUser.userId },
-          { email: authUser.email },
-        ],
+        userId: authUser.userId,
         tenantId: authUser.tenantId
       }
     });
+
+    // If not found by userId, try by email
+    if (!student && authUser.email) {
+      student = await prisma.student.findFirst({
+        where: {
+          email: authUser.email,
+          tenantId: authUser.tenantId
+        }
+      });
+    }
+
+    // If still not found, try by studentId field
+    if (!student && authUser.userId) {
+      student = await prisma.student.findFirst({
+        where: {
+          studentId: authUser.userId,
+          tenantId: authUser.tenantId
+        }
+      });
+    }
 
     if (!student) {
       return NextResponse.json({ error: 'Student record not found. Please contact admin.' }, { status: 404 });
