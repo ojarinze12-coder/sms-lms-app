@@ -55,6 +55,41 @@ export async function GET(request: NextRequest) {
 
     console.log('[portal] Step 5 - Attendances:', attendances?.length);
 
+    // Assignments
+    const assignments = await prisma.assignmentSubmission.findMany({
+      where: { studentId: student.id },
+      take: 10
+    });
+
+    console.log('[portal] Step 6 - Assignments:', assignments?.length);
+
+    // Announcements for students
+    const announcements = await prisma.announcement.findMany({
+      where: {
+        tenantId: student.tenantId,
+        isPublished: true,
+        OR: [
+          { targetRoles: { has: 'STUDENT' } },
+          { targetRoles: { isEmpty: true } }
+        ]
+      },
+      take: 10
+    });
+
+    console.log('[portal] Step 7 - Announcements:', announcements?.length);
+
+    // Exams for student's enrollments
+    const exams = await prisma.exam.findMany({
+      where: {
+        tenantId: student.tenantId,
+        isPublished: true,
+        startTime: { lte: new Date() }
+      },
+      take: 20
+    });
+
+    console.log('[portal] Step 8 - Exams:', exams?.length);
+
     return NextResponse.json({
       student: {
         id: student.id,
@@ -67,9 +102,9 @@ export async function GET(request: NextRequest) {
       enrollments: enrollments || [],
       results: results || [],
       attendances: attendances || [],
-      enrollmentsCount: enrollments.length,
-      resultsCount: results.length,
-      attendancesCount: attendances.length,
+      assignments: assignments || [],
+      announcements: announcements || [],
+      exams: exams || [],
     });
   } catch (error) {
     console.error('Error:', error);
