@@ -5,10 +5,14 @@ import { getAuthUser } from '@/lib/auth-server';
 export async function POST(request: NextRequest) {
   const authUser = await getAuthUser();
   
+  console.log('[link-student] Auth user:', authUser);
+  
   if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  console.log('[link-student] User role:', authUser.role);
+  
   if (authUser.role !== 'PARENT') {
     return NextResponse.json({ error: 'Forbidden - Parent access required' }, { status: 403 });
   }

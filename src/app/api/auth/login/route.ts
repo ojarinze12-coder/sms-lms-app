@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
       tokenVersion: updatedUser.tokenVersion,
     });
 
+    console.log('[login] User role:', user.role, 'for email:', user.email);
+
     const cookieName = isSuperAdmin ? 'pcc-token' : 'scc-token';
     const isProduction = process.env.NODE_ENV === 'production';
 

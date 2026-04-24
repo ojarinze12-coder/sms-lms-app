@@ -28,6 +28,7 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
   };
 
   const token = getAuthToken();
+  console.log('[authFetch] Token:', token ? 'present' : 'missing', 'URL:', url);
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
