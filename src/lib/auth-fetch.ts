@@ -23,6 +23,11 @@ function clearAuthToken() {
 }
 
 export async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  // Prevent URL doubling
+  if (url.includes('/api/sms/parents/approve/api/sms/parents/approve')) {
+    url = '/api/sms/parents/approve';
+  }
+
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> || {}),
   };
