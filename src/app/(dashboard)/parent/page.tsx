@@ -2,17 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap, UserPlus } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -47,7 +38,6 @@ export default function ParentPortalPage() {
   const [error, setError] = useState('');
   const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [viewMode, setViewMode] = useState<'overview' | 'results' | 'report-cards' | 'fees' | 'attendance' | 'announcements'>('overview');
-  const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState('');
   const [linkSuccess, setLinkSuccess] = useState('');
@@ -104,14 +94,14 @@ export default function ParentPortalPage() {
         return;
       }
 
-      setLinkSuccess(result.message);
+      setLinkSuccess(result.message || 'Link request submitted successfully!');
       setStudentId('');
       setRelationship('GUARDIAN');
       setTimeout(() => {
-        setLinkModalOpen(false);
+        setStudentId('');
         setLinkSuccess('');
         loadPortalData();
-      }, 2000);
+      }, 3000);
     } catch (err) {
       setLinkError('An error occurred. Please try again.');
     } finally {
@@ -156,10 +146,16 @@ export default function ParentPortalPage() {
             Your email: {data?.parent?.email}
           </p>
           
-          <Button className="inline-flex items-center gap-2" onClick={() => setLinkModalOpen(true)}>
-            <UserPlus className="h-4 w-4" />
-            Link a Child
-          </Button>
+          <LinkChildModal
+            studentId={studentId}
+            relationship={relationship}
+            linkError={linkError}
+            linkSuccess={linkSuccess}
+            linking={linking}
+            onStudentIdChange={setStudentId}
+            onRelationshipChange={setRelationship}
+            onSubmit={handleLinkStudent}
+          />
         </div>
       </div>
     );
@@ -225,18 +221,22 @@ export default function ParentPortalPage() {
                 ))}
               </select>
             </div>
-            <Button variant="outline" className="w-full md:w-auto whitespace-nowrap" onClick={() => setLinkModalOpen(true)}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Link Child
-            </Button>
+            <LinkChildModal
+              studentId={studentId}
+              relationship={relationship}
+              linkError={linkError}
+              linkSuccess={linkSuccess}
+              linking={linking}
+              onStudentIdChange={setStudentId}
+              onRelationshipChange={setRelationship}
+              onSubmit={handleLinkStudent}
+            />
           </div>
         </div>
       )}
 
       {/* Link Child Modal */}
       <LinkChildModal
-        open={linkModalOpen}
-        onOpenChange={setLinkModalOpen}
         studentId={studentId}
         relationship={relationship}
         linkError={linkError}

@@ -11,26 +11,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
+import { useState } from 'react';
 
 interface LinkChildModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onStudentIdChange: (value: string) => void;
+  onRelationshipChange: (value: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
   studentId: string;
   relationship: string;
   linkError: string;
   linkSuccess: string;
   linking: boolean;
-  onStudentIdChange: (value: string) => void;
-  onRelationshipChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  children?: React.ReactNode;
 }
 
 export default function LinkChildModal({
-  open,
-  onOpenChange,
   studentId,
   relationship,
   linkError,
@@ -40,8 +37,16 @@ export default function LinkChildModal({
   onRelationshipChange,
   onSubmit,
 }: LinkChildModalProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button onClick={() => setOpen(true)}>
+          <UserPlus className="h-4 w-4 mr-2" />
+          Link a Child
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Link a Child</DialogTitle>
@@ -85,7 +90,7 @@ export default function LinkChildModal({
             )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={linking}>
