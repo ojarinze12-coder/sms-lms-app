@@ -2,15 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 
+export const runtime = 'nodejs';
+
 console.log('[parent-links] Route module loaded');
 
 export async function PATCH(request: NextRequest) {
-  console.log('[parent-links PATCH] Starting');
+  const logs: string[] = [];
+  
+  logs.push('PATCH starting');
   
   try {
-    console.log('[parent-links PATCH] Getting auth user...');
+    logs.push('Getting auth user...');
     const authUser = await getAuthUser();
-    console.log('[parent-links PATCH] Auth result:', authUser);
+    logs.push('Auth result: ' + JSON.stringify(authUser));
     
     if (!authUser || !authUser.tenantId) {
       console.log('[parent-links PATCH] Unauthorized - no auth or no tenantId');
@@ -111,13 +115,17 @@ export async function PATCH(request: NextRequest) {
       });
     }
   } catch (error) {
+    logs.push('ERROR: ' + (error as Error).message);
+    logs.push('Stack: ' + (error as Error).stack);
+    console.log('[parent-links PATCH] Logs:', logs.join(' | '));
     console.error('[parent-links PATCH] Error:', error);
-    console.error('[parent-links PATCH] Error message:', (error as Error).message);
     return NextResponse.json(
-      { error: 'Failed to process request: ' + (error as Error).message },
+      { error: 'Failed to process request', logs },
       { status: 500 }
     );
   }
+  
+  console.log('[parent-links PATCH] Logs:', logs.join(' | '));
 }
 
 export async function GET(request: NextRequest) {
