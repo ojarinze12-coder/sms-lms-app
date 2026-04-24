@@ -1,7 +1,6 @@
 'use client';
 
 import { TrendingUp, CreditCard, Calendar, Bell, FileText, Award } from 'lucide-react';
-import { formatCurrency } from '@/types/parent';
 
 interface ParentNavProps {
   viewMode: 'overview' | 'fees' | 'attendance' | 'announcements' | 'results' | 'report-cards';
@@ -33,36 +32,48 @@ export default function ParentNav({
 
   const getColorClasses = (color: string, isActive: boolean): string => {
     const colors: Record<string, string> = {
-      blue: isActive ? 'bg-blue-50 border-2 border-blue-500' : 'bg-white border hover:border-gray-300',
-      green: isActive ? 'bg-green-50 border-2 border-green-500' : 'bg-white border hover:border-gray-300',
-      purple: isActive ? 'bg-purple-50 border-2 border-purple-500' : 'bg-white border hover:border-gray-300',
-      orange: isActive ? 'bg-orange-50 border-2 border-orange-500' : 'bg-white border hover:border-gray-300',
-      cyan: isActive ? 'bg-cyan-50 border-2 border-cyan-500' : 'bg-white border hover:border-gray-300',
-      red: isActive ? 'bg-red-50 border-2 border-red-500' : 'bg-white border hover:border-gray-300',
+      blue: isActive 
+        ? 'bg-blue-50 dark:bg-blue-900/50 border-2 border-blue-500 dark:border-blue-400' 
+        : 'bg-white dark:bg-gray-800 border dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500',
+      green: isActive 
+        ? 'bg-green-50 dark:bg-green-900/50 border-2 border-green-500 dark:border-green-400' 
+        : 'bg-white dark:bg-gray-800 border dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500',
+      purple: isActive 
+        ? 'bg-purple-50 dark:bg-purple-900/50 border-2 border-purple-500 dark:border-purple-400' 
+        : 'bg-white dark:bg-gray-800 border dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500',
+      orange: isActive 
+        ? 'bg-orange-50 dark:bg-orange-900/50 border-2 border-orange-500 dark:border-orange-400' 
+        : 'bg-white dark:bg-gray-800 border dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500',
+      cyan: isActive 
+        ? 'bg-cyan-50 dark:bg-cyan-900/50 border-2 border-cyan-500 dark:border-cyan-400' 
+        : 'bg-white dark:bg-gray-800 border dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500',
+      red: isActive 
+        ? 'bg-red-50 dark:bg-red-900/50 border-2 border-red-500 dark:border-red-400' 
+        : 'bg-white dark:bg-gray-800 border dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500',
     };
     return colors[color] || colors.blue;
   };
 
   const getBadgeColor = (color: string): string => {
     const colors: Record<string, string> = {
-      blue: 'text-blue-600',
-      green: 'text-green-600',
-      purple: 'text-purple-600',
-      orange: 'text-orange-600',
-      cyan: 'text-cyan-600',
-      red: 'text-red-600',
+      blue: 'text-blue-600 dark:text-blue-400',
+      green: 'text-green-600 dark:text-green-400',
+      purple: 'text-purple-600 dark:text-purple-400',
+      orange: 'text-orange-600 dark:text-orange-400',
+      cyan: 'text-cyan-600 dark:text-cyan-400',
+      red: 'text-red-600 dark:text-red-400',
     };
     return colors[color] || colors.blue;
   };
 
   const getBgColor = (color: string): string => {
     const colors: Record<string, string> = {
-      blue: 'bg-blue-100',
-      green: 'bg-green-100',
-      purple: 'bg-purple-100',
-      orange: 'bg-orange-100',
-      cyan: 'bg-cyan-100',
-      red: 'bg-red-100',
+      blue: 'bg-blue-100 dark:bg-blue-900/50',
+      green: 'bg-green-100 dark:bg-green-900/50',
+      purple: 'bg-purple-100 dark:bg-purple-900/50',
+      orange: 'bg-orange-100 dark:bg-orange-900/50',
+      cyan: 'bg-cyan-100 dark:bg-cyan-900/50',
+      red: 'bg-red-100 dark:bg-red-900/50',
     };
     return colors[color] || colors.blue;
   };
@@ -88,7 +99,7 @@ export default function ParentNav({
                 <Icon className={`h-4 w-4 ${getBadgeColor(item.color)}`} />
               </div>
               <div>
-                <p className="text-xs text-gray-500">{item.label}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{item.label}</p>
                 <p className={`text-sm font-bold ${getBadgeColor(item.color)}`}>
                   {item.isPercentage ? `${item.badge}%` : item.badge !== null ? item.badge : ''}
                 </p>
