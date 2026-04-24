@@ -4,13 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
-import { Eye, EyeOff, Loader2, GraduationCap, User, Users } from 'lucide-react';
-
-type LoginType = 'admin' | 'student';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loginType, setLoginType] = useState<LoginType>('admin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -57,14 +54,10 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      const body = loginType === 'student'
-        ? { studentId: email, password, loginType: 'student' }
-        : { email, password };
-
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email, password }),
         credentials: 'include',
       });
 
@@ -78,21 +71,19 @@ export default function LoginPage() {
 
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
-      }
 
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const role = data.user?.role;
-      if (role === 'SUPER_ADMIN') {
-        window.location.href = '/admin';
-      } else if (role === 'ADMIN' || role === 'TEACHER') {
-        window.location.href = '/';
-      } else if (role === 'STUDENT') {
-        window.location.href = '/student';
-      } else if (role === 'PARENT') {
-        window.location.href = '/parent';
-      } else {
-        window.location.href = '/';
+        const role = data.user?.role;
+        if (role === 'SUPER_ADMIN') {
+          window.location.href = '/admin';
+        } else if (role === 'ADMIN' || role === 'TEACHER') {
+          window.location.href = '/';
+        } else if (role === 'STUDENT') {
+          window.location.href = '/student';
+        } else if (role === 'PARENT') {
+          window.location.href = '/parent';
+        } else {
+          window.location.href = '/';
+        }
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -135,70 +126,26 @@ export default function LoginPage() {
           <h1 className="text-4xl font-bold text-white leading-tight">
             Welcome to EduNext
           </h1>
-          <p className="text-blue-100 text-lg max-w-md">
-            Your complete school management solution. Manage students, teachers, exams, and more — all in one place.
+          <p className="text-blue-100 text-lg">
+            {getGreeting()}! Sign in to continue to your dashboard.
           </p>
-          
-          <div className="grid grid-cols-2 gap-4 pt-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="text-3xl font-bold text-white">1000+</div>
-              <div className="text-blue-100 text-sm">Schools Trust Us</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="text-3xl font-bold text-white">50K+</div>
-              <div className="text-blue-100 text-sm">Active Users</div>
-            </div>
-          </div>
         </div>
 
         <div className="relative z-10 text-blue-200 text-sm">
-          © 2024 EduNext. All rights reserved.
+          &copy; {new Date().getFullYear()} EduNext. All rights reserved.
         </div>
       </div>
 
       {/* Right Panel - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex justify-center">
-            <Logo size="lg" showText={true} />
-          </div>
-
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-gray-900">
-              {getGreeting()}
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Sign In
             </h2>
-            <p className="text-gray-600 mt-2">
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
               Sign in to access your dashboard
             </p>
-          </div>
-
-          {/* Login Type Tabs */}
-          <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
-            <button
-              type="button"
-              onClick={() => { setLoginType('admin'); setError(''); setEmail(''); setPassword(''); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
-                loginType === 'admin'
-                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              <Users className="h-4 w-4" />
-              Admin / Staff
-            </button>
-            <button
-              type="button"
-              onClick={() => { setLoginType('student'); setError(''); setEmail(''); setPassword(''); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
-                loginType === 'student'
-                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              <GraduationCap className="h-4 w-4" />
-              Student
-            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -210,65 +157,56 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {loginType === 'student' ? 'Student ID' : 'Email Address'}
+                Email Address
               </label>
               <input
-                type={loginType === 'student' ? 'text' : 'email'}
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 dark:bg-gray-700 dark:text-white"
-                placeholder={loginType === 'student' ? 'e.g., STU/2024/001' : 'you@school.edu'}
+                placeholder="you@school.edu"
                 required
               />
-              {loginType === 'student' && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Enter your student ID as provided by the school
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Password
-                </label>
-                {loginType === 'admin' && (
-                  <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400">
-                    Forgot password?
-                  </Link>
-                )}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 pr-12 dark:bg-gray-700 dark:text-white"
-                  placeholder="••••••••"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 dark:bg-gray-700 dark:text-white pr-12"
+                  placeholder="Enter your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
-            {loginType === 'admin' && (
-              <div className="flex items-center">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  id="remember"
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="remember" className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                  Remember me for 30 days
-                </label>
-              </div>
-            )}
+                <span className="text-sm text-gray-600 dark:text-gray-400">Remember me</span>
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             <button
               type="submit"
@@ -286,38 +224,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">Or</span>
-            </div>
-          </div>
-
-          {loginType === 'admin' && (
-            <>
-              <p className="text-center text-gray-600 dark:text-gray-400">
-                Don&apos;t have an account?{' '}
-                <Link href="/register" className="text-blue-600 hover:text-blue-700 font-semibold hover:underline dark:text-blue-400">
-                  Register your school
-                </Link>
-              </p>
-              
-              <p className="text-center text-gray-600 dark:text-gray-400 text-sm">
-                Are you a parent?{' '}
-                <Link href="/register/parent" className="text-blue-600 hover:text-blue-700 font-semibold hover:underline dark:text-blue-400">
-                  Register as Parent
-                </Link>
-              </p>
-            </>
-          )}
-
-          {loginType === 'student' && (
-            <p className="text-center text-gray-600 dark:text-gray-400 text-sm">
-              Need help logging in? Contact your school administrator.
-            </p>
-          )}
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+            Having trouble? Contact your administrator for assistance.
+          </p>
         </div>
       </div>
     </div>
