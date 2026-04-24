@@ -5,6 +5,15 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useBranch } from '@/lib/hooks/use-branch';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Copy, Check, UserPlus, Mail } from 'lucide-react';
 
 interface Student {
   id: string;
@@ -22,6 +31,12 @@ interface ClassItem {
   academicYearId?: string;
 }
 
+interface Credentials {
+  username: string;
+  password: string;
+  email: string;
+}
+
 export default function NewEnrollmentPage() {
   const router = useRouter();
   const { selectedBranch, isBranchMode } = useBranch();
@@ -31,13 +46,12 @@ export default function NewEnrollmentPage() {
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [years, setYears] = useState<any[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>('');
-  const [formData, setFormData] = useState({
-    studentId: '',
-    classId: '',
-  });
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
+  const [studentEmail, setStudentEmail] = useState<string>('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load academic years with branch filter
     const params = new URLSearchParams();
     if (selectedBranch) {
       params.set('branchId', selectedBranch.id);
@@ -48,7 +62,6 @@ export default function NewEnrollmentPage() {
       .then(data => {
         const yearsList = Array.isArray(data) ? data : (data.years || []);
         setYears(yearsList);
-        // Select active year or first year
         const activeYear = yearsList.find((y: any) => y.isActive);
         if (activeYear) {
           setSelectedYear(activeYear.id);
@@ -60,7 +73,6 @@ export default function NewEnrollmentPage() {
   }, [selectedBranch]);
 
   useEffect(() => {
-    // Load students with branch filter
     const params = new URLSearchParams();
     if (selectedBranch) {
       params.set('branchId', selectedBranch.id);
@@ -77,7 +89,6 @@ export default function NewEnrollmentPage() {
   }, [selectedBranch]);
 
   useEffect(() => {
-    // Load classes when academic year is selected
     if (selectedYear) {
       const params = new URLSearchParams();
       params.set('academicYearId', selectedYear);
@@ -94,6 +105,16 @@ export default function NewEnrollmentPage() {
         .catch(err => console.error('Error loading classes:', err));
     }
   }, [selectedYear, selectedBranch]);
+
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,13 +135,25 @@ export default function NewEnrollmentPage() {
         return;
       }
 
-      router.push('/lms/enrollments');
+      // Show credentials dialog if user was created
+      if (data.credentialsCreated && data.credentials) {
+        setCredentials(data.credentials);
+        setStudentEmail(data.enrollment?.student?.email || '');
+        setShowCredentials(true);
+      } else {
+        router.push('/lms/enrollments');
+      }
     } catch {
       setError('An error occurred');
     } finally {
       setLoading(false);
     }
   };
+
+  const [formData, setFormData] = useState({
+    studentId: '',
+    classId: '',
+  });
 
   return (
     <div className="max-w-2xl">
@@ -235,6 +268,94 @@ export default function NewEnrollmentPage() {
           </div>
         </form>
       </div>
+
+      {/* Credentials Dialog */}
+      <Dialog open={showCredentials} onOpenChange={setShowCredentials}>
+        <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 dark:text-white">
+              <UserPlus className="h-5 w-5 text-green-600" />
+              Student Account Created
+            </DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              {studentEmail ? (
+                <span className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Credentials have been sent to {studentEmail}
+                </span>
+              ) : (
+                'Copy the credentials below to share with the student.'
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {credentials && (
+            <div className="space-y-4 mt-4">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Username</p>
+                    <p className="font-mono font-medium dark:text-white">{credentials.username}</p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => copyToClipboard(credentials.username, 'username')}
+                    className="dark:border-gray-600 dark:text-gray-200"
+                  >
+                    {copiedField === 'username' ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Password</p>
+                    <p className="font-mono font-medium dark:text-white">{credentials.password}</p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => copyToClipboard(credentials.password, 'password')}
+                    className="dark:border-gray-600 dark:text-gray-200"
+                  >
+                    {copiedField === 'password' ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="text-sm text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg">
+                <strong>Important:</strong> Advise the student to change their password after first login.
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCredentials(false)}
+                  className="dark:border-gray-600 dark:text-gray-200"
+                >
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowCredentials(false);
+                    router.push('/lms/enrollments');
+                  }}
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

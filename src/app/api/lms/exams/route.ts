@@ -16,7 +16,7 @@ const createExamSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const authUser = await getAuthUser();
+    const authUser = await getAuthUser(request);
     if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const search = searchParams.get('search');
 
-    // Build tenant filter - allow SUPER_ADMIN to see all, others filtered by tenant
+    const now = new Date();
     let tenantFilter: any = {};
     if (authUser.role !== 'SUPER_ADMIN' && authUser.tenantId) {
       tenantFilter = {
@@ -44,16 +44,68 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // For STUDENT role: filter by enrolled subjects and time window
+    if (authUser.role === 'STUDENT') {
+      // Find the student record
+      const student = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { userId: authUser.userId },
+            { email: authUser.email }
+          ],
+          tenantId: authUser.tenantId
+        }
+      });
+
+      if (student) {
+        // Get student's active enrollments
+        const enrollments = await prisma.enrollment.findMany({
+          where: { studentId: student.id, status: 'ACTIVE' },
+          include: {
+            academicClass: {
+              include: {
+                subjects: { select: { id: true } }
+              }
+            }
+          }
+        });
+
+        // Collect all subject IDs the student is enrolled in
+        const subjectIds = enrollments.flatMap(e => 
+          e.academicClass?.subjects?.map(s => s.id) || []
+        );
+
+        // Filter exams by enrolled subjects
+        if (subjectIds.length > 0) {
+          tenantFilter.subjectId = { in: subjectIds };
+        } else {
+          // No subjects enrolled, return empty
+          return NextResponse.json([]);
+        }
+      }
+    }
+
     const where: any = tenantFilter;
 
+    // Students only see published exams within time window
     if (authUser.role === 'STUDENT') {
       where.status = 'PUBLISHED';
+      // Exams are visible if:
+      // - No start time set (always available), OR
+      // - Within the scheduled time window
+      where.OR = [
+        { startTime: null },
+        {
+          startTime: { lte: now },
+          endTime: { gte: now }
+        }
+      ];
     } else if (status) {
       where.status = status;
     }
 
     if (termId) where.termId = termId;
-    if (subjectId) where.subjectId = subjectId;
+    if (subjectId && authUser.role !== 'STUDENT') where.subjectId = subjectId;
     if (search) where.title = { contains: search, mode: 'insensitive' };
 
     const exams = await prisma.exam.findMany({

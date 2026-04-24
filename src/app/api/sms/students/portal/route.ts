@@ -14,12 +14,19 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Support multiple lookup methods: userId, email, or studentId
     const student = await prisma.student.findFirst({
-      where: { email: authUser.email }
+      where: {
+        OR: [
+          { userId: authUser.userId },                        // Link by userId (preferred)
+          { email: authUser.email },                           // Fallback: match email
+        ],
+        tenantId: authUser.tenantId                           // Must belong to same tenant
+      }
     });
 
     if (!student) {
-      return NextResponse.json({ error: 'Student record not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Student record not found. Please contact admin.' }, { status: 404 });
     }
 
     const enrollments = await prisma.enrollment.findMany({
