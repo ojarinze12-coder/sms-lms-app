@@ -76,7 +76,11 @@ export default function ParentsPage() {
 
   const fetchLinks = async () => {
     try {
-      const res = await authFetch(APPROVE_URL);
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch('/api/sms/parents/approve', {
+        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include'
+      });
       if (res.ok) {
         const data = await res.json();
         setLinks(data.requests || []);
@@ -89,11 +93,17 @@ export default function ParentsPage() {
   };
 
   const handleApprove = async (requestId: string) => {
+    if (actionLoading) return; // Prevent double invocation
     setActionLoading(requestId);
     try {
-      const res = await authFetch(APPROVE_URL, {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch('/api/sms/parents/approve', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
         body: JSON.stringify({ requestId, action: 'approve' })
       });
       
@@ -112,11 +122,17 @@ export default function ParentsPage() {
   };
 
   const handleReject = async (requestId: string) => {
+    if (actionLoading) return; // Prevent double invocation
     setActionLoading(requestId);
     try {
-      const res = await authFetch(APPROVE_URL, {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch('/api/sms/parents/approve', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
         body: JSON.stringify({ requestId, action: 'reject' })
       });
       
