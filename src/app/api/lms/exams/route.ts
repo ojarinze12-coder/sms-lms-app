@@ -58,9 +58,10 @@ export async function GET(request: NextRequest) {
       });
 
       if (student) {
-        // Get student's active enrollments
+        // Get student's active enrollments (filtered by branch)
+        const branchFilter = student.branchId ? { branchId: student.branchId } : {};
         const enrollments = await prisma.enrollment.findMany({
-          where: { studentId: student.id, status: 'ACTIVE' },
+          where: { studentId: student.id, status: 'ACTIVE', ...branchFilter },
           include: {
             academicClass: {
               include: {

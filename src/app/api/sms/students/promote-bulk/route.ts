@@ -22,7 +22,7 @@ async function getMinPassScore(tenantId: string): Promise<number> {
   return 50;
 }
 
-async function checkEligibility(studentId: string, settings: any, minScore: number, classId: string, academicYearId: string): Promise<{ eligible: boolean; reasons: string[]}> {
+async function checkEligibility(studentId: string, settings: any, minScore: number, classId: string, academicYearId: string, branchId: string | null): Promise<{ eligible: boolean; reasons: string[]}> {
   const reasons: string[] = [];
   
   const currentEnrollment = await prisma.enrollment.findFirst({
@@ -74,10 +74,11 @@ async function checkEligibility(studentId: string, settings: any, minScore: numb
   const results = await prisma.result.findMany({
     where: { 
       studentId,
+      branchId: branchId,
       exam: { term: { academicYearId } },
     },
   });
-  console.log(`[Eligibility] Student ${studentId}: results count=${results.length}, minScore=${minScore}`);
+  console.log(`[Eligibility] Student ${studentId}: results count=${results.length}, minScore=${minScore}, branchId=${branchId}`);
 
   const failedSubjects = results.filter((r: any) => r.score < minScore);
   if (failedSubjects.length > 0) {
@@ -177,7 +178,7 @@ export async function GET(req: NextRequest) {
 const preview = await Promise.all(
     enrollments.map(async (enrollment) => {
         try {
-          const { eligible, reasons } = await checkEligibility(enrollment.studentId, settings, minScore, sourceClassId, sourceClass.academicYearId);
+          const { eligible, reasons } = await checkEligibility(enrollment.studentId, settings, minScore, sourceClassId, sourceClass.academicYearId, enrollment.branchId);
           return {
             studentId: enrollment.studentId,
             studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
@@ -269,7 +270,7 @@ export async function POST(req: NextRequest) {
 
     for (const enrollment of enrollments) {
       try {
-        const { eligible, reasons } = await checkEligibility(enrollment.studentId, settings, minScore, sourceClassId, sourceClass.academicYearId);
+        const { eligible, reasons } = await checkEligibility(enrollment.studentId, settings, minScore, sourceClassId, sourceClass.academicYearId, enrollment.branchId);
 
         if (!eligible) {
           results.skipped++;

@@ -5,8 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
+interface GradingScaleGrade {
+  grade: string;
+  minPercentage: number;
+  remarks: string;
+}
+
+interface GradingScale {
+  name: string;
+  isDefault: boolean;
+  grades: GradingScaleGrade[];
+}
+
 interface StudentData {
-  student: { id: string; studentId: string; firstName: string; lastName: string; class: { id: string; name: string; level: number } | null };
+  student: { id: string; studentId: string; firstName: string; lastName: string; branchId?: string; class: { id: string; name: string; level: number } | null };
+  gradingScale: GradingScale | null;
   enrollments: Array<{ id: string; status: string; academicClass: { id: string; name: string; level: number; stream?: string; subjects?: Array<{ id: string; name: string; code: string }> } }>;
   results: Array<{ id: string; percentage: number; score: number; status: string; exam: { title: string; subject: { name: string }; term: { name: string; academicYear: { name: string } } } }>;
   reportCards: Array<{ id: string; totalScore: number; average: number; grade: string; term: { name: string; academicYear: { name: string } } }>;
@@ -22,6 +35,44 @@ const getGradeColor = (grade: string): string => {
   if (grade === 'C') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300';
   if (grade === 'D') return 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300';
   return 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300';
+};
+
+const getGradeFromScale = (percentage: number, gradingScale: GradingScale | null): { letter: string; pass: boolean } => {
+  if (!gradingScale?.grades || gradingScale.grades.length === 0) {
+    // Default fallback
+    if (percentage >= 80) return { letter: 'A', pass: true };
+    if (percentage >= 70) return { letter: 'B', pass: true };
+    if (percentage >= 60) return { letter: 'C', pass: true };
+    if (percentage >= 50) return { letter: 'D', pass: false };
+    return { letter: 'F', pass: false };
+  }
+  
+  const sortedGrades = [...gradingScale.grades].sort((a, b) => b.minPercentage - a.minPercentage);
+  for (const g of sortedGrades) {
+    if (percentage >= g.minPercentage) {
+      return { letter: g.grade, pass: g.minPercentage >= 50 };
+    }
+  }
+  return { letter: 'F', pass: false };
+};
+
+const getMinPassingScore = (gradingScale: GradingScale | null): number => {
+  if (!gradingScale?.grades || gradingScale.grades.length === 0) return 60;
+  const passing = gradingScale.grades.find(g => g.remarks?.toLowerCase().includes('pass'));
+  return passing?.minPercentage || 50;
+};
+
+// Default grading scale for display when none is configured
+const defaultGradingScale: GradingScale = {
+  name: 'Default',
+  isDefault: true,
+  grades: [
+    { grade: 'A', minPercentage: 80, remarks: 'Excellent' },
+    { grade: 'B', minPercentage: 70, remarks: 'Very Good' },
+    { grade: 'C', minPercentage: 60, remarks: 'Good' },
+    { grade: 'D', minPercentage: 50, remarks: 'Pass' },
+    { grade: 'F', minPercentage: 0, remarks: 'Fail' },
+  ]
 };
 
 export default function StudentPortalPage() {
@@ -90,19 +141,17 @@ export default function StudentPortalPage() {
     };
   }, [data?.results]);
 
-  // Grade distribution
+  // Grade distribution using the configured grading scale
+  const activeGradingScale = data?.gradingScale || defaultGradingScale;
   const gradeDistribution = useMemo(() => {
     if (!data?.results) return {};
-    const dist: Record<string, number> = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0 };
+    const dist: Record<string, number> = {};
     data.results.forEach(r => {
-      if (r.percentage >= 80) dist['A']++;
-      else if (r.percentage >= 70) dist['B']++;
-      else if (r.percentage >= 60) dist['C']++;
-      else if (r.percentage >= 50) dist['D']++;
-      else dist['F']++;
+      const { letter } = getGradeFromScale(r.percentage, activeGradingScale);
+      dist[letter] = (dist[letter] || 0) + 1;
     });
     return dist;
-  }, [data?.results]);
+  }, [data?.results, activeGradingScale]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
@@ -186,6 +235,13 @@ export default function StudentPortalPage() {
       {/* Results Tab - Full Implementation */}
       {viewMode === 'results' && (
         <div className="space-y-6">
+          {/* Grading Scale Info */}
+          {data.gradingScale && (
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Using <span className="font-medium">{data.gradingScale.name}</span> grading scale
+            </div>
+          )}
+
           {/* Overall Statistics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="dark:bg-gray-800 dark:border-gray-700">
@@ -211,14 +267,18 @@ export default function StudentPortalPage() {
             <CardHeader><CardTitle className="dark:text-white">Grade Distribution</CardTitle></CardHeader>
             <CardContent>
               <div className="flex items-end gap-2 h-32">
-                {Object.entries(gradeDistribution).map(([grade, count]) => (
-                  <div key={grade} className="flex-1 flex flex-col items-center">
-                    <div className="w-full bg-blue-100 dark:bg-blue-900/50 rounded-t" style={{ height: `${Math.max((count / (overallStats.total || 1)) * 100, 5)}%` }}>
-                      <span className="text-xs font-bold dark:text-white">{count}</span>
+                {Object.keys(gradeDistribution).length === 0 ? (
+                  <p className="text-gray-500 dark:text-gray-400">No results to display</p>
+                ) : (
+                  Object.entries(gradeDistribution).map(([grade, count]) => (
+                    <div key={grade} className="flex-1 flex flex-col items-center">
+                      <div className="w-full bg-blue-100 dark:bg-blue-900/50 rounded-t" style={{ height: `${Math.max((count / (overallStats.total || 1)) * 100, 5)}%` }}>
+                        <span className="text-xs font-bold dark:text-white">{count}</span>
+                      </div>
+                      <span className="text-xs mt-1 dark:text-gray-400">{grade}</span>
                     </div>
-                    <span className="text-xs mt-1 dark:text-gray-400">{grade}</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -247,23 +307,22 @@ export default function StudentPortalPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {results.map((result) => (
+                      {results.map((result) => {
+                        const minPass = getMinPassingScore(activeGradingScale);
+                        const { letter, pass } = getGradeFromScale(result.percentage, activeGradingScale);
+                        return (
                         <tr key={result.id} className="border-b dark:border-gray-700">
                           <td className="py-2 px-2 dark:text-white">{result.exam?.title}</td>
                           <td className="py-2 px-2 dark:text-gray-300">{result.exam?.subject?.name}</td>
                           <td className="py-2 px-2 dark:text-gray-300">{result.score}</td>
                           <td className="py-2 px-2 font-bold dark:text-white">{result.percentage.toFixed(1)}%</td>
                           <td className="py-2 px-2">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              result.percentage >= 60 
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' 
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
-                            }`}>
-                              {result.percentage >= 60 ? 'PASS' : 'FAIL'}
+                            <span className={`px-2 py-1 rounded-full text-xs ${pass ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'}`}>
+                              {letter} ({pass ? 'PASS' : 'FAIL'})
                             </span>
                           </td>
                         </tr>
-                      ))}
+                      )})}
                     </tbody>
                   </table>
                 </div>

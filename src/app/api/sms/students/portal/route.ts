@@ -14,14 +14,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Support multiple lookup methods: userId, email, or studentId
     const student = await prisma.student.findFirst({
       where: {
         OR: [
-          { userId: authUser.userId },                        // Link by userId (preferred)
-          { email: authUser.email },                           // Fallback: match email
+          { userId: authUser.userId },
+          { email: authUser.email },
         ],
-        tenantId: authUser.tenantId                           // Must belong to same tenant
+        tenantId: authUser.tenantId
       }
     });
 
@@ -29,8 +28,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Student record not found. Please contact admin.' }, { status: 404 });
     }
 
+    const settings = await prisma.tenantSettings.findUnique({
+      where: { tenantId: authUser.tenantId },
+      select: { gradingScale: true }
+    });
+
+    let gradingScale = null;
+    if (settings?.gradingScale) {
+      const tenantModule = await prisma.tenantModule.findFirst({
+        where: { tenantId: authUser.tenantId, moduleKey: 'grading_scales' }
+      });
+      const config = tenantModule?.config as { scales?: any[] } || {};
+      const scales = config.scales || [];
+      gradingScale = scales.find((s: any) => s.name === settings.gradingScale) || scales.find((s: any) => s.isDefault) || scales[0] || null;
+    }
+
+    const branchFilter = student.branchId ? { branchId: student.branchId } : {};
+
     const enrollments = await prisma.enrollment.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.id, ...branchFilter },
       include: {
         academicClass: {
           include: {
@@ -45,7 +61,7 @@ export async function GET(request: NextRequest) {
     });
 
     const results = await prisma.result.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.id, ...branchFilter },
       include: {
         exam: {
           include: {
@@ -61,7 +77,7 @@ export async function GET(request: NextRequest) {
     });
 
     const reportCards = await prisma.reportCard.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.id, ...branchFilter },
       include: {
         term: { 
           select: { id: true, name: true, academicYear: { select: { name: true } } }
@@ -71,13 +87,13 @@ export async function GET(request: NextRequest) {
     });
 
     const attendances = await prisma.attendance.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.id, ...branchFilter },
       orderBy: { date: 'desc' },
       take: 30
     });
 
     const assignments = await prisma.assignmentSubmission.findMany({
-      where: { studentId: student.id },
+      where: { studentId: student.id, ...branchFilter },
       include: {
         assignment: {
           include: {
@@ -125,8 +141,10 @@ export async function GET(request: NextRequest) {
         lastName: student.lastName,
         email: student.email,
         phone: student.phone,
+        branchId: student.branchId,
         class: currentClass || null,
       },
+      gradingScale,
       enrollments: enrollments || [],
       results: results || [],
       reportCards: reportCards || [],
