@@ -43,11 +43,6 @@ export default function LinkChildModal({
 }: LinkChildModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          Link a Child
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Link a Child</DialogTitle>
