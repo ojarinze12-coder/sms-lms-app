@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, GraduationCap, Users } from 'lucide-react';
+
+type LoginType = 'admin' | 'student';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [loginType, setLoginType] = useState<LoginType>('admin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -54,10 +57,14 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
+      const body = loginType === 'student'
+        ? { studentId: email, password, loginType: 'student' }
+        : { email, password };
+
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(body),
         credentials: 'include',
       });
 
@@ -148,6 +155,34 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {/* Login Type Tabs */}
+          <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
+            <button
+              type="button"
+              onClick={() => { setLoginType('admin'); setError(''); setEmail(''); setPassword(''); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
+                loginType === 'admin'
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              Admin / Staff
+            </button>
+            <button
+              type="button"
+              onClick={() => { setLoginType('student'); setError(''); setEmail(''); setPassword(''); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
+                loginType === 'student'
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              <GraduationCap className="h-4 w-4" />
+              Student
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm animate-pulse">
@@ -157,16 +192,21 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email Address
+                {loginType === 'student' ? 'Student ID' : 'Email Address'}
               </label>
               <input
-                type="email"
+                type={loginType === 'student' ? 'text' : 'email'}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-400 dark:bg-gray-700 dark:text-white"
-                placeholder="you@school.edu"
+                placeholder={loginType === 'student' ? 'e.g., STU/2024/001' : 'you@school.edu'}
                 required
               />
+              {loginType === 'student' && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Enter your student ID as provided by the school
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

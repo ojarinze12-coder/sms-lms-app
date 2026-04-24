@@ -5,9 +5,94 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const { email, password, studentId, loginType } = body;
 
-    // Unified login - all users login the same way
+    // Handle Student Login (restored from working version 0ad0526)
+    if (loginType === 'student' && studentId) {
+      const student = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { studentId: studentId },
+            { email: studentId }
+          ]
+        }
+      });
+
+      if (!student || !student.userId) {
+        return NextResponse.json(
+          { error: 'Student account not found. Please contact your school administrator.' },
+          { status: 401 }
+        );
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: student.userId },
+        include: { tenant: true, branch: true }
+      });
+
+      if (!user || !user.password) {
+        return NextResponse.json(
+          { error: 'Invalid credentials' },
+          { status: 401 }
+        );
+      }
+
+      const isValid = comparePassword(password, user.password);
+      if (!isValid) {
+        return NextResponse.json(
+          { error: 'Invalid credentials' },
+          { status: 401 }
+        );
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { tokenVersion: { increment: 1 } },
+      });
+
+      const token = createToken({
+        id: user.id,
+        userId: user.id,
+        email: user.email,
+        tenantId: user.tenantId || undefined,
+        branchId: user.branchId || undefined,
+        role: user.role,
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        tokenVersion: updatedUser.tokenVersion,
+      });
+
+      console.log('[login] Student login:', student.studentId, 'user:', user.email);
+
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      const response = NextResponse.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          tenant: user.tenant,
+          branch: user.branch,
+          studentId: student.studentId
+        },
+        token: token,
+      });
+
+      response.cookies.set('scc-token', token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+      response.cookies.set('pcc-token', '', { maxAge: 0, path: '/' });
+
+      return response;
+    }
+
+    // Handle Admin/Staff Login (existing unified flow)
     if (!email || !password) {
       return NextResponse.json(
         { error: 'Email and password are required' },
