@@ -29,17 +29,31 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (!student.userId) {
+      let user = null;
+
+      // If student has userId linked, get user directly
+      if (student.userId) {
+        user = await prisma.user.findUnique({
+          where: { id: student.userId },
+          include: { tenant: true, branch: true }
+        });
+      }
+
+      // If no user linked, try to find by student's email (for existing students)
+      if (!user && student.email) {
+        user = await prisma.user.findFirst({
+          where: { email: student.email },
+          include: { tenant: true, branch: true }
+        });
+        console.log('[login] Found user by email:', user?.id, 'role:', user?.role);
+      }
+
+      if (!user) {
         return NextResponse.json(
           { error: 'Student account not linked. Please contact your school administrator.' },
           { status: 401 }
         );
       }
-
-      const user = await prisma.user.findUnique({
-        where: { id: student.userId },
-        include: { tenant: true, branch: true }
-      });
 
       if (!user || !user.password) {
         return NextResponse.json(
