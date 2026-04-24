@@ -14,12 +14,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Find student by userId or email within the same tenant - restore working lookup
+    // Find student by userId or email within the same tenant - case-insensitive
     const student = await prisma.student.findFirst({
       where: {
         OR: [
           { userId: authUser.userId },
-          { email: authUser.email },
+          { email: { mode: 'insensitive', equals: authUser.email } },
         ],
         tenantId: authUser.tenantId
       }
