@@ -1,19 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table } from 'lucide-react';
+import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
 interface StudentData {
   student: { id: string; studentId: string; firstName: string; lastName: string; class: { id: string; name: string; level: number } | null };
   enrollments: Array<{ id: string; status: string; academicClass: { id: string; name: string; level: number; stream?: string; subjects?: Array<{ id: string; name: string; code: string }> } }>;
-  results: Array<{ id: string; percentage: number; status: string; exam: { title: string; subject: { name: string }; term: { name: string } } }>;
+  results: Array<{ id: string; percentage: number; score: number; status: string; exam: { title: string; subject: { name: string }; term: { name: string; academicYear: { name: string } } } }>;
+  reportCards: Array<{ id: string; totalScore: number; average: number; grade: string; term: { name: string; academicYear: { name: string } } }>;
   attendances: Array<{ id: string; date: string; status: string; remarks?: string }>;
   assignments: Array<{ id: string; status: string; grade?: number; assignment: { title: string; dueDate?: string } }>;
   announcements: Array<{ id: string; title: string; content: string; type: string; priority: string; createdAt: string }>;
   timetable: Array<{ id: string; dayOfWeek: number; period: number; subject: { name: string } }>;
 }
+
+const getGradeColor = (grade: string): string => {
+  if (grade.startsWith('A')) return 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300';
+  if (grade.startsWith('B')) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300';
+  if (grade === 'C') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300';
+  if (grade === 'D') return 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300';
+  return 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300';
+};
 
 export default function StudentPortalPage() {
   const [loading, setLoading] = useState(true);
@@ -52,6 +61,49 @@ export default function StudentPortalPage() {
     return { present, total, percentage: total > 0 ? Math.round((present / total) * 100) : 0 };
   };
 
+  const stats = getAttendanceStats();
+  const pendingAssignments = data?.assignments?.filter(a => a.status !== 'GRADED') || [];
+
+  // Group results by term
+  const resultsByTerm = useMemo(() => {
+    if (!data?.results) return {};
+    const grouped: Record<string, typeof data.results> = {};
+    data.results.forEach(result => {
+      const termName = result.exam?.term?.name || 'Unknown';
+      if (!grouped[termName]) grouped[termName] = [];
+      grouped[termName].push(result);
+    });
+    return grouped;
+  }, [data?.results]);
+
+  // Calculate overall statistics
+  const overallStats = useMemo(() => {
+    if (!data?.results || data.results.length === 0) {
+      return { average: 0, highest: 0, lowest: 0, total: 0 };
+    }
+    const percentages = data.results.map(r => r.percentage);
+    return {
+      average: Math.round(percentages.reduce((a, b) => a + b, 0) / percentages.length),
+      highest: Math.max(...percentages),
+      lowest: Math.min(...percentages),
+      total: data.results.length
+    };
+  }, [data?.results]);
+
+  // Grade distribution
+  const gradeDistribution = useMemo(() => {
+    if (!data?.results) return {};
+    const dist: Record<string, number> = { 'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0 };
+    data.results.forEach(r => {
+      if (r.percentage >= 80) dist['A']++;
+      else if (r.percentage >= 70) dist['B']++;
+      else if (r.percentage >= 60) dist['C']++;
+      else if (r.percentage >= 50) dist['D']++;
+      else dist['F']++;
+    });
+    return dist;
+  }, [data?.results]);
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
   }
@@ -59,12 +111,9 @@ export default function StudentPortalPage() {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto mt-8 p-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-800 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.href = '/login'}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+          <p className="text-yellow-800 dark:text-yellow-200 mb-4">{error}</p>
+          <button onClick={() => window.location.href = '/login'} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             Go to Login
           </button>
         </div>
@@ -73,14 +122,12 @@ export default function StudentPortalPage() {
   }
 
   if (!data) {
-    return <div className="max-w-2xl mx-auto mt-8"><div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">Unable to load student data</div></div>;
+    return <div className="max-w-2xl mx-auto mt-8"><div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300">Unable to load student data</div></div>;
   }
-
-  const stats = getAttendanceStats();
-  const pendingAssignments = data.assignments?.filter(a => a.status !== 'GRADED') || [];
 
   return (
     <div className="space-y-6 p-4">
+      {/* Welcome Header */}
       <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-6 text-white">
         <h1 className="text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
         <p className="text-orange-100">{data.student.class?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
@@ -91,104 +138,276 @@ export default function StudentPortalPage() {
         <div className="flex gap-2 min-w-max">
           {[
             { id: 'overview', label: 'Overview', icon: TrendingUp },
-            { id: 'timetable', label: 'Timetable', icon: Table },
+            { id: 'results', label: 'Results', icon: Award },
             { id: 'courses', label: 'Courses', icon: BookOpen },
-            { id: 'assignments', label: 'Assignments', icon: FileText },
+            { id: 'assignments', label: 'Tasks', icon: FileText },
             { id: 'attendance', label: 'Attendance', icon: Calendar },
             { id: 'announcements', label: 'Notices', icon: Bell },
           ].map(item => (
-            <button key={item.id} onClick={() => setViewMode(item.id as any)} className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap ${viewMode === item.id ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'}`}>
+            <button key={item.id} onClick={() => setViewMode(item.id as any)} 
+              className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                viewMode === item.id 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-white dark:bg-gray-800 border dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}>
               {item.label}
             </button>
           ))}
         </div>
       </div>
 
+      {/* Overview Tab */}
       {viewMode === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Attendance</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-green-600">{stats.percentage}%</div></CardContent></Card>
-          <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Assignments</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-blue-600">{pendingAssignments.length}</div></CardContent></Card>
-          <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Courses</CardTitle></CardHeader><CardContent><div className="text-3xl font-bold text-purple-600">{data.enrollments?.length || 0}</div></CardContent></Card>
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Attendance</CardTitle></CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.percentage}%</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{stats.present} of {stats.total} days</p>
+            </CardContent>
+          </Card>
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Average Score</CardTitle></CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{overallStats.average}%</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Across {overallStats.total} exams</p>
+            </CardContent>
+          </Card>
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Courses</CardTitle></CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{data.enrollments?.length || 0}</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Enrolled classes</p>
+            </CardContent>
+          </Card>
         </div>
       )}
 
-      {viewMode === 'courses' && (
-        <Card>
-          <CardHeader><CardTitle>My Courses</CardTitle></CardHeader>
-          <CardContent>
-            {data.enrollments?.length === 0 ? <p className="text-gray-500">No courses</p> : (
-              <div className="space-y-2">
-                {data.enrollments.map(e => (
-                  <div key={e.id} className="p-3 border rounded-lg">
-                    <p className="font-medium">{e.academicClass?.name || 'Class'}</p>
-                    <p className="text-sm text-gray-500">Level {e.academicClass?.level}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {viewMode === 'attendance' && (
-        <Card>
-          <CardHeader><CardTitle>Attendance</CardTitle></CardHeader>
-          <CardContent>
-            {data.attendances?.length === 0 ? <p className="text-gray-500">No records</p> : (
-              <div className="space-y-2">
-                {data.attendances.slice(0, 10).map(a => (
-                  <div key={a.id} className="flex justify-between p-2 border rounded">
-                    <span>{new Date(a.date).toLocaleDateString()}</span>
-                    <span className={`px-2 py-1 rounded text-xs ${a.status === 'PRESENT' ? 'bg-green-100' : 'bg-red-100'}`}>{a.status}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {viewMode === 'announcements' && (
-        <Card>
-          <CardHeader><CardTitle>Announcements</CardTitle></CardHeader>
-          <CardContent>
-            {data.announcements?.length === 0 ? <p className="text-gray-500">No announcements</p> : (
-              <div className="space-y-2">
-                {data.announcements.map(a => (
-                  <div key={a.id} className="p-3 border rounded">
-                    <h4 className="font-medium">{a.title}</h4>
-                    <p className="text-sm text-gray-600">{a.content}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {viewMode === 'timetable' && (
-        <Card>
-          <CardHeader><CardTitle>Timetable</CardTitle></CardHeader>
-          <CardContent>
-            {data.timetable?.length === 0 ? <p className="text-gray-500">No timetable</p> : <p className="text-gray-500">Timetable view</p>}
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Results Tab - Full Implementation */}
       {viewMode === 'results' && (
-        <Card>
-          <CardHeader><CardTitle>Results</CardTitle></CardHeader>
+        <div className="space-y-6">
+          {/* Overall Statistics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Average</CardTitle></CardHeader>
+              <CardContent><div className="text-2xl font-bold dark:text-white">{overallStats.average}%</div></CardContent>
+            </Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Highest</CardTitle></CardHeader>
+              <CardContent><div className="text-2xl font-bold text-green-600 dark:text-green-400">{overallStats.highest}%</div></CardContent>
+            </Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Lowest</CardTitle></CardHeader>
+              <CardContent><div className="text-2xl font-bold text-red-600 dark:text-red-400">{overallStats.lowest}%</div></CardContent>
+            </Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Total Exams</CardTitle></CardHeader>
+              <CardContent><div className="text-2xl font-bold dark:text-white">{overallStats.total}</div></CardContent>
+            </Card>
+          </div>
+
+          {/* Grade Distribution */}
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader><CardTitle className="dark:text-white">Grade Distribution</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex items-end gap-2 h-32">
+                {Object.entries(gradeDistribution).map(([grade, count]) => (
+                  <div key={grade} className="flex-1 flex flex-col items-center">
+                    <div className="w-full bg-blue-100 dark:bg-blue-900/50 rounded-t" style={{ height: `${Math.max((count / (overallStats.total || 1)) * 100, 5)}%` }}>
+                      <span className="text-xs font-bold dark:text-white">{count}</span>
+                    </div>
+                    <span className="text-xs mt-1 dark:text-gray-400">{grade}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Results by Term */}
+          {Object.entries(resultsByTerm).map(([term, results]) => (
+            <Card key={term} className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="dark:text-white flex justify-between items-center">
+                  <span>{term}</span>
+                  <span className="text-sm font-normal text-gray-500">
+                    Avg: {Math.round(results.reduce((a, r) => a + r.percentage, 0) / results.length)}%
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[500px]">
+                    <thead className="border-b dark:border-gray-700">
+                      <tr>
+                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Exam</th>
+                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Subject</th>
+                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Score</th>
+                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Percentage</th>
+                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.map((result) => (
+                        <tr key={result.id} className="border-b dark:border-gray-700">
+                          <td className="py-2 px-2 dark:text-white">{result.exam?.title}</td>
+                          <td className="py-2 px-2 dark:text-gray-300">{result.exam?.subject?.name}</td>
+                          <td className="py-2 px-2 dark:text-gray-300">{result.score}</td>
+                          <td className="py-2 px-2 font-bold dark:text-white">{result.percentage.toFixed(1)}%</td>
+                          <td className="py-2 px-2">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              result.percentage >= 60 
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' 
+                                : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+                            }`}>
+                              {result.percentage >= 60 ? 'PASS' : 'FAIL'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {data.results?.length === 0 && (
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="py-8 text-center text-gray-500 dark:text-gray-400">
+                No exam results available yet.
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Courses Tab */}
+      {viewMode === 'courses' && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader><CardTitle className="dark:text-white">My Courses</CardTitle></CardHeader>
           <CardContent>
-            {data.results?.length === 0 ? <p className="text-gray-500">No results</p> : <p className="text-gray-500">Results view</p>}
+            {data.enrollments?.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400">No courses enrolled</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {data.enrollments.map(e => (
+                  <div key={e.id} className="p-4 border dark:border-gray-700 rounded-lg dark:bg-gray-700/50">
+                    <p className="font-medium dark:text-white">{e.academicClass?.name || 'Class'}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Level {e.academicClass?.level}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      e.status === 'ACTIVE' 
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+                        : 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+                    }`}>
+                      {e.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
+      {/* Assignments Tab */}
       {viewMode === 'assignments' && (
-        <Card>
-          <CardHeader><CardTitle>Assignments</CardTitle></CardHeader>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader><CardTitle className="dark:text-white">Tasks & Assignments</CardTitle></CardHeader>
           <CardContent>
-            {data.assignments?.length === 0 ? <p className="text-gray-500">No assignments</p> : <p className="text-gray-500">Assignments view</p>}
+            {data.assignments?.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400">No tasks assigned</p>
+            ) : (
+              <div className="space-y-3">
+                {data.assignments.map(a => (
+                  <div key={a.id} className="flex justify-between items-center p-3 border dark:border-gray-700 rounded-lg dark:bg-gray-700/50">
+                    <div>
+                      <p className="font-medium dark:text-white">{a.assignment?.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Due: {a.assignment?.dueDate || 'No deadline'}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs ${
+                      a.status === 'GRADED' 
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300'
+                    }`}>
+                      {a.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Attendance Tab */}
+      {viewMode === 'attendance' && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader><CardTitle className="dark:text-white">Attendance Records</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4 mb-4">
+              <div className="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.present}</div>
+                <div className="text-xs text-green-700 dark:text-green-300">Present</div>
+              </div>
+              <div className="text-center p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.total - stats.present}</div>
+                <div className="text-xs text-red-700 dark:text-red-300">Absent</div>
+              </div>
+              <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">0</div>
+                <div className="text-xs text-yellow-700 dark:text-yellow-300">Late</div>
+              </div>
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.percentage}%</div>
+                <div className="text-xs text-blue-700 dark:text-blue-300">Rate</div>
+              </div>
+            </div>
+            {data.attendances?.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400">No attendance records</p>
+            ) : (
+              <div className="space-y-2">
+                {data.attendances.slice(0, 15).map(a => (
+                  <div key={a.id} className="flex justify-between p-2 border dark:border-gray-700 rounded dark:bg-gray-700/50">
+                    <span className="dark:text-gray-300">{new Date(a.date).toLocaleDateString()}</span>
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      a.status === 'PRESENT' 
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+                        : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+                    }`}>{a.status}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Announcements Tab */}
+      {viewMode === 'announcements' && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader><CardTitle className="dark:text-white">Announcements</CardTitle></CardHeader>
+          <CardContent>
+            {data.announcements?.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400">No announcements</p>
+            ) : (
+              <div className="space-y-3">
+                {data.announcements.map(a => (
+                  <div key={a.id} className="p-4 border dark:border-gray-700 rounded-lg dark:bg-gray-700/50">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-medium dark:text-white">{a.title}</h4>
+                      <div className="flex gap-2">
+                        {a.priority === 'URGENT' && (
+                          <span className="px-2 py-0.5 text-xs bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 rounded">URGENT</span>
+                        )}
+                        <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded">{a.type}</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{a.content}</p>
+                    <p className="text-xs text-gray-400 mt-2">{new Date(a.createdAt).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
