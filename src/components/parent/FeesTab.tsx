@@ -12,65 +12,65 @@ interface FeesTabProps {
 
 export default function FeesTab({ fees, feeStats }: FeesTabProps) {
   return (
-    <Card>
+    <Card className="dark:bg-gray-800 dark:border-gray-700">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 dark:text-white">
           <CreditCard className="h-5 w-5" /> Fee Payments
         </CardTitle>
       </CardHeader>
       <CardContent>
         {fees.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No fee records found</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-8">No fee records found</p>
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-2 md:gap-4 p-3 md:p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-3 gap-2 md:gap-4 p-3 md:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div>
-                <p className="text-xs md:text-sm text-gray-500">Total Fees</p>
-                <p className="text-lg md:text-xl font-bold">{formatCurrency(feeStats.total)}</p>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Total Fees</p>
+                <p className="text-lg md:text-xl font-bold dark:text-white">{formatCurrency(feeStats.total)}</p>
               </div>
               <div>
-                <p className="text-xs md:text-sm text-gray-500">Paid</p>
-                <p className="text-lg md:text-xl font-bold text-green-600">{formatCurrency(feeStats.paid)}</p>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Paid</p>
+                <p className="text-lg md:text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(feeStats.paid)}</p>
               </div>
               <div>
-                <p className="text-xs md:text-sm text-gray-500">Balance</p>
-                <p className="text-lg md:text-xl font-bold text-red-600">{formatCurrency(feeStats.pending)}</p>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Balance</p>
+                <p className="text-lg md:text-xl font-bold text-red-600 dark:text-red-400">{formatCurrency(feeStats.pending)}</p>
               </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[500px]">
-                <thead className="border-b">
+                <thead className="border-b dark:border-gray-700">
                   <tr>
-                    <th className="text-left py-3 px-2 whitespace-nowrap">Description</th>
-                    <th className="text-left py-3 px-2 whitespace-nowrap">Amount</th>
-                    <th className="text-left py-3 px-2 whitespace-nowrap">Paid</th>
-                    <th className="text-left py-3 px-2 whitespace-nowrap">Status</th>
-                    <th className="text-left py-3 px-2 whitespace-nowrap">Date</th>
+                    <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Description</th>
+                    <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Amount</th>
+                    <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Paid</th>
+                    <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Status</th>
+                    <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {fees.map((fee) => (
-                    <tr key={fee.id} className="border-b">
+                    <tr key={fee.id} className="border-b dark:border-gray-700">
                       <td className="py-3 px-2">
-                        <p className="font-medium">{fee.feeStructure.name}</p>
-                        <p className="text-xs text-gray-500">{fee.feeStructure.term?.name} {fee.feeStructure.academicYear?.name}</p>
+                        <p className="font-medium dark:text-white">{fee.feeStructure.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{fee.feeStructure.term?.name} {fee.feeStructure.academicYear?.name}</p>
                       </td>
-                      <td className="py-3 px-2 whitespace-nowrap">{formatCurrency(fee.feeStructure.amount)}</td>
-                      <td className="py-3 px-2 whitespace-nowrap">{formatCurrency(fee.amount)}</td>
+                      <td className="py-3 px-2 whitespace-nowrap dark:text-gray-300">{formatCurrency(fee.feeStructure.amount)}</td>
+                      <td className="py-3 px-2 whitespace-nowrap dark:text-gray-300">{formatCurrency(fee.amount)}</td>
                       <td className="py-3 px-2 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${getStatusColor(fee.status)}`}>{fee.status}</span>
                       </td>
-                      <td className="py-3 px-2 text-sm whitespace-nowrap">{fee.paidAt ? new Date(fee.paidAt).toLocaleDateString() : '-'}</td>
+                      <td className="py-3 px-2 text-sm whitespace-nowrap dark:text-gray-400">{fee.paidAt ? new Date(fee.paidAt).toLocaleDateString() : '-'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             {feeStats.pending > 0 && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg flex justify-between items-center">
+              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex justify-between items-center">
                 <div>
-                  <p className="font-medium">Make a payment</p>
-                  <p className="text-sm text-gray-600">Click to pay {formatCurrency(feeStats.pending)} online</p>
+                  <p className="font-medium dark:text-white">Make a payment</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Click to pay {formatCurrency(feeStats.pending)} online</p>
                 </div>
                 <Button>Pay Now</Button>
               </div>
