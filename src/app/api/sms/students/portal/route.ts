@@ -14,16 +14,39 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Find student by userId or email within the same tenant (restored from working v0ad0526)
-    const student = await prisma.student.findFirst({
+    // Debug: log what authUser contains
+    console.log('[portal] Step 1 - authUser:', {
+      userId: authUser.userId,
+      email: authUser.email,
+      tenantId: authUser.tenantId,
+      role: authUser.role
+    });
+
+    // Find student by userId or email within the same tenant
+    let student = await prisma.student.findFirst({
       where: {
         OR: [
           { userId: authUser.userId },
-          { email: authUser.email },
+          { email: { mode: 'insensitive', equals: authUser.email } },
         ],
         tenantId: authUser.tenantId
       }
     });
+
+    console.log('[portal] Step 2 - Student found:', student?.id, student?.studentId, 'tenantId:', student?.tenantId);
+
+    // If not found with tenantId, try without tenant filter
+    if (!student) {
+      student = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { userId: authUser.userId },
+            { email: { mode: 'insensitive', equals: authUser.email } },
+          ]
+        }
+      });
+      console.log('[portal] Step 3 - Student found (no tenant filter):', student?.id, student?.studentId);
+    }
 
     if (!student) {
       return NextResponse.json({ error: 'Student record not found. Please contact admin.' }, { status: 404 });
