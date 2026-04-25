@@ -32,9 +32,14 @@ export async function GET(request: NextRequest) {
 
     // Step 2: Enrollments
     const enrollments = await prisma.enrollment.findMany({
-      where: { studentId: student.id }
+      where: { studentId: student.id },
+      include: { academicClass: true },
+      orderBy: { createdAt: 'desc' }
     });
     console.log('[portal] Enrollments:', enrollments?.length);
+
+    // Get active enrollment for class display
+    const activeEnrollment = enrollments?.find(e => e.status === 'ACTIVE');
 
     // Step 3: Results
     const results = await prisma.result.findMany({
@@ -106,6 +111,7 @@ export async function GET(request: NextRequest) {
         lastName: student.lastName,
         email: student.email,
         phone: student.phone,
+        academicClass: activeEnrollment?.academicClass || null,
       },
       enrollments: enrollments || [],
       results: results || [],

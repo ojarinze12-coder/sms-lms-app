@@ -18,7 +18,7 @@ interface GradingScale {
 }
 
 interface StudentData {
-  student: { id: string; studentId: string; firstName: string; lastName: string; branchId?: string; class: { id: string; name: string; level: number } | null };
+  student: { id: string; studentId: string; firstName: string; lastName: string; branchId?: string; academicClass: { id: string; name: string; level: number; stream?: string } | null };
   gradingScale: GradingScale | null;
   enrollments: Array<{ id: string; status: string; academicClass: { id: string; name: string; level: number; stream?: string; subjects?: Array<{ id: string; name: string; code: string }> } }>;
   results: Array<{ id: string; percentage: number; score: number; status: string; exam: { title: string; subject: { name: string }; term: { name: string; academicYear: { name: string } } } }>;
@@ -180,7 +180,7 @@ export default function StudentPortalPage() {
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-6 text-white">
         <h1 className="text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
-        <p className="text-orange-100">{data.student.class?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
+        <p className="text-orange-100">{data.student.academicClass?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
       </div>
 
       {/* Navigation */}
