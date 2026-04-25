@@ -11,9 +11,10 @@ import { useState, useEffect, useRef } from 'react';
 import AIChatWidget from '@/components/AIChatWidget';
 import { useTenantTheme } from '@/components/use-tenant-theme';
 import { useTheme } from 'next-themes';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor, User, Settings, LogOut, Key } from 'lucide-react';
 import { useBrand } from '@/components/brand-theme-provider';
 import { BranchSelector } from '@/components/BranchSelector';
+import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 
 const superAdminNavItems = [
   { label: 'Dashboard', href: '/admin' },
@@ -195,6 +196,8 @@ export default function DashboardLayout({
   const { user, role, loading } = useAuth();
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [tenantInfo, setTenantInfo] = useState<{ name: string; brandColor: string; logo?: string | null } | null>(null);
   const { loading: themeLoading } = useTenantTheme();
   const { theme, setTheme } = useTheme();
@@ -409,18 +412,41 @@ useEffect(() => {
                 {!isSuperAdmin && (
                   <Logo size="sm" variant="dark" className="opacity-50" />
                 )}
-                <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:block">
-                  {user.email}
-                </span>
-                <Link
-                  href="/api/auth/logout"
-                  className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 px-3 py-1 border rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-                  onClick={() => {
-                    localStorage.removeItem('auth_token');
-                  }}
-                >
-                  Sign out
-                </Link>
+                
+                {/* User Dropdown */}
+                <div className="relative" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
+                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <User className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:block">
+                      {user.email}
+                    </span>
+                  </button>
+                  
+                  {userMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border dark:border-gray-700 py-1 z-50">
+                      <button
+                        onClick={() => {
+                          setPasswordDialogOpen(true);
+                          setUserMenuOpen(false);
+                        }}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <Key className="h-4 w-4" />
+                        Change Password
+                      </button>
+                      <Link
+                        href="/api/auth/logout"
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => {
+                          localStorage.removeItem('auth_token');
+                        }}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign out
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -433,6 +459,7 @@ useEffect(() => {
           {role === 'PARENT' && <AIChatWidget userRole="PARENT" />}
         </main>
         <Toaster />
+        <ChangePasswordDialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen} />
       </div>
     </BranchProvider>
   );
