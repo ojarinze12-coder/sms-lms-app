@@ -211,13 +211,17 @@ export default function DashboardLayout({
   const isParent = role === 'PARENT';
 
 useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (loading) {
-        console.log('[Layout] Auth timeout, showing page anyway');
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.user-menu-dropdown')) {
+        setUserMenuOpen(false);
       }
-    }, 10000);
-    return () => clearTimeout(timeout);
-  }, [loading]);
+    };
+    if (userMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [userMenuOpen]);
 
   useEffect(() => {
     async function fetchTenantInfo() {
@@ -414,16 +418,26 @@ useEffect(() => {
                 )}
                 
                 {/* User Dropdown */}
-                <div className="relative" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
-                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <div className="relative user-menu-dropdown">
+                  <button 
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
                     <User className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                     <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:block">
                       {user.email}
                     </span>
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={userMenuOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
+                    </svg>
                   </button>
                   
                   {userMenuOpen && (
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border dark:border-gray-700 py-1 z-50">
+                    <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border dark:border-gray-700 py-1 z-50">
+                      <div className="px-4 py-2 border-b dark:border-gray-700">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{user.firstName} {user.lastName}</p>
+                        <p className="text-xs text-gray-500">{role}</p>
+                      </div>
                       <button
                         onClick={() => {
                           setPasswordDialogOpen(true);
