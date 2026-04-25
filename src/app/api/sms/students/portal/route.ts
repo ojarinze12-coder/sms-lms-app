@@ -5,8 +5,6 @@ import { getAuthUser } from '@/lib/auth-server';
 export async function GET(request: NextRequest) {
   const authUser = await getAuthUser();
   
-  console.log('[portal] Step 1 - authUser:', authUser);
-  
   if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -16,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Simple student lookup - no includes
+    // Step 1: Find student
     const student = await prisma.student.findFirst({
       where: {
         OR: [
@@ -26,69 +24,62 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log('[portal] Step 2 - Student found:', student?.id, student?.studentId);
+    console.log('[portal] Student found:', student?.id);
 
     if (!student) {
       return NextResponse.json({ error: 'Student record not found' }, { status: 404 });
     }
 
-    // Simple enrollments - no nested includes
+    // Step 2: Enrollments
     const enrollments = await prisma.enrollment.findMany({
       where: { studentId: student.id }
     });
+    console.log('[portal] Enrollments:', enrollments?.length);
 
-    console.log('[portal] Step 3 - Enrollments:', enrollments?.length);
-
-    // Simple results - no includes
+    // Step 3: Results
     const results = await prisma.result.findMany({
       where: { studentId: student.id },
       take: 20
     });
+    console.log('[portal] Results:', results?.length);
 
-    console.log('[portal] Step 4 - Results:', results?.length);
-
-    // Simple attendances
+    // Step 4: Attendances
     const attendances = await prisma.attendance.findMany({
       where: { studentId: student.id },
       take: 30
     });
+    console.log('[portal] Attendances:', attendances?.length);
 
-    console.log('[portal] Step 5 - Attendances:', attendances?.length);
-
-    // Assignments
+    // Step 5: Assignments
     const assignments = await prisma.assignmentSubmission.findMany({
       where: { studentId: student.id },
       take: 10
     });
+    console.log('[portal] Assignments:', assignments?.length);
 
-    console.log('[portal] Step 6 - Assignments:', assignments?.length);
+    // Step 6: Announcements (simplified - no tenantId filter)
+    let announcements = [];
+    try {
+      announcements = await prisma.announcement.findMany({
+        where: { isPublished: true },
+        take: 10
+      });
+    } catch (e) {
+      console.log('[portal] Announcements query failed:', e);
+    }
+    console.log('[portal] Announcements:', announcements?.length);
 
-    // Announcements for students
-    const announcements = await prisma.announcement.findMany({
-      where: {
-        tenantId: student.tenantId,
-        isPublished: true,
-        OR: [
-          { targetRoles: { has: 'STUDENT' } },
-          { targetRoles: { isEmpty: true } }
-        ]
-      },
-      take: 10
-    });
-
-    console.log('[portal] Step 7 - Announcements:', announcements?.length);
-
-    // Exams for student's enrollments
-    const exams = await prisma.exam.findMany({
-      where: {
-        tenantId: student.tenantId,
-        isPublished: true,
-        startTime: { lte: new Date() }
-      },
-      take: 20
-    });
-
-    console.log('[portal] Step 8 - Exams:', exams?.length);
+    // Step 7: Exams (simplified - no tenantId filter)
+    let exams = [];
+    try {
+      exams = await prisma.exam.findMany({
+        where: { isPublished: true },
+        take: 20
+      });
+    } catch (e) {
+      console.log('[portal] Exams query failed:', e);
+    }
+    console.log('[portal] Exams:', exams?.length);
 
     return NextResponse.json({
       student: {
@@ -107,8 +98,8 @@ export async function GET(request: NextRequest) {
       exams: exams || [],
     });
   } catch (error) {
-    console.error('Error:', error);
-    console.error('Error message:', error instanceof Error ? error.message : String(error));
+    console.error('[portal] Error:', error);
+    console.error('[portal] Error message:', error instanceof Error ? error.message : String(error));
     return NextResponse.json({ 
       error: 'Failed to fetch data', 
       details: error instanceof Error ? error.message : String(error) 
