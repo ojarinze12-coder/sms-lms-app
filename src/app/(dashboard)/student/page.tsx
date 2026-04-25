@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download } from 'lucide-react';
+import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download, ClipboardList, PlayCircle } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
 interface GradingScaleGrade {
@@ -27,6 +27,7 @@ interface StudentData {
   assignments: Array<{ id: string; status: string; grade?: number; assignment: { title: string; dueDate?: string } }>;
   announcements: Array<{ id: string; title: string; content: string; type: string; priority: string; createdAt: string }>;
   timetable: Array<{ id: string; dayOfWeek: number; period: number; subject: { name: string } }>;
+  exams: Array<{ id: string; title: string; description?: string; duration: number; startTime: string; endTime: string; examType: string; subject?: { id: string; name: string; code: string }; term?: { id: string; name: string } }>;
 }
 
 const getGradeColor = (grade: string): string => {
@@ -79,7 +80,7 @@ export default function StudentPortalPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<StudentData | null>(null);
   const [error, setError] = useState('');
-  const [viewMode, setViewMode] = useState<'overview' | 'courses' | 'results' | 'attendance' | 'assignments' | 'announcements' | 'timetable'>('overview');
+  const [viewMode, setViewMode] = useState<'overview' | 'courses' | 'results' | 'attendance' | 'assignments' | 'announcements' | 'timetable' | 'exams'>('overview');
 
   useEffect(() => {
     loadPortalData();
@@ -192,6 +193,7 @@ export default function StudentPortalPage() {
             { id: 'assignments', label: 'Tasks', icon: FileText },
             { id: 'attendance', label: 'Attendance', icon: Calendar },
             { id: 'announcements', label: 'Notices', icon: Bell },
+            { id: 'exams', label: 'Exams', icon: ClipboardList },
           ].map(item => (
             <button key={item.id} onClick={() => setViewMode(item.id as any)} 
               className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
@@ -465,6 +467,97 @@ export default function StudentPortalPage() {
                     <p className="text-xs text-gray-400 mt-2">{new Date(a.createdAt).toLocaleDateString()}</p>
                   </div>
                 ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Exams Tab */}
+      {viewMode === 'exams' && (
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
+          <CardHeader>
+            <CardTitle className="dark:text-white flex items-center gap-2">
+              <ClipboardList className="h-5 w-5" />
+              Available Exams
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data.exams?.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No exams currently available</p>
+                <p className="text-sm mt-1">Exams will appear here when they are scheduled within your class time window.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {data.exams.map(exam => {
+                  const startTime = new Date(exam.startTime);
+                  const endTime = new Date(exam.endTime);
+                  const isOngoing = startTime <= new Date() && endTime >= new Date();
+                  const isUpcoming = startTime > new Date();
+                  
+                  return (
+                    <div key={exam.id} className="p-4 border dark:border-gray-700 rounded-lg dark:bg-gray-700/50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium dark:text-white text-lg">{exam.title}</h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {exam.subject?.name} ({exam.subject?.code})
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            isOngoing 
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+                              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                          }`}>
+                            {isOngoing ? 'LIVE' : 'UPCOMING'}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{exam.examType}</span>
+                        </div>
+                      </div>
+                      
+                      {exam.description && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{exam.description}</p>
+                      )}
+                      
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>Duration: {exam.duration} min</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Start: </span>
+                          <span>{startTime.toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">End: </span>
+                          <span>{endTime.toLocaleString()}</span>
+                        </div>
+                        {exam.term && (
+                          <div>
+                            <span className="text-gray-400">Term: </span>
+                            <span>{exam.term.name}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {isOngoing && (
+                        <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                          <PlayCircle className="h-5 w-5" />
+                          Start Exam
+                        </button>
+                      )}
+                      
+                      {isUpcoming && (
+                        <div className="w-full text-center px-4 py-2 bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-300 rounded-lg text-sm">
+                          Exam not started yet. Come back when the scheduled time begins.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>

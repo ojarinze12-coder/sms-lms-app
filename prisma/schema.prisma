@@ -433,6 +433,7 @@ model AcademicClass {
   timetableSlots TimetableSlot[]
   transcripts    Transcript[]
   applications   Application[]
+  exams          Exam[]
   classTeacher   Teacher?        @relation("ClassTeacherClasses", fields: [classTeacherId], references: [id])
   formMaster     Teacher?        @relation("FormMasterClasses", fields: [formMasterId], references: [id])
   caregiver      Staff?          @relation("CaregiverClasses", fields: [caregiverId], references: [id])
@@ -787,27 +788,30 @@ model Enrollment {
 }
 
 model Exam {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title       String
-  description String?
-  status      String?    @default("DRAFT")
-  duration    Int?       @default(60)
-  startTime   DateTime?  @db.Timestamptz(6)
-  endTime     DateTime?  @db.Timestamptz(6)
-  termId      String?    @db.Uuid
-  subjectId   String?    @db.Uuid
-  createdById String?    @db.Uuid
-  createdAt   DateTime?  @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime?  @default(now()) @updatedAt @db.Timestamptz(6)
-  examType    ExamType   @default(MID_TERM)
-  tenantId    String?    @db.Uuid
-  subject     Subject?   @relation(fields: [subjectId], references: [id])
-  term        Term?      @relation(fields: [termId], references: [id])
-  questions   Question[]
-  results     Result[]
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  description    String?
+  status          String?         @default("DRAFT")
+  duration        Int?            @default(60)
+  startTime       DateTime?       @db.Timestamptz(6)
+  endTime         DateTime?       @db.Timestamptz(6)
+  termId          String?         @db.Uuid
+  subjectId      String?          @db.Uuid
+  academicClassId String?        @db.Uuid
+  createdById    String?          @db.Uuid
+  createdAt       DateTime?       @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime?       @default(now()) @updatedAt @db.Timestamptz(6)
+  examType        ExamType        @default(MID_TERM)
+  tenantId        String?         @db.Uuid
+  subject         Subject?        @relation(fields: [subjectId], references: [id])
+  term            Term?           @relation(fields: [termId], references: [id])
+  academicClass  AcademicClass?  @relation(fields: [academicClassId], references: [id])
+  questions       Question[]
+  results         Result[]
 
   @@index([subjectId], map: "idx_exams_subject")
   @@index([termId], map: "idx_exams_term")
+  @@index([academicClassId], map: "idx_exams_class")
   @@map("exams")
 }
 

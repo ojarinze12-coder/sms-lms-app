@@ -69,13 +69,30 @@ export async function GET(request: NextRequest) {
     }
     console.log('[portal] Announcements:', announcements?.length);
 
-    // Step 7: Exams (simplified - no tenantId filter)
+    // Step 7: Exams for student's enrolled classes (filter by time window)
     let exams = [];
     try {
-      exams = await prisma.exam.findMany({
-        where: { isPublished: true },
-        take: 20
-      });
+      // Get student's enrolled class IDs from active enrollments
+      const classIds = enrollments
+        .filter(e => e.status === 'ACTIVE')
+        .map(e => e.classId);
+
+      if (classIds.length > 0) {
+        exams = await prisma.exam.findMany({
+          where: {
+            isPublished: true,
+            academicClassId: { in: classIds },
+            startTime: { lte: new Date() },
+            endTime: { gte: new Date() }
+          },
+          include: {
+            subject: true,
+            term: true
+          },
+          orderBy: { startTime: 'desc' },
+          take: 20
+        });
+      }
     } catch (e) {
       console.log('[portal] Exams query failed:', e);
     }
