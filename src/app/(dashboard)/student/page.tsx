@@ -184,18 +184,19 @@ export default function StudentPortalPage() {
         <p className="text-orange-100 text-sm">{data.student.academicClass?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
       </div>
 
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu Button - Always visible on mobile for testing */}
       <button 
-        className="md:hidden fixed bottom-4 left-4 z-[60] bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform active:scale-95"
+        className="fixed bottom-4 left-4 z-[60] bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-xl hover:bg-blue-700 transition-all active:scale-95 md:hidden"
         onClick={() => setMobileMenuOpen(true)}
         aria-label="Open menu"
+        style={{ boxShadow: '0 4px 20px rgba(37, 99, 235, 0.4)' }}
       >
-        <Menu className="h-6 w-6" />
+        <Menu className="h-7 w-7" />
       </button>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
           <div className="absolute right-0 top-0 h-full w-72 bg-white dark:bg-gray-800 shadow-xl animate-in slide-in-from-right duration-300">
             <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
