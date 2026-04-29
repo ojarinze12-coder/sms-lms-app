@@ -112,9 +112,8 @@ export default function ClassesPage() {
   const [selectedTierCode, setSelectedTierCode] = useState<string>('');
 
   const getStreamOptions = (deptId?: string, deptCode?: string) => {
-    if (deptCode && STREAM_OPTIONS.SSS.includes(deptCode.toUpperCase())) {
-      return STREAM_OPTIONS.SSS;
-    }
+    // Stream is for classroom splitting (A, B, C, D) - always use default
+    // Department/Track is selected separately for subject grouping
     return STREAM_OPTIONS.DEFAULT;
   };
 
@@ -498,11 +497,12 @@ export default function ClassesPage() {
             </div>
           ) : (
             classes.map((cls) => {
-              const fullClassName = cls.department 
-                ? `${cls.name}-${cls.department.code}${cls.stream ? '-' + cls.stream : ''}`
-                : cls.stream 
-                  ? `${cls.name}-${cls.stream}`
-                  : cls.name;
+              // Build display name: Name + Department + Stream
+              const parts = [cls.name];
+              if (cls.department) parts.push(cls.department.code);
+              if (cls.stream && !cls.department) parts.push(cls.stream);
+              if (cls.stream && cls.department) parts.push(cls.stream);
+              const fullClassName = parts.join('-');
               return (
                 <div key={cls.id} className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start">
@@ -510,6 +510,7 @@ export default function ClassesPage() {
                       <h3 className="font-semibold text-lg dark:text-white">{fullClassName}</h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {getLevelName(cls.level)}
+                        {cls.stream && cls.department && <span className="ml-1 text-orange-600">Stream: {cls.stream}</span>}
                       </p>
                     </div>
                     <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs">
@@ -668,8 +669,11 @@ export default function ClassesPage() {
               {departments.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Department (Stream)
+                    Department/Track
                   </label>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    Subject grouping for SSS (Science, Arts, Commerce, Technical)
+                  </p>
                   <select
                     value={formData.departmentId}
                     onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
@@ -689,6 +693,9 @@ export default function ClassesPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Stream
                 </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  Split large classes into parallel sections (A, B, C, D...)
+                </p>
                 <div className="relative">
                   <select
                     value={isCustomStream ? '__custom__' : (streamOptions.includes(formData.stream) ? formData.stream : '__custom__')}
@@ -934,8 +941,11 @@ export default function ClassesPage() {
               {departments.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Department (Stream)
+                    Department/Track
                   </label>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    Subject grouping for SSS (Science, Arts, Commerce, Technical)
+                  </p>
                   <select
                     value={editFormData.departmentId}
                     onChange={(e) => setEditFormData({ ...editFormData, departmentId: e.target.value })}
@@ -955,6 +965,9 @@ export default function ClassesPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Stream
                 </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  Split large classes into parallel sections (A, B, C, D...)
+                </p>
                 <div className="relative">
                   <select
                     value={editIsCustomStream ? '__custom__' : (editStreamOptions.includes(editFormData.stream) ? editFormData.stream : '__custom__')}
