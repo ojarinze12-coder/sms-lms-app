@@ -33,13 +33,10 @@ export async function GET(request: NextRequest) {
       where.tierId = tierId;
     }
 
-    if (branchId) {
-      // Include classes for this branch OR global classes (no branch assigned)
-      where.OR = [
-        { branchId },
-        { branchId: null },
-      ];
-    }
+    // Branch filtering disabled temporarily - was causing 500 errors
+    // if (branchId) {
+    //   where.branchId = { in: [branchId, null] };
+    // }
 
     const classes = await prisma.academicClass.findMany({
       where,
