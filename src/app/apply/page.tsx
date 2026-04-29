@@ -298,46 +298,46 @@ function ApplicationForm() {
 
   if (viewMode === 'select') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 md:py-12 px-3 md:px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 md:mb-8">
             {schoolInfo && (
               <>
                 {schoolLogo ? (
-                  <div className="mb-4">
+                  <div className="mb-3 md:mb-4">
                     <img 
                       src={schoolLogo} 
                       alt={`${schoolInfo.name} logo`}
-                      className="h-20 w-auto mx-auto object-contain"
+                      className="h-16 md:h-20 w-auto mx-auto object-contain"
                     />
                   </div>
                 ) : (
                   <div 
-                    className="h-16 w-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4"
+                    className="h-12 w-12 md:h-16 md:w-16 rounded-lg flex items-center justify-center text-white font-bold text-xl md:text-2xl mx-auto mb-3 md:mb-4"
                     style={{ backgroundColor: brandColor }}
                   >
                     {schoolInfo.name?.charAt(0) || 'S'}
                   </div>
                 )}
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2" style={{ color: brandColor }}>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2" style={{ color: brandColor }}>
                   {schoolInfo.name}
                 </h1>
               </>
             )}
-            <p className="text-lg text-gray-600 dark:text-gray-300">Online Admissions</p>
+            <p className="text-base md:text-lg text-gray-600 dark:text-gray-300">Online Admissions</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <Card 
               className="cursor-pointer hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700 border-2 border-transparent hover:border-blue-500"
               onClick={() => setViewMode('new')}
             >
-              <CardContent className="pt-8 pb-8 text-center">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Upload className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              <CardContent className="p-6 md:pt-8 md:pb-8 text-center">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                  <Upload className="h-6 w-6 md:h-8 md:w-8 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">New Application</h2>
-                <p className="text-gray-600 dark:text-gray-300">Start a new admission application for the upcoming academic year</p>
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">New Application</h2>
+                <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">Start a new admission application for the upcoming academic year</p>
               </CardContent>
             </Card>
 
@@ -345,12 +345,12 @@ function ApplicationForm() {
               className="cursor-pointer hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700 border-2 border-transparent hover:border-green-500"
               onClick={() => setViewMode('track')}
             >
-              <CardContent className="pt-8 pb-8 text-center">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+              <CardContent className="p-6 md:pt-8 md:pb-8 text-center">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                  <Check className="h-6 w-6 md:h-8 md:w-8 text-green-600 dark:text-green-400" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Track Application</h2>
-                <p className="text-gray-600 dark:text-gray-300">Check the status of an existing application using your application number</p>
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">Track Application</h2>
+                <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">Check the status of an existing application using your application number</p>
               </CardContent>
             </Card>
           </div>
@@ -632,35 +632,35 @@ function ApplicationForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 md:py-8 px-3 md:px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 md:mb-8">
           {schoolInfo && (
             <>
               {schoolLogo ? (
-                <div className="mb-4">
+                <div className="mb-3 md:mb-4">
                   <img 
                     src={schoolLogo} 
                     alt={`${schoolInfo.name} logo`}
-                    className="h-20 w-auto mx-auto object-contain"
+                    className="h-16 md:h-20 w-auto mx-auto object-contain"
                   />
                 </div>
               ) : (
                 <div 
-                  className="h-16 w-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4"
+                  className="h-12 w-12 md:h-16 md:w-16 rounded-lg flex items-center justify-center text-white font-bold text-xl md:text-2xl mx-auto mb-3 md:mb-4"
                   style={{ backgroundColor: brandColor }}
                 >
                   {schoolInfo.name?.charAt(0) || 'S'}
                 </div>
               )}
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2" style={{ color: brandColor }}>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2" style={{ color: brandColor }}>
                 {schoolInfo.name}
               </h1>
             </>
           )}
-          <p className="text-lg text-gray-600 dark:text-gray-300 dark:text-gray-300">Online Admission Application</p>
+          <p className="text-base md:text-lg text-gray-600 dark:text-gray-300">Online Admission Application</p>
           {deadline && (
-            <Badge variant="outline" className="mt-2" style={{ borderColor: brandColor, color: brandColor }}>
+            <Badge variant="outline" className="mt-2 text-xs md:text-sm" style={{ borderColor: brandColor, color: brandColor }}>
               Deadline: {new Date(deadline).toLocaleDateString()}
             </Badge>
           )}
@@ -679,9 +679,9 @@ function ApplicationForm() {
               <CardTitle className="text-lg dark:text-white">Student Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <Label className="dark:text-gray-200" htmlFor="firstName">First Name *</Label>
+                  <Label className="dark:text-gray-200 text-sm md:text-base" htmlFor="firstName">First Name *</Label>
                   <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required />
                 </div>
                 <div>

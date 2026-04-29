@@ -705,5 +705,45 @@ Current implementation shows tabs directly on mobile (horizontal scroll) which w
 
 ---
 
+---
+
+## 28. Online Admission Portal Mobile Improvements
+
+### Features Implemented
+
+| Component | Improvement | Files Modified |
+|-----------|-------------|----------------|
+| Container Padding | Reduced on mobile (py-6 md:py-12, px-3 md:px-4) | apply/page.tsx, apply/status/page.tsx |
+| Header Text | Responsive (text-2xl md:text-3xl) | apply/page.tsx, apply/status/page.tsx |
+| Card Spacing | Reduced padding on mobile (p-6 md:p-8) | apply/page.tsx |
+| Icon Sizes | Smaller on mobile | apply/page.tsx |
+| Form Grid | Gap reduction on mobile (gap-3 md:gap-4) | apply/page.tsx |
+| Touch Targets | 48px minimum for buttons (h-11 md:h-12) | apply/page.tsx, apply/status/page.tsx |
+| Application Details | Responsive grid (grid-cols-1 sm:grid-cols-2) | apply/status/page.tsx |
+| Tabs | Smaller on mobile | apply/status/page.tsx |
+
+### Changes Summary
+
+#### apply/page.tsx
+- Main container: py-6 md:py-12, px-3 md:px-4
+- Select page cards: p-6, reduced icons
+- Form page: py-6 md:py-8, responsive header
+- All buttons: h-11 md:h-12 (48px touch target)
+
+#### apply/status/page.tsx
+- Container: py-6 md:py-12, px-3 md:px-4
+- Header: text-2xl md:text-3xl
+- Tabs: smaller text and padding on mobile
+- Form inputs: h-10 md:h-11
+- Submit button: h-11 md:h-12
+- Application details grid: responsive columns
+- Register form button: h-11 md:h-12
+- Dark mode support added
+
+### Status
+✅ Completed - Mobile responsive improvements working
+
+---
+
 ## Date Updated
 April 30, 2026

@@ -173,48 +173,50 @@ function StatusCheckForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 md:py-12 px-3 md:px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 md:mb-8">
           {schoolInfo && (
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{schoolInfo.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">{schoolInfo.name}</h1>
           )}
-          <p className="text-xl text-gray-600">Check Application Status</p>
+          <p className="text-base md:text-xl text-gray-600 dark:text-gray-300">Check Application Status</p>
         </div>
 
         <Tabs value={showLoginForm ? 'login' : 'track'} onValueChange={(v) => setShowLoginForm(v === 'login')}>
-          <TabsList className="mb-6 w-full">
-            <TabsTrigger value="track" className="flex-1">Track Application</TabsTrigger>
-            <TabsTrigger value="login" className="flex-1">Parent Login</TabsTrigger>
+          <TabsList className="mb-4 md:mb-6 w-full">
+            <TabsTrigger value="track" className="flex-1 text-sm md:text-base py-2 md:py-3">Track</TabsTrigger>
+            <TabsTrigger value="login" className="flex-1 text-sm md:text-base py-2 md:py-3">Parent Login</TabsTrigger>
           </TabsList>
 
           <TabsContent value="track">
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <form onSubmit={checkStatus} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="mb-4 md:mb-6">
+              <CardContent className="p-4 md:pt-6">
+                <form onSubmit={checkStatus} className="space-y-3 md:space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <div>
-                      <Label htmlFor="appNo">Application Number</Label>
+                      <Label htmlFor="appNo" className="text-sm md:text-base">Application Number</Label>
                       <Input
                         id="appNo"
                         value={appNo}
                         onChange={(e) => setAppNo(e.target.value)}
                         placeholder="e.g., APP-2026-00001"
+                        className="h-10 md:h-11"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone" className="text-sm md:text-base">Phone Number</Label>
                       <Input
                         id="phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="Enter phone used in application"
+                        className="h-10 md:h-11"
                         required
                       />
                     </div>
                   </div>
-                  <Button type="submit" disabled={loading} className="w-full">
+                  <Button type="submit" disabled={loading} className="w-full h-11 md:h-12">
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Check Status
                   </Button>
@@ -235,7 +237,7 @@ function StatusCheckForm() {
                 <p className="text-gray-600 mb-4">
                   If you&apos;ve already created a parent account, login here to track your child&apos;s application.
                 </p>
-                <Button onClick={() => router.push(`/login?school=${tenantSlug}`)} className="w-full">
+                <Button onClick={() => router.push(`/login?school=${tenantSlug}`)} className="w-full h-11 md:h-12">
                   Go to Login Page
                 </Button>
                 <p className="text-sm text-gray-500 mt-4 text-center">
@@ -291,39 +293,39 @@ function StatusCheckForm() {
 
             {/* Application Details */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Application Details</span>
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="text-base md:text-lg">Application Details</span>
                   <Badge className={getStatusColor(application.status)}>
                     {application.status.replace('_', ' ')}
                   </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Application No.</p>
-                    <p className="font-semibold">{application.applicationNo}</p>
+              <CardContent className="p-4 md:p-6 pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Application No.</p>
+                    <p className="font-semibold text-sm md:text-base">{application.applicationNo}</p>
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Applicant Name</p>
-                    <p className="font-semibold">{application.firstName} {application.lastName}</p>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Applicant Name</p>
+                    <p className="font-semibold text-sm md:text-base">{application.firstName} {application.lastName}</p>
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Applied Class</p>
-                    <p className="font-semibold">{application.applyingClass?.name || 'N/A'}</p>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Applied Class</p>
+                    <p className="font-semibold text-sm md:text-base">{application.applyingClass?.name || 'N/A'}</p>
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Academic Year</p>
-                    <p className="font-semibold">{application.academicYear?.name || 'N/A'}</p>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Academic Year</p>
+                    <p className="font-semibold text-sm md:text-base">{application.academicYear?.name || 'N/A'}</p>
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="font-semibold">{application.email || 'N/A'}</p>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Email</p>
+                    <p className="font-semibold text-sm md:text-base">{application.email || 'N/A'}</p>
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Phone</p>
-                    <p className="font-semibold">{application.phone}</p>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                    <p className="font-semibold text-sm md:text-base">{application.phone}</p>
                   </div>
                 </div>
               </CardContent>
@@ -522,7 +524,7 @@ function StatusCheckForm() {
                       {registerError && (
                         <p className="text-red-500 text-sm">{registerError}</p>
                       )}
-                      <Button type="submit" disabled={registering} className="w-full">
+                      <Button type="submit" disabled={registering} className="w-full h-11 md:h-12">
                         {registering && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Create Account
                       </Button>
