@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, TrendingUp, CreditCard, Calendar, Bell, FileText, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,11 +25,11 @@ import {
   formatDate 
 } from '@/types/parent';
 import LinkChildModal from '@/components/parent/LinkChildModal';
-import ParentNav from '@/components/parent/ParentNav';
 import OverviewTab from '@/components/parent/OverviewTab';
 import FeesTab from '@/components/parent/FeesTab';
 import AttendanceTab from '@/components/parent/AttendanceTab';
 import AnnouncementsTab from '@/components/parent/AnnouncementsTab';
+import { MobileTabNav } from '@/components/mobile-nav';
 
 const API_BASE = '/api/sms';
 
@@ -208,7 +208,7 @@ export default function ParentPortalPage() {
   const pendingChildren = data.children.filter(c => c.approvalStatus === 'PENDING');
 
   return (
-    <div className="space-y-4 md:space-y-6 p-2 md:p-0">
+    <div className="space-y-4 md:space-y-6 p-2 md:p-0 pb-20 md:pb-6">
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-4 md:p-6 text-white">
         <h1 className="text-xl md:text-2xl font-bold">Welcome, {data.parent.firstName} {data.parent.lastName}</h1>
@@ -287,15 +287,18 @@ export default function ParentPortalPage() {
         onSubmit={handleLinkStudent}
       />
 
-      {/* Navigation */}
-      <ParentNav
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        feeStats={feeStats}
-        attendanceStats={attendanceStats}
-        announcementsCount={data.announcements.length}
-        resultsCount={data.results.length}
-        reportCardsCount={data.reportCards.length}
+      {/* Mobile Tab Navigation */}
+      <MobileTabNav
+        tabs={[
+          { id: 'overview', label: 'Overview', icon: TrendingUp },
+          { id: 'fees', label: 'Fees', icon: CreditCard },
+          { id: 'attendance', label: 'Attendance', icon: Calendar },
+          { id: 'announcements', label: 'Notices', icon: Bell },
+          { id: 'results', label: 'Results', icon: FileText },
+          { id: 'report-cards', label: 'Reports', icon: Award },
+        ]}
+        activeTab={viewMode}
+        onTabChange={(id) => setViewMode(id as any)}
       />
 
       {/* Tab Content */}

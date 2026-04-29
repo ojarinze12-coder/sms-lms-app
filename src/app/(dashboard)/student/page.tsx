@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download, ClipboardList, PlayCircle } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
+import { MobileTabNav } from '@/components/mobile-nav';
 
 interface GradingScaleGrade {
   grade: string;
@@ -176,58 +177,49 @@ export default function StudentPortalPage() {
   }
 
   return (
-    <div className="space-y-6 p-4">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
-        <p className="text-orange-100">{data.student.academicClass?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
+    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 px-2 md:px-0">
+      {/* Welcome Header - Mobile optimized */}
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-4 md:p-6 text-white">
+        <h1 className="text-xl md:text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
+        <p className="text-orange-100 text-sm">{data.student.academicClass?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
       </div>
 
-      {/* Navigation */}
-      <div className="overflow-x-auto pb-2">
-        <div className="flex gap-2 min-w-max">
-          {[
-            { id: 'overview', label: 'Overview', icon: TrendingUp },
-            { id: 'results', label: 'Results', icon: Award },
-            { id: 'courses', label: 'Courses', icon: BookOpen },
-            { id: 'assignments', label: 'Tasks', icon: FileText },
-            { id: 'attendance', label: 'Attendance', icon: Calendar },
-            { id: 'announcements', label: 'Notices', icon: Bell },
-            { id: 'exams', label: 'Exams', icon: ClipboardList },
-          ].map(item => (
-            <button key={item.id} onClick={() => setViewMode(item.id as any)} 
-              className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                viewMode === item.id 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white dark:bg-gray-800 border dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}>
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Navigation - Mobile Tab Bar */}
+      <MobileTabNav
+        tabs={[
+          { id: 'overview', label: 'Overview', icon: TrendingUp },
+          { id: 'results', label: 'Results', icon: Award },
+          { id: 'courses', label: 'Courses', icon: BookOpen },
+          { id: 'assignments', label: 'Tasks', icon: FileText },
+          { id: 'attendance', label: 'Attendance', icon: Calendar },
+          { id: 'announcements', label: 'Notices', icon: Bell },
+          { id: 'exams', label: 'Exams', icon: ClipboardList },
+        ]}
+        activeTab={viewMode}
+        onTabChange={(id) => setViewMode(id as any)}
+      />
 
       {/* Overview Tab */}
       {viewMode === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           <Card className="dark:bg-gray-800 dark:border-gray-700">
             <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Attendance</CardTitle></CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.percentage}%</div>
+              <div className="text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400">{stats.percentage}%</div>
               <p className="text-xs text-gray-500 dark:text-gray-400">{stats.present} of {stats.total} days</p>
             </CardContent>
           </Card>
           <Card className="dark:bg-gray-800 dark:border-gray-700">
             <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Average Score</CardTitle></CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{overallStats.average}%</div>
+              <div className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">{overallStats.average}%</div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Across {overallStats.total} exams</p>
             </CardContent>
           </Card>
           <Card className="dark:bg-gray-800 dark:border-gray-700">
             <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Courses</CardTitle></CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{data.enrollments?.length || 0}</div>
+              <div className="text-2xl md:text-3xl font-bold text-purple-600 dark:text-purple-400">{data.enrollments?.length || 0}</div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Enrolled classes</p>
             </CardContent>
           </Card>
@@ -297,15 +289,15 @@ export default function StudentPortalPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[500px]">
+                <div className="overflow-x-auto -mx-2 px-2">
+                  <table className="w-full min-w-[400px] md:min-w-[500px]">
                     <thead className="border-b dark:border-gray-700">
                       <tr>
-                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Exam</th>
-                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Subject</th>
-                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Score</th>
-                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Percentage</th>
-                        <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Status</th>
+                        <th className="text-left py-2 px-1 md:px-2 text-xs md:text-sm dark:text-gray-300">Exam</th>
+                        <th className="text-left py-2 px-1 md:px-2 text-xs md:text-sm dark:text-gray-300">Subject</th>
+                        <th className="text-left py-2 px-1 md:px-2 text-xs md:text-sm dark:text-gray-300">Score</th>
+                        <th className="text-left py-2 px-1 md:px-2 text-xs md:text-sm dark:text-gray-300">%</th>
+                        <th className="text-left py-2 px-1 md:px-2 text-xs md:text-sm dark:text-gray-300">Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -314,13 +306,13 @@ export default function StudentPortalPage() {
                         const { letter, pass } = getGradeFromScale(result.percentage, activeGradingScale);
                         return (
                         <tr key={result.id} className="border-b dark:border-gray-700">
-                          <td className="py-2 px-2 dark:text-white">{result.exam?.title}</td>
-                          <td className="py-2 px-2 dark:text-gray-300">{result.exam?.subject?.name}</td>
-                          <td className="py-2 px-2 dark:text-gray-300">{result.score}</td>
-                          <td className="py-2 px-2 font-bold dark:text-white">{result.percentage.toFixed(1)}%</td>
-                          <td className="py-2 px-2">
-                            <span className={`px-2 py-1 rounded-full text-xs ${pass ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'}`}>
-                              {letter} ({pass ? 'PASS' : 'FAIL'})
+                          <td className="py-2 px-1 md:px-2 text-xs md:text-sm dark:text-white">{result.exam?.title}</td>
+                          <td className="py-2 px-1 md:px-2 text-xs md:text-sm dark:text-gray-300">{result.exam?.subject?.name}</td>
+                          <td className="py-2 px-1 md:px-2 text-xs md:text-sm dark:text-gray-300">{result.score}</td>
+                          <td className="py-2 px-1 md:px-2 font-bold text-xs md:text-sm dark:text-white">{result.percentage.toFixed(1)}%</td>
+                          <td className="py-2 px-1 md:px-2">
+                            <span className={`px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-[10px] md:text-xs ${pass ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'}`}>
+                              {letter}
                             </span>
                           </td>
                         </tr>
