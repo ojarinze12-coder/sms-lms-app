@@ -173,26 +173,26 @@ function StatusCheckForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 md:py-12 px-3 md:px-4">
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-6 md:mb-8">
+        <div className="text-center mb-8">
           {schoolInfo && (
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{schoolInfo.name}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{schoolInfo.name}</h1>
           )}
-          <p className="text-base md:text-xl text-gray-600">Check Application Status</p>
+          <p className="text-xl text-gray-600">Check Application Status</p>
         </div>
 
         <Tabs value={showLoginForm ? 'login' : 'track'} onValueChange={(v) => setShowLoginForm(v === 'login')}>
-          <TabsList className="mb-4 md:mb-6 w-full grid grid-cols-2">
-            <TabsTrigger value="track" className="h-11">Track</TabsTrigger>
-            <TabsTrigger value="login" className="h-11">Parent Login</TabsTrigger>
+          <TabsList className="mb-6 w-full">
+            <TabsTrigger value="track" className="flex-1">Track Application</TabsTrigger>
+            <TabsTrigger value="login" className="flex-1">Parent Login</TabsTrigger>
           </TabsList>
 
           <TabsContent value="track">
-            <Card className="mb-4 md:mb-6">
-              <CardContent className="p-4 md:pt-6">
-                <form onSubmit={checkStatus} className="space-y-3 md:space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <form onSubmit={checkStatus} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="appNo">Application Number</Label>
                       <Input
@@ -201,7 +201,6 @@ function StatusCheckForm() {
                         onChange={(e) => setAppNo(e.target.value)}
                         placeholder="e.g., APP-2026-00001"
                         required
-                        className="h-11 md:h-10"
                       />
                     </div>
                     <div>
@@ -248,34 +247,34 @@ function StatusCheckForm() {
         </Tabs>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 md:p-4 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <p className="text-red-700 text-sm">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-red-500" />
+            <p className="text-red-700">{error}</p>
           </div>
         )}
 
         {application && (
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-6">
             {/* Progress Timeline */}
             <Card>
-              <CardHeader className="px-3 md:px-6">
-                <CardTitle className="text-base md:text-lg">Application Progress</CardTitle>
+              <CardHeader>
+                <CardTitle>Application Progress</CardTitle>
               </CardHeader>
-              <CardContent className="px-3 md:px-6">
-                <div className="flex items-center justify-between overflow-x-auto pb-2">
+              <CardContent>
+                <div className="flex items-center justify-between overflow-x-auto">
                   {statusSteps.slice(0, application.status === 'REJECTED' ? 3 : application.status === 'ENROLLED' ? 6 : currentStepIndex + 2).map((step, index) => {
                     const isCompleted = index < currentStepIndex || application.status === 'ENROLLED' || application.status === 'APPROVED';
                     const isCurrent = step.status === application.status;
                     const Icon = step.icon;
 
                     return (
-                      <div key={step.status} className="flex flex-col items-center min-w-[80px] md:min-w-[100px]">
-                        <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center ${
+                      <div key={step.status} className="flex flex-col items-center min-w-[100px]">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           isCompleted ? 'bg-green-500 text-white' :
                           isCurrent ? 'bg-blue-500 text-white' :
                           'bg-gray-200 text-gray-400'
                         }`}>
-                          <Icon className="h-4 w-4 md:h-5 md:w-5" />
+                          <Icon className="h-5 w-5" />
                         </div>
                         <p className={`text-xs mt-2 text-center ${isCurrent ? 'font-bold text-blue-600' : 'text-gray-600'}`}>
                           {step.label}

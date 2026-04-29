@@ -20,11 +20,8 @@ export async function PUT(
 
   try {
     const { id } = await params;
-    console.log('[CLASS_EDIT] PUT request for class ID:', id, 'tenant:', authUser.tenantId);
-    
     const body = await request.json();
-    console.log('[CLASS_EDIT] Request body:', JSON.stringify(body));
-    const { name, level, capacity, addNerdcSubjects, stream, departmentId, classTeacherId, formMasterId, caregiverId, tierId } = body;
+    const { name, level, capacity, addNerdcSubjects, stream, departmentId, classTeacherId, formMasterId, caregiverId } = body;
 
     if (!name || level === undefined || !capacity) {
     return NextResponse.json(
@@ -35,20 +32,11 @@ export async function PUT(
 
   const existingClass = await prisma.academicClass.findUnique({
     where: { id },
-    include: {
-      department: true,
-      classTeacher: true,
-      formMaster: true,
-      caregiver: true,
-    }
   });
 
   if (!existingClass) {
-    console.log('[CLASS_EDIT] Class not found:', id);
     return NextResponse.json({ error: 'Class not found' }, { status: 404 });
   }
-
-  console.log('[CLASS_EDIT] Found class:', existingClass.name, 'level:', existingClass.level);
 
   // Check for duplicate - considering stream
   const duplicateClass = await prisma.academicClass.findFirst({
@@ -177,9 +165,8 @@ export async function PUT(
 
     return NextResponse.json(academicClass);
   } catch (error: any) {
-    console.error('[CLASS_EDIT] Error updating class:', error.name, error.message, error.meta);
-    const errorMessage = error?.message || error?.code || 'Unknown error';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error('Error updating class:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -214,8 +201,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('[CLASS_EDIT] Error deleting class:', error.name, error.message, error.meta);
-    const errorMessage = error?.message || error?.code || 'Unknown error';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error('Error deleting class:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

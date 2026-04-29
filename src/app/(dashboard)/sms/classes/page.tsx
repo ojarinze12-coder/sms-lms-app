@@ -329,17 +329,10 @@ export default function ClassesPage() {
   };
 
   const handleEdit = (cls: AcademicClass) => {
-    console.log('[CLASSES] Edit clicked for class:', cls.id, cls.name);
+    setEditingClass(cls);
     
     // Check if stream is custom (not in predefined options)
-    const defaultStreams = ['A', 'B', 'C', 'D', 'SCI', 'COMM', 'ARTS', 'TECH', 'GEN'];
-    const isCustom = cls.stream && !defaultStreams.includes(cls.stream);
-    
-    // Update stream options first based on department
-    const streamOptions = cls.department?.code && ['SCI', 'COMM', 'ARTS', 'TECH'].includes(cls.department.code.toUpperCase()) 
-      ? ['SCI', 'COMM', 'ARTS', 'TECH', 'GEN'] 
-      : ['A', 'B', 'C', 'D'];
-    setEditStreamOptions(streamOptions);
+    const isCustom = cls.stream && !editStreamOptions.includes(cls.stream);
     setEditIsCustomStream(isCustom);
     
     // Detect tier code for the editing class
@@ -357,7 +350,6 @@ export default function ClassesPage() {
     }
     setSelectedTierCode(tierCode);
     
-    setEditingClass(cls);
     setEditFormData({
       name: cls.name,
       level: cls.level.toString(),
@@ -370,7 +362,6 @@ export default function ClassesPage() {
       formMasterId: cls.formMaster?.id || '',
       caregiverId: cls.caregiver?.id || '',
     });
-    console.log('[CLASSES] Opening edit modal for:', cls.name);
     setShowEditModal(true);
   };
 

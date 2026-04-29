@@ -41,13 +41,13 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: { level: 'asc' },
       take: 50,
-      include: {
-        department: { select: { id: true, name: true, code: true } },
-        classTeacher: { select: { id: true, firstName: true, lastName: true, employeeId: true, position: true } },
-        formMaster: { select: { id: true, firstName: true, lastName: true, employeeId: true, position: true } },
-        caregiver: { select: { id: true, firstName: true, lastName: true, employeeId: true, category: true } },
+      select: {
+        id: true,
+        name: true,
+        level: true,
+        tierId: true,
+        academicYearId: true,
         subjects: { select: { id: true } },
-        enrollments: { select: { id: true } },
       }
     });
     

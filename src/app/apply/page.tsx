@@ -298,9 +298,9 @@ function ApplicationForm() {
 
   if (viewMode === 'select') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 md:py-12 px-3 md:px-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-6 md:mb-8">
+          <div className="text-center mb-8">
             {schoolInfo && (
               <>
                 {schoolLogo ? (
@@ -308,18 +308,18 @@ function ApplicationForm() {
                     <img 
                       src={schoolLogo} 
                       alt={`${schoolInfo.name} logo`}
-                      className="h-16 md:h-20 w-auto mx-auto object-contain"
+                      className="h-20 w-auto mx-auto object-contain"
                     />
                   </div>
                 ) : (
                   <div 
-                    className="h-12 w-12 md:h-16 md:w-16 rounded-lg flex items-center justify-center text-white font-bold text-xl md:text-2xl mx-auto mb-4"
+                    className="h-16 w-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4"
                     style={{ backgroundColor: brandColor }}
                   >
                     {schoolInfo.name?.charAt(0) || 'S'}
                   </div>
                 )}
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2" style={{ color: brandColor }}>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2" style={{ color: brandColor }}>
                   {schoolInfo.name}
                 </h1>
               </>
@@ -327,17 +327,17 @@ function ApplicationForm() {
             <p className="text-lg text-gray-600 dark:text-gray-300">Online Admissions</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card 
               className="cursor-pointer hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700 border-2 border-transparent hover:border-blue-500"
               onClick={() => setViewMode('new')}
             >
-              <CardContent className="p-6 md:pt-8 md:pb-8 text-center">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                  <Upload className="h-6 w-6 md:h-8 md:w-8 text-blue-600 dark:text-blue-400" />
+              <CardContent className="pt-8 pb-8 text-center">
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Upload className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-2">New Application</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Start a new admission application for the upcoming academic year</p>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">New Application</h2>
+                <p className="text-gray-600 dark:text-gray-300">Start a new admission application for the upcoming academic year</p>
               </CardContent>
             </Card>
 
@@ -345,12 +345,12 @@ function ApplicationForm() {
               className="cursor-pointer hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700 border-2 border-transparent hover:border-green-500"
               onClick={() => setViewMode('track')}
             >
-              <CardContent className="p-6 md:pt-8 md:pb-8 text-center">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                  <Check className="h-6 w-6 md:h-8 md:w-8 text-green-600 dark:text-green-400" />
+              <CardContent className="pt-8 pb-8 text-center">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
                 </div>
-                <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-2">Track Application</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Check the status of an existing application using your application number</p>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Track Application</h2>
+                <p className="text-gray-600 dark:text-gray-300">Check the status of an existing application using your application number</p>
               </CardContent>
             </Card>
           </div>
@@ -632,9 +632,9 @@ function ApplicationForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-4 md:py-8 px-3 md:px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-6 md:mb-8">
+        <div className="text-center mb-8">
           {schoolInfo && (
             <>
               {schoolLogo ? (
@@ -642,23 +642,23 @@ function ApplicationForm() {
                   <img 
                     src={schoolLogo} 
                     alt={`${schoolInfo.name} logo`}
-                    className="h-16 md:h-20 w-auto mx-auto object-contain"
+                    className="h-20 w-auto mx-auto object-contain"
                   />
                 </div>
               ) : (
                 <div 
-                  className="h-12 w-12 md:h-16 md:w-16 rounded-lg flex items-center justify-center text-white font-bold text-xl md:text-2xl mx-auto mb-4"
+                  className="h-16 w-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4"
                   style={{ backgroundColor: brandColor }}
                 >
                   {schoolInfo.name?.charAt(0) || 'S'}
                 </div>
               )}
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2" style={{ color: brandColor }}>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2" style={{ color: brandColor }}>
                 {schoolInfo.name}
               </h1>
             </>
           )}
-          <p className="text-base md:text-lg text-gray-600 dark:text-gray-300">Online Admission Application</p>
+          <p className="text-lg text-gray-600 dark:text-gray-300 dark:text-gray-300">Online Admission Application</p>
           {deadline && (
             <Badge variant="outline" className="mt-2" style={{ borderColor: brandColor, color: brandColor }}>
               Deadline: {new Date(deadline).toLocaleDateString()}
@@ -674,32 +674,32 @@ function ApplicationForm() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <Card className="mb-4 md:mb-6 dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader className="px-3 md:px-6">
-              <CardTitle className="text-base md:text-lg dark:text-white">Student Information</CardTitle>
+          <Card className="mb-6 dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-lg dark:text-white">Student Information</CardTitle>
             </CardHeader>
-            <CardContent className="px-3 md:px-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="firstName">First Name *</Label>
-                  <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="firstName">First Name *</Label>
+                  <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="lastName">Last Name *</Label>
-                  <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} required className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="lastName">Last Name *</Label>
+                  <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} required />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="middleName">Middle Name</Label>
-                  <Input id="middleName" name="middleName" value={formData.middleName} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="middleName">Middle Name</Label>
+                  <Input id="middleName" name="middleName" value={formData.middleName} onChange={handleChange} />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="dateOfBirth">Date of Birth *</Label>
-                  <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="dateOfBirth">Date of Birth *</Label>
+                  <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="gender">Gender *</Label>
+                  <Label className="dark:text-gray-200" htmlFor="gender">Gender *</Label>
                   <Select value={formData.gender} onValueChange={(v) => handleSelectChange('gender', v)}>
-                    <SelectTrigger className="h-11 md:h-10">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -709,21 +709,21 @@ function ApplicationForm() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="phone">Phone Number *</Label>
-                  <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} required placeholder="e.g., 08012345678" className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="phone">Phone Number *</Label>
+                  <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} required placeholder="e.g., 08012345678" />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="address">Address</Label>
-                  <Input id="address" name="address" value={formData.address} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="address">Address</Label>
+                  <Input id="address" name="address" value={formData.address} onChange={handleChange} />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="stateOfOrigin">State of Origin</Label>
+                  <Label className="dark:text-gray-200" htmlFor="stateOfOrigin">State of Origin</Label>
                   <Select value={formData.stateOfOrigin} onValueChange={(v) => handleSelectChange('stateOfOrigin', v)}>
-                    <SelectTrigger className="h-11 md:h-10">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select state" />
                     </SelectTrigger>
                     <SelectContent>
@@ -734,61 +734,61 @@ function ApplicationForm() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="birthCertNo">Birth Certificate No.</Label>
+                  <Label className="dark:text-gray-200" htmlFor="birthCertNo">Birth Certificate No.</Label>
                   <Input id="birthCertNo" name="birthCertNo" value={formData.birthCertNo} onChange={handleChange} />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="mb-4 md:mb-6 dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader className="px-3 md:px-6">
-              <CardTitle className="text-base md:text-lg dark:text-white">Previous School Information</CardTitle>
+          <Card className="mb-6 dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-lg dark:text-white">Previous School Information</CardTitle>
             </CardHeader>
-            <CardContent className="px-3 md:px-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="previousSchool">Previous School Name</Label>
-                  <Input id="previousSchool" name="previousSchool" value={formData.previousSchool} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="previousSchool">Previous School Name</Label>
+                  <Input id="previousSchool" name="previousSchool" value={formData.previousSchool} onChange={handleChange} />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="previousClass">Previous Class</Label>
-                  <Input id="previousClass" name="previousClass" value={formData.previousClass} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="previousClass">Previous Class</Label>
+                  <Input id="previousClass" name="previousClass" value={formData.previousClass} onChange={handleChange} />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="jambRegNo">JAMB Registration No. (SS3 only)</Label>
-                  <Input id="jambRegNo" name="jambRegNo" value={formData.jambRegNo} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="jambRegNo">JAMB Registration No. (SS3 only)</Label>
+                  <Input id="jambRegNo" name="jambRegNo" value={formData.jambRegNo} onChange={handleChange} />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="waecNo">WAEC No. (SS3 only)</Label>
-                  <Input id="waecNo" name="waecNo" value={formData.waecNo} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="waecNo">WAEC No. (SS3 only)</Label>
+                  <Input id="waecNo" name="waecNo" value={formData.waecNo} onChange={handleChange} />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="mb-4 md:mb-6 dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader className="px-3 md:px-6">
-              <CardTitle className="text-base md:text-lg dark:text-white">Guardian/Parent Information</CardTitle>
+          <Card className="mb-6 dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-lg dark:text-white">Guardian/Parent Information</CardTitle>
             </CardHeader>
-            <CardContent className="px-3 md:px-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="guardianName">Guardian Name *</Label>
-                  <Input id="guardianName" name="guardianName" value={formData.guardianName} onChange={handleChange} required className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="guardianName">Guardian Name *</Label>
+                  <Input id="guardianName" name="guardianName" value={formData.guardianName} onChange={handleChange} required />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="guardianPhone">Guardian Phone *</Label>
-                  <Input id="guardianPhone" name="guardianPhone" type="tel" value={formData.guardianPhone} onChange={handleChange} required className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="guardianPhone">Guardian Phone *</Label>
+                  <Input id="guardianPhone" name="guardianPhone" type="tel" value={formData.guardianPhone} onChange={handleChange} required />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="guardianEmail">Guardian Email</Label>
-                  <Input id="guardianEmail" name="guardianEmail" type="email" value={formData.guardianEmail} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="guardianEmail">Guardian Email</Label>
+                  <Input id="guardianEmail" name="guardianEmail" type="email" value={formData.guardianEmail} onChange={handleChange} />
                 </div>
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="guardianRelation">Relationship *</Label>
+                  <Label className="dark:text-gray-200" htmlFor="guardianRelation">Relationship *</Label>
                   <Select value={formData.guardianRelation} onValueChange={(v) => handleSelectChange('guardianRelation', v)}>
-                    <SelectTrigger className="h-11 md:h-10">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select relationship" />
                     </SelectTrigger>
                     <SelectContent>
@@ -799,21 +799,21 @@ function ApplicationForm() {
                   </Select>
                 </div>
                 <div className="md:col-span-2">
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="guardianAddress">Guardian Address</Label>
-                  <Input id="guardianAddress" name="guardianAddress" value={formData.guardianAddress} onChange={handleChange} className="h-11 md:h-10" />
+                  <Label className="dark:text-gray-200" htmlFor="guardianAddress">Guardian Address</Label>
+                  <Input id="guardianAddress" name="guardianAddress" value={formData.guardianAddress} onChange={handleChange} />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="mb-4 md:mb-6 dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader className="px-3 md:px-6">
-              <CardTitle className="text-base md:text-lg dark:text-white">Application Details</CardTitle>
+          <Card className="mb-6 dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-lg dark:text-white">Application Details</CardTitle>
             </CardHeader>
-            <CardContent className="px-3 md:px-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="dark:text-gray-200 text-sm" htmlFor="applyingClassId">Applying for Class *</Label>
+                  <Label className="dark:text-gray-200" htmlFor="applyingClassId">Applying for Class *</Label>
                   <Select value={formData.applyingClassId} onValueChange={(v) => handleSelectChange('applyingClassId', v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select class" />
@@ -877,20 +877,20 @@ function ApplicationForm() {
                         onChange={(e) => handleFileChange(index, e.target.files?.[0] || null)}
                       />
                     )}
-</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className="text-center px-3">
-          <Button type="submit" disabled={submitting} className="w-full h-12 md:h-10 md:px-8" style={{ backgroundColor: brandColor }}>
-            {submitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
+          <div className="text-center">
+            <Button type="submit" disabled={submitting} className="px-8" style={{ backgroundColor: brandColor }}>
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
                 'Submit Application'
               )}
             </Button>
