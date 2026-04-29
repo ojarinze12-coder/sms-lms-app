@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download, ClipboardList, PlayCircle } from 'lucide-react';
+import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download, ClipboardList, PlayCircle, Menu, X } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
 interface GradingScaleGrade {
@@ -81,6 +81,7 @@ export default function StudentPortalPage() {
   const [data, setData] = useState<StudentData | null>(null);
   const [error, setError] = useState('');
   const [viewMode, setViewMode] = useState<'overview' | 'courses' | 'results' | 'attendance' | 'assignments' | 'announcements' | 'timetable' | 'exams'>('overview');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadPortalData();
@@ -183,8 +184,58 @@ export default function StudentPortalPage() {
         <p className="text-orange-100">{data.student.academicClass?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
       </div>
 
-      {/* Navigation */}
-      <div className="overflow-x-auto pb-2">
+      {/* Mobile Menu Button */}
+      <button 
+        className="md:hidden fixed bottom-4 right-4 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg"
+        onClick={() => setMobileMenuOpen(true)}
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-72 bg-white dark:bg-gray-800 shadow-xl animate-in slide-in-from-right duration-300">
+            <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
+              <h2 className="text-lg font-semibold dark:text-white">Menu</h2>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2">
+                <X className="h-5 w-5 dark:text-gray-300" />
+              </button>
+            </div>
+            <div className="p-4 space-y-2">
+              {[
+                { id: 'overview', label: 'Overview', icon: TrendingUp },
+                { id: 'results', label: 'Results', icon: Award },
+                { id: 'courses', label: 'Courses', icon: BookOpen },
+                { id: 'assignments', label: 'Tasks', icon: FileText },
+                { id: 'attendance', label: 'Attendance', icon: Calendar },
+                { id: 'announcements', label: 'Notices', icon: Bell },
+                { id: 'exams', label: 'Exams', icon: ClipboardList },
+              ].map(item => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => { setViewMode(item.id as any); setMobileMenuOpen(false); }}
+                    className={`w-full flex items-center gap-3 p-4 rounded-lg text-left transition-colors ${
+                      viewMode === item.id 
+                        ? 'bg-blue-600 text-white' 
+                        : 'dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Navigation */}
+      <div className="hidden md:block overflow-x-auto pb-2">
         <div className="flex gap-2 min-w-max">
           {[
             { id: 'overview', label: 'Overview', icon: TrendingUp },
@@ -209,26 +260,26 @@ export default function StudentPortalPage() {
 
       {/* Overview Tab */}
       {viewMode === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Attendance</CardTitle></CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.percentage}%</div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{stats.present} of {stats.total} days</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <Card className="dark:bg-gray-800 dark:border-gray-700 p-4 sm:p-6">
+            <CardHeader className="pb-2 px-0 pt-0"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Attendance</CardTitle></CardHeader>
+            <CardContent className="px-0 pb-0">
+              <div className="text-4xl sm:text-3xl font-bold text-green-600 dark:text-green-400">{stats.percentage}%</div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{stats.present}/{stats.total} days</p>
             </CardContent>
           </Card>
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Average Score</CardTitle></CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{overallStats.average}%</div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Across {overallStats.total} exams</p>
+          <Card className="dark:bg-gray-800 dark:border-gray-700 p-4 sm:p-6">
+            <CardHeader className="pb-2 px-0 pt-0"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Average Score</CardTitle></CardHeader>
+            <CardContent className="px-0 pb-0">
+              <div className="text-4xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">{overallStats.average}%</div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{overallStats.total} exams</p>
             </CardContent>
           </Card>
-          <Card className="dark:bg-gray-800 dark:border-gray-700">
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Courses</CardTitle></CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{data.enrollments?.length || 0}</div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Enrolled classes</p>
+          <Card className="dark:bg-gray-800 dark:border-gray-700 p-4 sm:p-6">
+            <CardHeader className="pb-2 px-0 pt-0"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Courses</CardTitle></CardHeader>
+            <CardContent className="px-0 pb-0">
+              <div className="text-4xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">{data.enrollments?.length || 0}</div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enrolled</p>
             </CardContent>
           </Card>
         </div>
@@ -245,22 +296,22 @@ export default function StudentPortalPage() {
           )}
 
           {/* Overall Statistics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Average</CardTitle></CardHeader>
-              <CardContent><div className="text-2xl font-bold dark:text-white">{overallStats.average}%</div></CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <Card className="dark:bg-gray-800 dark:border-gray-700 p-3 md:p-4">
+              <CardHeader className="pb-1 md:pb-2 p-0"><CardTitle className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Average</CardTitle></CardHeader>
+              <CardContent className="p-0"><div className="text-xl md:text-2xl font-bold dark:text-white">{overallStats.average}%</div></CardContent>
             </Card>
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Highest</CardTitle></CardHeader>
-              <CardContent><div className="text-2xl font-bold text-green-600 dark:text-green-400">{overallStats.highest}%</div></CardContent>
+            <Card className="dark:bg-gray-800 dark:border-gray-700 p-3 md:p-4">
+              <CardHeader className="pb-1 md:pb-2 p-0"><CardTitle className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Highest</CardTitle></CardHeader>
+              <CardContent className="p-0"><div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">{overallStats.highest}%</div></CardContent>
             </Card>
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Lowest</CardTitle></CardHeader>
-              <CardContent><div className="text-2xl font-bold text-red-600 dark:text-red-400">{overallStats.lowest}%</div></CardContent>
+            <Card className="dark:bg-gray-800 dark:border-gray-700 p-3 md:p-4">
+              <CardHeader className="pb-1 md:pb-2 p-0"><CardTitle className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Lowest</CardTitle></CardHeader>
+              <CardContent className="p-0"><div className="text-xl md:text-2xl font-bold text-red-600 dark:text-red-400">{overallStats.lowest}%</div></CardContent>
             </Card>
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Total Exams</CardTitle></CardHeader>
-              <CardContent><div className="text-2xl font-bold dark:text-white">{overallStats.total}</div></CardContent>
+            <Card className="dark:bg-gray-800 dark:border-gray-700 p-3 md:p-4">
+              <CardHeader className="pb-1 md:pb-2 p-0"><CardTitle className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Total</CardTitle></CardHeader>
+              <CardContent className="p-0"><div className="text-xl md:text-2xl font-bold dark:text-white">{overallStats.total}</div></CardContent>
             </Card>
           </div>
 

@@ -83,7 +83,7 @@ export default function ParentNav({
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = viewMode === item.id;
@@ -92,15 +92,15 @@ export default function ParentNav({
           <button
             key={item.id}
             onClick={() => handleClick(item.id)}
-            className={`p-3 rounded-xl text-left transition-all min-h-[60px] ${getColorClasses(item.color, isActive)}`}
+            className={`p-3 md:p-4 rounded-xl text-left transition-all min-h-[60px] md:min-h-[70px] ${getColorClasses(item.color, isActive)}`}
           >
             <div className="flex items-center gap-2">
-              <div className={`p-1.5 rounded-lg ${getBgColor(item.color)}`}>
-                <Icon className={`h-4 w-4 ${getBadgeColor(item.color)}`} />
+              <div className={`p-1.5 md:p-2 rounded-lg ${getBgColor(item.color)}`}>
+                <Icon className={`h-4 w-4 md:h-5 md:w-5 ${getBadgeColor(item.color)}`} />
               </div>
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{item.label}</p>
-                <p className={`text-sm font-bold ${getBadgeColor(item.color)}`}>
+                <p className={`text-sm md:text-base font-bold ${getBadgeColor(item.color)}`}>
                   {item.isPercentage ? `${item.badge}%` : item.badge !== null ? item.badge : ''}
                 </p>
               </div>

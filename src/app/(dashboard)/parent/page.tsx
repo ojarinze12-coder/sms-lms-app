@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, Menu, X, TrendingUp, CreditCard, Calendar, Bell, FileText, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +44,7 @@ export default function ParentPortalPage() {
   const [linkSuccess, setLinkSuccess] = useState('');
   const [studentId, setStudentId] = useState('');
   const [relationship, setRelationship] = useState('GUARDIAN');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadPortalData();
@@ -287,16 +288,77 @@ export default function ParentPortalPage() {
         onSubmit={handleLinkStudent}
       />
 
-      {/* Navigation */}
-      <ParentNav
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        feeStats={feeStats}
-        attendanceStats={attendanceStats}
-        announcementsCount={data.announcements.length}
-        resultsCount={data.results.length}
-        reportCardsCount={data.reportCards.length}
-      />
+      {/* Mobile Menu Button */}
+      <button 
+        className="md:hidden fixed bottom-4 right-4 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg"
+        onClick={() => setMobileMenuOpen(true)}
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-72 bg-white dark:bg-gray-800 shadow-xl animate-in slide-in-from-right duration-300">
+            <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
+              <h2 className="text-lg font-semibold dark:text-white">Menu</h2>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2">
+                <X className="h-5 w-5 dark:text-gray-300" />
+              </button>
+            </div>
+            <div className="p-4 space-y-2">
+              {[
+                { id: 'overview', label: 'Overview', icon: TrendingUp },
+                { id: 'fees', label: 'Fees', icon: CreditCard, badge: feeStats.pending },
+                { id: 'attendance', label: 'Attendance', icon: Calendar, badge: attendanceStats.percentage, isPercentage: true },
+                { id: 'announcements', label: 'Notices', icon: Bell, badge: data.announcements.length },
+                { id: 'results', label: 'Results', icon: FileText, badge: data.results.length },
+                { id: 'report-cards', label: 'Report Cards', icon: Award, badge: data.reportCards.length },
+              ].map(item => {
+                const Icon = item.icon;
+                const isPercentage = (item as any).isPercentage;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => { setViewMode(item.id as any); setMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between p-4 rounded-lg text-left transition-colors ${
+                      viewMode === item.id 
+                        ? 'bg-blue-600 text-white' 
+                        : 'dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-5 w-5" />
+                      <span className="font-medium">{item.label}</span>
+                    </div>
+                    {(item as any).badge !== undefined && (
+                      <span className={`text-sm font-bold ${
+                        viewMode === item.id ? 'text-blue-100' : 'text-blue-600 dark:text-blue-400'
+                      }`}>
+                        {isPercentage ? `${(item as any).badge}%` : (item as any).badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Navigation */}
+      <div className="hidden md:block">
+        <ParentNav
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          feeStats={feeStats}
+          attendanceStats={attendanceStats}
+          announcementsCount={data.announcements.length}
+          resultsCount={data.results.length}
+          reportCardsCount={data.reportCards.length}
+        />
+      </div>
 
       {/* Tab Content */}
       {viewMode === 'overview' && (
