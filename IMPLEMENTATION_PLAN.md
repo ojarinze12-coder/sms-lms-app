@@ -612,3 +612,98 @@ promotionAutoEnroll      Boolean    @default(true)
 
 ## Date Updated
 April 17, 2026
+
+---
+
+## 26. Mobile Portal Responsiveness Improvements
+
+### Features Implemented
+
+| Component | Improvement | Files Modified |
+|-----------|-------------|----------------|
+| Container Padding | Responsive padding (p-3 md:p-4) | student/page.tsx, parent/page.tsx |
+| Header Text | Smaller on mobile (text-lg md:text-2xl) | student/page.tsx |
+| Overview Cards | Larger mobile text, better spacing | student/page.tsx, OverviewTab.tsx |
+| Results Stats | Responsive padding and text sizes | student/page.tsx |
+| Touch Targets | 48px minimum height for buttons | apply/page.tsx |
+| ParentNav | Enhanced spacing on desktop | ParentNav.tsx |
+
+### Changes Summary
+
+#### Student Portal (`src/app/(dashboard)/student/page.tsx`)
+- Reduced container padding on mobile (p-3 vs p-4)
+- Header text responsive (text-lg md:text-2xl)
+- Overview cards: larger mobile numbers (text-4xl sm:text-3xl)
+- Results statistics cards: responsive padding and text
+- Removed min-width constraints from tables to prevent horizontal scroll
+
+#### Parent Portal (`src/app/(dashboard)/parent/page.tsx`)
+- Container: p-2 md:p-0 (smaller on mobile)
+- Header: p-4 md:p-6 (reduced on mobile)
+- Added mobile menu button (hamburger) - see defer item below
+- Table min-width removed
+
+#### Components Updated
+- `src/components/parent/OverviewTab.tsx` - Card spacing, button heights (h-11)
+- `src/components/parent/ParentNav.tsx` - Responsive grid and padding
+- `src/app/apply/page.tsx` - Touch targets (h-12) for submit/payment buttons
+
+### Status
+✅ Completed - Mobile responsive improvements working
+
+---
+
+## 27. Hamburger Menu for Mobile Portals (DEFERRED)
+
+### Attempted Implementation
+Added hamburger menu button with slide-out drawer for Student and Parent portals on mobile.
+
+### Files Modified
+- `src/app/(dashboard)/student/page.tsx`
+- `src/app/(dashboard)/parent/page.tsx`
+
+### Implementation Details
+```tsx
+// Mobile Menu Button - bottom-left with high z-index
+<button className="fixed bottom-4 left-4 z-[60] bg-blue-600 ...">
+  <Menu className="h-7 w-7" />
+</button>
+
+// Drawer with animation
+<div className="animate-in slide-in-from-right duration-300">
+  // Navigation items
+</div>
+```
+
+### Issue Encountered
+Hamburger button did not render on Android 13 Chrome browser. Possible causes:
+1. React rendering order on mobile
+2. Theme/provider context issues
+3. Device-specific CSS handling
+4. AIChatWidget overlap (attempted fix: moved to bottom-left)
+5. CSS specificity issues with md:hidden breakpoint
+
+### Attempted Fixes
+1. Moved button from bottom-right to bottom-left
+2. Increased z-index to z-[60]
+3. Added explicit inline styles
+4. Made drawer work without md:hidden conditional
+
+### Status
+⚠️ DEFERRED - Not working on mobile device, needs further investigation
+
+### Future Improvements to Try
+1. Use React Portal to render menu at document.body level
+2. Add hamburger to main layout instead of page-level
+3. Try different Tailwind breakpoints (sm: instead of md:)
+4. Use actual device debugging via Chrome Remote Debugging
+5. Test with different z-index values
+6. Try CSS-only approach with :before/:after pseudo-elements
+
+### Note
+Current implementation shows tabs directly on mobile (horizontal scroll) which works fine. Hamburger menu was an enhancement attempt that didn't render properly.
+
+---
+
+## Date Updated
+April 30, 2026
