@@ -139,6 +139,7 @@ export default function ClassesPage() {
   }, []);
 
   useEffect(() => {
+    console.log('[CLASSES] Year or Branch changed - loading:', { selectedYearId, selectedBranch: selectedBranch?.name });
     if (selectedYearId) {
       loadClasses(selectedYearId);
     }

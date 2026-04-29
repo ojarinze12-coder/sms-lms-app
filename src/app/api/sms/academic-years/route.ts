@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = { tenantId };
     if (branchId) {
+      // Include years for this branch OR global years (no branch assigned)
       whereClause.OR = [
         { branchId },
         { branchId: null },
