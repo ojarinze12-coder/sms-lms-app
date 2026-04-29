@@ -290,8 +290,9 @@ export default function ParentPortalPage() {
 
       {/* Mobile Menu Button */}
       <button 
-        className="md:hidden fixed bottom-4 right-4 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg"
+        className="md:hidden fixed bottom-4 left-4 z-[60] bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform active:scale-95"
         onClick={() => setMobileMenuOpen(true)}
+        aria-label="Open menu"
       >
         <Menu className="h-6 w-6" />
       </button>
