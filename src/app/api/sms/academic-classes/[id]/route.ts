@@ -139,7 +139,7 @@ export async function PUT(
         if (newSubjects.length > 0) {
           const subjectRecords = newSubjects.map(s => ({
             name: s.name,
-            code: s.code,
+            code: `${s.code}_${id.substring(0, 8)}`,  // Unique code per class
             academicClassId: id,
             tenantId: authUser.tenantId,
             curriculum: curriculum,
