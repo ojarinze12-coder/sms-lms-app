@@ -177,17 +177,18 @@ export default function StudentPortalPage() {
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-4 md:space-y-6 p-3 md:p-4">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-6 text-white">
-        <h1 className="text-xl md:text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
-        <p className="text-orange-100">{data.student.academicClass?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-4 md:p-6 text-white">
+        <h1 className="text-lg md:text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
+        <p className="text-orange-100 text-sm">{data.student.academicClass?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
       </div>
 
       {/* Mobile Menu Button */}
       <button 
-        className="md:hidden fixed bottom-4 right-4 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg"
+        className="md:hidden fixed bottom-4 right-4 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform active:scale-95"
         onClick={() => setMobileMenuOpen(true)}
+        aria-label="Open menu"
       >
         <Menu className="h-6 w-6" />
       </button>
