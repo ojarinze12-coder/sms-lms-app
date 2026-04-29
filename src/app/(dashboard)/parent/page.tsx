@@ -288,15 +288,16 @@ export default function ParentPortalPage() {
         onSubmit={handleLinkStudent}
       />
 
-      {/* Mobile Menu Button - Always visible on mobile for testing */}
-      <button 
-        className="fixed bottom-4 left-4 z-[60] bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-xl hover:bg-blue-700 transition-all active:scale-95 md:hidden"
-        onClick={() => setMobileMenuOpen(true)}
-        aria-label="Open menu"
-        style={{ boxShadow: '0 4px 20px rgba(37, 99, 235, 0.4)' }}
-      >
-        <Menu className="h-7 w-7" />
-      </button>
+      {/* Mobile Menu Button - Debug: forced display */}
+      <div className="md:hidden" style={{ position: 'fixed', bottom: '16px', left: '16px', zIndex: 9999 }}>
+        <button 
+          className="bg-blue-600 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-xl active:scale-95"
+          onClick={() => { console.log('Menu clicked'); setMobileMenuOpen(true); }}
+          aria-label="Open menu"
+        >
+          <Menu className="h-7 w-7" />
+        </button>
+      </div>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
