@@ -432,7 +432,7 @@ function ApplicationForm() {
                       <p className="text-red-700 dark:text-red-400 text-sm">{trackingError}</p>
                     </div>
                   )}
-                  <Button type="submit" disabled={trackingLoading} className="w-full" style={{ backgroundColor: brandColor }}>
+                  <Button type="submit" disabled={trackingLoading} className="w-full h-12" style={{ backgroundColor: brandColor }}>
                     {trackingLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Check Status
                   </Button>
@@ -600,7 +600,7 @@ function ApplicationForm() {
                 <Button 
                   onClick={handlePayment} 
                   disabled={paying}
-                  className="w-full mb-3"
+                  className="w-full h-12 mb-3"
                   size="lg"
                 >
                   {paying ? (
@@ -884,7 +884,7 @@ function ApplicationForm() {
           </Card>
 
           <div className="text-center">
-            <Button type="submit" disabled={submitting} className="px-8" style={{ backgroundColor: brandColor }}>
+            <Button type="submit" disabled={submitting} className="w-full md:w-auto px-8 h-12" style={{ backgroundColor: brandColor }}>
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

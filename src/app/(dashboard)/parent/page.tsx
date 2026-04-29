@@ -331,7 +331,7 @@ export default function ParentPortalPage() {
               <p className="text-gray-500 dark:text-gray-400 text-center py-8">No exam results found</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[500px]">
+                <table className="w-full">
                   <thead className="border-b dark:border-gray-700">
                     <tr>
                       <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Exam</th>
@@ -375,7 +375,7 @@ export default function ParentPortalPage() {
               <p className="text-gray-500 dark:text-gray-400 text-center py-8">No report cards found</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[400px]">
+                <table className="w-full">
                   <thead className="border-b dark:border-gray-700">
                     <tr>
                       <th className="text-left py-3 px-2 whitespace-nowrap dark:text-gray-300">Term</th>

@@ -179,7 +179,7 @@ export default function StudentPortalPage() {
     <div className="space-y-6 p-4">
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
+        <h1 className="text-xl md:text-2xl font-bold">Welcome, {data.student.firstName}!</h1>
         <p className="text-orange-100">{data.student.academicClass?.name || 'Student Portal'} | ID: {data.student.studentId}</p>
       </div>
 
@@ -298,7 +298,7 @@ export default function StudentPortalPage() {
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[500px]">
+                  <table className="w-full">
                     <thead className="border-b dark:border-gray-700">
                       <tr>
                         <th className="text-left py-2 px-2 text-sm dark:text-gray-300">Exam</th>
