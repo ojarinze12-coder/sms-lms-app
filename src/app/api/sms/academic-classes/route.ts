@@ -33,10 +33,12 @@ export async function GET(request: NextRequest) {
       where.tierId = tierId;
     }
 
-    // Branch filtering disabled temporarily - was causing 500 errors
-    // if (branchId) {
-    //   where.branchId = { in: [branchId, null] };
-    // }
+    if (branchId) {
+      where.OR = [
+        { branchId },
+        { branchId: null },
+      ];
+    }
 
     const classes = await prisma.academicClass.findMany({
       where,
