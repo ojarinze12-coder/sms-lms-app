@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const branchId = request.nextUrl.searchParams.get('branchId');
 
   try {
-    console.log('[CLASSES] Fetching for tenant:', authUser.tenantId, 'tierId:', tierId);
+    console.log('[CLASSES] Fetching for tenant:', authUser.tenantId, 'tierId:', tierId, 'branchId:', branchId);
     
     let where: any = {};
     
@@ -34,7 +34,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (branchId) {
-      where.branchId = { in: [branchId, null] };
+      // Include classes for this branch OR global classes (no branch assigned)
+      where.OR = [
+        { branchId },
+        { branchId: null },
+      ];
     }
 
     const classes = await prisma.academicClass.findMany({
