@@ -647,6 +647,7 @@ export default function SettingsPage() {
           <TabsTrigger value="branches">Branches</TabsTrigger>
           <TabsTrigger value="transfers">Transfers</TabsTrigger>
           <TabsTrigger value="promotions">Promotions</TabsTrigger>
+          <TabsTrigger value="communications">Communications</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -1579,8 +1580,9 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Communication Settings */}
+        <TabsContent value="communications">
           <Card>
             <CardHeader>
               <CardTitle>Communication Settings</CardTitle>
