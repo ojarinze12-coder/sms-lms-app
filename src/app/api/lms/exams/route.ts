@@ -62,19 +62,20 @@ export async function GET(request: NextRequest) {
     }
 
     // HOD: Exams for all subjects in their department
-    const teacherRecord = await prisma.teacher.findFirst({
-      where: { userId: authUser.userId },
-      include: { 
-        department: { 
-          include: { subjects: { select: { id: true } } }
-        } 
-      }
-    });
-    
-    if (teacherRecord?.position === 'HOD' && teacherRecord.department?.subjects) {
-      subjectIdFilter = teacherRecord.department.subjects.map(s => s.id);
-      if (subjectIdFilter.length === 0) {
-        return NextResponse.json([]);
+    if (authUser.role === 'HOD') {
+      const teacherRecord = await prisma.teacher.findFirst({
+        where: { userId: authUser.userId },
+      });
+      
+      if (teacherRecord?.departmentId) {
+        const deptSubjects = await prisma.subject.findMany({
+          where: { departmentId: teacherRecord.departmentId },
+          select: { id: true }
+        });
+        subjectIdFilter = deptSubjects.map(s => s.id);
+        if (subjectIdFilter.length === 0) {
+          return NextResponse.json([]);
+        }
       }
     }
 

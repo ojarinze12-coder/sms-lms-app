@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
           where: { position: 'HOD' },
           select: { id: true, firstName: true, lastName: true, userId: true }
         },
+        _count: { select: { subjects: true, academicClasses: true } }
       },
       orderBy: { name: 'asc' },
     });
