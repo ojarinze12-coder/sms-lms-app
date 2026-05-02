@@ -181,8 +181,9 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         term: true,
-        subject: true,
-        _count: { select: { questions: true } }
+        subject: { include: { teacher: { select: { userId: true, firstName: true, lastName: true } } } },
+        _count: { select: { questions: true } },
+        createdBy: { select: { firstName: true, lastName: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
