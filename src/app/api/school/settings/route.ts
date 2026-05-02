@@ -24,7 +24,7 @@ export async function GET() {
       where: { tenantId },
     });
 
-    return NextResponse.json({
+return NextResponse.json({
       settings: {
         schoolName: tenant?.name || '',
         email: config?.smtpFromEmail || '',
@@ -46,9 +46,38 @@ export async function GET() {
         requireFeesPaidForStaffTransfer: settings?.requireFeesPaidForStaffTransfer ?? false,
         transferNotificationsEmail: settings?.transferNotificationsEmail || '',
         promotionEnabled: settings?.promotionEnabled ?? true,
-        promotionRequireFeesPaid: settings?.promotionRequireFeesPaid ?? true,
         promotionMinAttendance: settings?.promotionMinAttendance ?? 75,
         promotionAutoEnroll: settings?.promotionAutoEnroll ?? true,
+        
+        // SMTP Settings
+        smtpHost: config?.smtpHost || '',
+        smtpPort: config?.smtpPort || 587,
+        smtpUser: config?.smtpUser || '',
+        smtpFromName: config?.smtpFromName || '',
+        smtpSecure: config?.smtpSecure ?? true,
+        
+        // SMS Settings
+        smsProvider: config?.smsProvider || '',
+        smsSenderId: config?.smsSenderId || '',
+        smsEnvironment: config?.smsEnvironment || '',
+        
+        // WhatsApp Settings
+        whatsappEnabled: config?.whatsappEnabled ?? false,
+        whatsappApiUrl: config?.whatsappApiUrl || '',
+        whatsappPhoneId: config?.whatsappPhoneId || '',
+        
+        // Exam Workflow Settings
+        examRequiresHodReview: settings?.examRequiresHodReview ?? false,
+        examNotifyInApp: settings?.examNotifyInApp ?? true,
+        examNotifyEmail: settings?.examNotifyEmail ?? false,
+        examNotifySms: settings?.examNotifySms ?? false,
+        examNotifyWhatsapp: settings?.examNotifyWhatsapp ?? false,
+        examResultsRequirePublish: settings?.examResultsRequirePublish ?? true,
+        
+        // Bulk Communication
+        bulkEmailEnabled: settings?.bulkEmailEnabled ?? true,
+        bulkSmsEnabled: settings?.bulkSmsEnabled ?? true,
+        bulkWhatsappEnabled: settings?.bulkWhatsappEnabled ?? true,
       },
     });
   } catch (error) {
@@ -77,7 +106,14 @@ export async function PUT(req: NextRequest) {
     const tenantId = authUser.tenantId;
     const body = await req.json();
     console.log('[Settings PUT] Body keys:', Object.keys(body));
-    const { schoolName, email, phone, address, timezone, dateFormat, gradingScale, currency, brandColor, logo, themeMode, aiEnabled, openRouterApiKey, openRouterModel } = body;
+    const { schoolName, email, phone, address, timezone, dateFormat, gradingScale, currency, brandColor, logo, themeMode, aiEnabled, openRouterApiKey, openRouterModel, 
+    // Communication settings
+    smtpHost, smtpPort, smtpUser, smtpPassword, smtpFromName, smtpFromEmail, smtpSecure,
+    smsProvider, smsApiKey, smsSenderId, smsEnvironment,
+    whatsappEnabled, whatsappApiUrl, whatsappApiToken, whatsappPhoneId,
+    examRequiresHodReview, examNotifyInApp, examNotifyEmail, examNotifySms, examNotifyWhatsapp, examResultsRequirePublish,
+    bulkEmailEnabled, bulkSmsEnabled, bulkWhatsappEnabled,
+    } = body;
 
     await prisma.tenant.update({
       where: { id: tenantId },
@@ -91,6 +127,21 @@ export async function PUT(req: NextRequest) {
         timezone,
         dateFormat,
         currency,
+        smtpHost,
+        smtpPort,
+        smtpUser,
+        smtpPassword,
+        smtpFromName,
+        smtpFromEmail,
+        smtpSecure: smtpSecure ?? true,
+        smsProvider,
+        smsApiKey,
+        smsSenderId,
+        smsEnvironment,
+        whatsappEnabled,
+        whatsappApiUrl,
+        whatsappApiToken,
+        whatsappPhoneId,
       },
       create: {
         tenantId,
@@ -98,6 +149,21 @@ export async function PUT(req: NextRequest) {
         timezone,
         dateFormat,
         currency,
+        smtpHost,
+        smtpPort,
+        smtpUser,
+        smtpPassword,
+        smtpFromName,
+        smtpFromEmail,
+        smtpSecure: smtpSecure ?? true,
+        smsProvider,
+        smsApiKey,
+        smsSenderId,
+        smsEnvironment,
+        whatsappEnabled,
+        whatsappApiUrl,
+        whatsappApiToken,
+        whatsappPhoneId,
       },
     });
 
@@ -120,6 +186,17 @@ export async function PUT(req: NextRequest) {
         promotionRequireFeesPaid: body.promotionRequireFeesPaid ?? true,
         promotionMinAttendance,
         promotionAutoEnroll: body.promotionAutoEnroll ?? true,
+        // Exam workflow settings
+        examRequiresHodReview: examRequiresHodReview ?? false,
+        examNotifyInApp: examNotifyInApp ?? true,
+        examNotifyEmail: examNotifyEmail ?? false,
+        examNotifySms: examNotifySms ?? false,
+        examNotifyWhatsapp: examNotifyWhatsapp ?? false,
+        examResultsRequirePublish: examResultsRequirePublish ?? true,
+        // Bulk communication
+        bulkEmailEnabled: bulkEmailEnabled ?? true,
+        bulkSmsEnabled: bulkSmsEnabled ?? true,
+        bulkWhatsappEnabled: bulkWhatsappEnabled ?? true,
       },
       create: {
         tenantId,
@@ -137,6 +214,17 @@ export async function PUT(req: NextRequest) {
         promotionRequireFeesPaid: body.promotionRequireFeesPaid ?? true,
         promotionMinAttendance,
         promotionAutoEnroll: body.promotionAutoEnroll ?? true,
+        // Exam workflow settings
+        examRequiresHodReview: examRequiresHodReview ?? false,
+        examNotifyInApp: examNotifyInApp ?? true,
+        examNotifyEmail: examNotifyEmail ?? false,
+        examNotifySms: examNotifySms ?? false,
+        examNotifyWhatsapp: examNotifyWhatsapp ?? false,
+        examResultsRequirePublish: examResultsRequirePublish ?? true,
+        // Bulk communication
+        bulkEmailEnabled: bulkEmailEnabled ?? true,
+        bulkSmsEnabled: bulkSmsEnabled ?? true,
+        bulkWhatsappEnabled: bulkWhatsappEnabled ?? true,
       },
     });
 

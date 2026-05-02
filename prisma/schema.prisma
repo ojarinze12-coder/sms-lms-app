@@ -607,6 +607,7 @@ model TenantSettings {
   examNotifyInApp            Boolean    @default(true)
   examNotifyEmail           Boolean    @default(false)
   examNotifySms            Boolean    @default(false)
+  examNotifyWhatsapp        Boolean    @default(false)
   examResultsRequirePublish Boolean @default(true)
   
   themeMode                   String     @default("SYSTEM") // LIGHT, DARK, SYSTEM
@@ -1507,6 +1508,20 @@ model TenantConfig {
   smtpPassword         String?
   smtpFromName         String?
   smtpFromEmail        String?
+  smtpSecure          Boolean   @default(true)
+  
+  // SMS Providers (Nigerian-focused)
+  smsProvider         String?   // 'BETACODE', 'SMARTSMS', 'TWISTED', 'TERMII'
+  smsApiKey           String?
+  smsSenderId         String?   // Sender ID (e.g., "EDUSCH")
+  smsEnvironment     String?   // 'DEMO', 'LIVE'
+  
+  // WhatsApp
+  whatsappEnabled    Boolean   @default(false)
+  whatsappApiUrl    String?
+  whatsappApiToken  String?
+  whatsappPhoneId   String?
+  
   studentPortalEnabled Boolean   @default(true)
   parentPortalEnabled  Boolean   @default(true)
   mobileAppEnabled     Boolean   @default(false)
