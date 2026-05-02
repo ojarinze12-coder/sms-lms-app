@@ -199,6 +199,70 @@ if (res.ok) {
     }
   };
 
+  const handleApplyDefaults = async () => {
+    if (!selectedTierId) return;
+    
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await authFetch('/api/sms/departments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applyDefaults: true,
+          tierId: selectedTierId,
+          branchId: selectedBranch?.id || null,
+        }),
+      });
+
+      if (res.ok) {
+        setShowDefaultsModal(false);
+        loadDepartments(selectedTierId);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to create default departments');
+      }
+    } catch {
+      setError('An error occurred');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTierId) return;
+    
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await authFetch('/api/sms/departments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          code: formData.code,
+          alias: formData.alias || null,
+          tierId: selectedTierId,
+          branchId: selectedBranch?.id || null,
+        }),
+      });
+
+      if (res.ok) {
+        setShowModal(false);
+        setFormData({ name: '', code: '', alias: '', tierId: '' });
+        loadDepartments(selectedTierId);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to create department');
+      }
+    } catch {
+      setError('An error occurred');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const selectedTier = tiers.find(t => t.id === selectedTierId);
   const isSSSTier = selectedTier?.code === 'SSS';
 
