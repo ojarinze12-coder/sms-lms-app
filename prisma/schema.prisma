@@ -601,6 +601,14 @@ model TenantSettings {
   regulatoryReportsEnabled    Boolean    @default(true)
   reportsEnabled              Boolean    @default(true)
   virtualClassEnabled         Boolean    @default(true)
+  
+  // Exam workflow settings
+  examRequiresHodReview      Boolean    @default(false)
+  examNotifyInApp            Boolean    @default(true)
+  examNotifyEmail           Boolean    @default(false)
+  examNotifySms            Boolean    @default(false)
+  examResultsRequirePublish Boolean @default(true)
+  
   themeMode                   String     @default("SYSTEM") // LIGHT, DARK, SYSTEM
   enableClassSections         Boolean    @default(false)
   defaultSectionNaming        String     @default("A,B,C")
@@ -794,15 +802,21 @@ model Exam {
   title           String
   description    String?
   status          String?         @default("DRAFT")
+  reviewStatus   String?         @default("NOT_SUBMITTED") // NOT_SUBMITTED, PENDING_REVIEW, APPROVED, REJECTED
+  reviewComment String?
   duration        Int?            @default(60)
   startTime       DateTime?       @db.Timestamptz(6)
   endTime         DateTime?       @db.Timestamptz(6)
   termId          String?         @db.Uuid
   subjectId      String?          @db.Uuid
   academicClassId String?        @db.Uuid
-  createdById    String?          @db.Uuid
+  createdById    String?         @db.Uuid
   createdAt       DateTime?       @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime?       @default(now()) @updatedAt @db.Timestamptz(6)
+  reviewSubmittedAt DateTime?    @db.Timestamptz(6)
+  reviewedAt      DateTime?       @db.Timestamptz(6)
+  reviewedBy     String?        @db.Uuid
+  resultsPublishedAt DateTime? @db.Timestamptz(6)
   examType        ExamType        @default(MID_TERM)
   tenantId        String?         @db.Uuid
   subject         Subject?        @relation(fields: [subjectId], references: [id])

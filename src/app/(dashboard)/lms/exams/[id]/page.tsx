@@ -18,7 +18,10 @@ import {
   Edit,
   Upload,
   Trash2,
-  Plus
+  Plus,
+  Send,
+  Check,
+  X
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -41,6 +44,13 @@ const statusColors: Record<string, string> = {
   IN_PROGRESS: 'warning',
   COMPLETED: 'info',
   CANCELLED: 'destructive',
+};
+
+const reviewStatusColors: Record<string, string> = {
+  NOT_SUBMITTED: 'secondary',
+  PENDING_REVIEW: 'warning',
+  APPROVED: 'success',
+  REJECTED: 'destructive',
 };
 
 export default function ExamDetailPage() {
@@ -80,6 +90,37 @@ export default function ExamDetailPage() {
       toast({
         title: 'Success',
         description: 'Exam published successfully',
+      });
+      loadExam();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitForReview = async () => {
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/lms/exams/${examId}/submit-review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error);
+      }
+      
+      toast({
+        title: data.autoApproved ? 'Published' : 'Submitted for Review',
+        description: data.autoApproved 
+          ? 'Exam is now live' 
+          : 'Awaiting HOD approval',
       });
       loadExam();
     } catch (error: any) {
@@ -175,6 +216,13 @@ export default function ExamDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight">{exam.title}</h1>
             <Badge variant={statusColors[exam.status] as any}>{exam.status}</Badge>
+            {exam.reviewStatus && exam.reviewStatus !== 'NOT_SUBMITTED' && (
+              <Badge variant={reviewStatusColors[exam.reviewStatus] as any}>
+                {exam.reviewStatus === 'PENDING_REVIEW' && 'Pending Review'}
+                {exam.reviewStatus === 'APPROVED' && 'Approved'}
+                {exam.reviewStatus === 'REJECTED' && 'Rejected'}
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground">
             {exam.subject?.name} • {exam.term?.name}
@@ -187,6 +235,12 @@ export default function ExamDetailPage() {
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
+              {(exam.reviewStatus === 'NOT_SUBMITTED' || exam.reviewStatus === 'REJECTED') && (
+                <Button onClick={handleSubmitForReview} disabled={submitting || (exam.questions?.length || 0) === 0}>
+                  <Send className="mr-2 h-4 w-4" />
+                  Submit for Review
+                </Button>
+              )}
               <Button onClick={handlePublish} disabled={submitting || (exam.questions?.length || 0) === 0}>
                 <Upload className="mr-2 h-4 w-4" />
                 Publish

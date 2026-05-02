@@ -39,6 +39,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }
     }
 
+    // Check if exam needs review first
+    if (exam.reviewStatus === 'PENDING_REVIEW') {
+      return NextResponse.json({ 
+        error: 'Exam is pending HOD review. Please wait for approval.' 
+      }, { status: 400 });
+    }
+
+    if (exam.reviewStatus === 'REJECTED') {
+      return NextResponse.json({ 
+        error: 'Exam was rejected. Please revise and submit again.' 
+      }, { status: 400 });
+    }
+
     if (exam.status !== 'DRAFT') {
       return NextResponse.json({ error: 'Only draft exams can be published' }, { status: 400 });
     }
@@ -63,9 +76,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }, { status: 400 });
     }
 
+    // Check if HOD review is required but not done
+    const settings = await prisma.tenantSettings.findUnique({
+      where: { tenantId: authUser.tenantId }
+    });
+
+    if (settings?.examRequiresHodReview && !['APPROVED', 'NOT_SUBMITTED'].includes(exam.reviewStatus || '')) {
+      return NextResponse.json({ 
+        error: 'This school requires HOD review before publishing exams.' 
+      }, { status: 400 });
+    }
+
     const updatedExam = await prisma.exam.update({
       where: { id },
-      data: { status: 'PUBLISHED' }
+      data: { 
+        status: 'PUBLISHED',
+        reviewStatus: exam.reviewStatus === 'NOT_SUBMITTED' ? 'APPROVED' : exam.reviewStatus,
+      }
     });
 
     return NextResponse.json(updatedExam);

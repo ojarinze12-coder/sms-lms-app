@@ -4,6 +4,8 @@ export interface Exam {
   description?: string;
   examType: 'QUIZ' | 'MID_TERM' | 'END_TERM' | 'ASSIGNMENT' | 'PRACTICE' | 'WAEC' | 'NECO' | 'BECE' | 'JAMB_UTME' | 'MOCK';
   status: 'DRAFT' | 'PUBLISHED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  reviewStatus?: 'NOT_SUBMITTED' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  reviewComment?: string;
   duration: number;
   startTime?: string;
   endTime?: string;
@@ -12,6 +14,9 @@ export interface Exam {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  reviewSubmittedAt?: string;
+  reviewedAt?: string;
+  resultsPublishedAt?: string;
   term?: Term;
   subject?: Subject;
   createdBy?: User;

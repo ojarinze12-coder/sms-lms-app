@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const termId = searchParams.get('termId');
     const subjectId = searchParams.get('subjectId');
     const status = searchParams.get('status');
+    const reviewStatus = searchParams.get('reviewStatus');
     const search = searchParams.get('search');
 
     const now = new Date();
@@ -141,6 +142,35 @@ export async function GET(request: NextRequest) {
       ];
     } else if (status) {
       where.status = status;
+    }
+
+    // Filter by review status (for teachers/HOD)
+    if (reviewStatus && ['TEACHER', 'HOD', 'ADMIN', 'PRINCIPAL'].includes(authUser.role)) {
+      where.reviewStatus = reviewStatus;
+    }
+
+    // Teachers see their own subjects' exams + approved/published
+    if (authUser.role === 'TEACHER' && !reviewStatus) {
+      where.OR = [
+        { reviewStatus: 'APPROVED' },
+        { reviewStatus: 'PUBLISHED' },
+        { createdById: authUser.userId }
+      ];
+    }
+
+    // HOD sees pending review exams in their department
+    if (authUser.role === 'HOD') {
+      const teacher = await prisma.teacher.findFirst({
+        where: { userId: authUser.userId },
+        include: { department: { include: { subjects: { select: { id: true } } } } }
+      });
+      
+      if (teacher?.department?.subjects) {
+        const deptSubjectIds = teacher.department.subjects.map(s => s.id);
+        where.AND = [
+          { subjectId: { in: deptSubjectIds } }
+        ];
+      }
     }
 
     if (termId) where.termId = termId;
