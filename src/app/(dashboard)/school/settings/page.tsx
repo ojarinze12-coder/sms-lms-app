@@ -69,6 +69,37 @@ interface PromotionSettings {
   promotionAutoEnroll: boolean;
 }
 
+interface CommunicationSettings {
+  // SMTP
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword?: string;
+  smtpFromName: string;
+  smtpSecure: boolean;
+  // SMS
+  smsProvider: string;
+  smsApiKey?: string;
+  smsSenderId: string;
+  smsEnvironment: string;
+  // WhatsApp
+  whatsappEnabled: boolean;
+  whatsappApiUrl: string;
+  whatsappApiToken?: string;
+  whatsappPhoneId: string;
+  // Exam notifications
+  examRequiresHodReview: boolean;
+  examNotifyInApp: boolean;
+  examNotifyEmail: boolean;
+  examNotifySms: boolean;
+  examNotifyWhatsapp: boolean;
+  examResultsRequirePublish: boolean;
+  // Bulk
+  bulkEmailEnabled: boolean;
+  bulkSmsEnabled: boolean;
+  bulkWhatsappEnabled: boolean;
+}
+
 interface Branch {
   id: string;
   name: string;
@@ -128,6 +159,31 @@ export default function SettingsPage() {
     promotionMinAttendance: 75,
     promotionAutoEnroll: true,
   });
+  const [commSettings, setCommSettings] = useState<CommunicationSettings>({
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUser: '',
+    smtpPassword: '',
+    smtpFromName: '',
+    smtpSecure: true,
+    smsProvider: '',
+    smsApiKey: '',
+    smsSenderId: '',
+    smsEnvironment: '',
+    whatsappEnabled: false,
+    whatsappApiUrl: '',
+    whatsappApiToken: '',
+    whatsappPhoneId: '',
+    examRequiresHodReview: false,
+    examNotifyInApp: true,
+    examNotifyEmail: false,
+    examNotifySms: false,
+    examNotifyWhatsapp: false,
+    examResultsRequirePublish: true,
+    bulkEmailEnabled: true,
+    bulkSmsEnabled: true,
+    bulkWhatsappEnabled: true,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -185,6 +241,32 @@ export default function SettingsPage() {
             promotionRequireFeesPaid: data.settings.promotionRequireFeesPaid ?? true,
             promotionMinAttendance: data.settings.promotionMinAttendance ?? 75,
             promotionAutoEnroll: data.settings.promotionAutoEnroll ?? true,
+          });
+          // Communication settings
+          setCommSettings({
+            smtpHost: data.settings.smtpHost || '',
+            smtpPort: data.settings.smtpPort || 587,
+            smtpUser: data.settings.smtpUser || '',
+            smtpPassword: '', // Don't expose passwords
+            smtpFromName: data.settings.smtpFromName || '',
+            smtpSecure: data.settings.smtpSecure ?? true,
+            smsProvider: data.settings.smsProvider || '',
+            smsApiKey: '', // Don't expose passwords
+            smsSenderId: data.settings.smsSenderId || '',
+            smsEnvironment: data.settings.smsEnvironment || '',
+            whatsappEnabled: data.settings.whatsappEnabled ?? false,
+            whatsappApiUrl: data.settings.whatsappApiUrl || '',
+            whatsappApiToken: '', // Don't expose passwords
+            whatsappPhoneId: data.settings.whatsappPhoneId || '',
+            examRequiresHodReview: data.settings.examRequiresHodReview ?? false,
+            examNotifyInApp: data.settings.examNotifyInApp ?? true,
+            examNotifyEmail: data.settings.examNotifyEmail ?? false,
+            examNotifySms: data.settings.examNotifySms ?? false,
+            examNotifyWhatsapp: data.settings.examNotifyWhatsapp ?? false,
+            examResultsRequirePublish: data.settings.examResultsRequirePublish ?? true,
+            bulkEmailEnabled: data.settings.bulkEmailEnabled ?? true,
+            bulkSmsEnabled: data.settings.bulkSmsEnabled ?? true,
+            bulkWhatsappEnabled: data.settings.bulkWhatsappEnabled ?? true,
           });
         }
       }
@@ -269,6 +351,58 @@ export default function SettingsPage() {
     } catch (err) {
       console.error('Failed to save AI settings:', err);
       setError('Failed to save AI settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveCommSettings = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await authFetch('/api/school/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // SMTP
+          smtpHost: commSettings.smtpHost,
+          smtpPort: commSettings.smtpPort,
+          smtpUser: commSettings.smtpUser,
+          smtpFromName: commSettings.smtpFromName,
+          smtpSecure: commSettings.smtpSecure,
+          // SMS
+          smsProvider: commSettings.smsProvider,
+          smsSenderId: commSettings.smsSenderId,
+          smsEnvironment: commSettings.smsEnvironment,
+          // WhatsApp
+          whatsappEnabled: commSettings.whatsappEnabled,
+          whatsappApiUrl: commSettings.whatsappApiUrl,
+          whatsappPhoneId: commSettings.whatsappPhoneId,
+          // Exam notifications
+          examRequiresHodReview: commSettings.examRequiresHodReview,
+          examNotifyInApp: commSettings.examNotifyInApp,
+          examNotifyEmail: commSettings.examNotifyEmail,
+          examNotifySms: commSettings.examNotifySms,
+          examNotifyWhatsapp: commSettings.examNotifyWhatsapp,
+          examResultsRequirePublish: commSettings.examResultsRequirePublish,
+          // Bulk communication
+          bulkEmailEnabled: commSettings.bulkEmailEnabled,
+          bulkSmsEnabled: commSettings.bulkSmsEnabled,
+          bulkWhatsappEnabled: commSettings.bulkWhatsappEnabled,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        setError(data.error || 'Failed to save communication settings');
+      }
+    } catch (err) {
+      console.error('Failed to save communication settings:', err);
+      setError('Failed to save communication settings');
     } finally {
       setSaving(false);
     }
@@ -1441,6 +1575,285 @@ export default function SettingsPage() {
               <div className="flex justify-end">
                 <Button onClick={handleSavePromotionSettings} disabled={saving}>
                   {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Promotion Settings'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Communication Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Communication Settings</CardTitle>
+              <CardDescription>Configure email, SMS, WhatsApp and notification preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* SMTP Settings */}
+              <div className="border-b pb-4">
+                <h4 className="font-medium mb-4 dark:text-white">Email (SMTP)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Host</label>
+                    <input
+                      type="text"
+                      value={commSettings.smtpHost}
+                      onChange={(e) => setCommSettings({ ...commSettings, smtpHost: e.target.value })}
+                      placeholder="smtp.gmail.com"
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Port</label>
+                    <input
+                      type="number"
+                      value={commSettings.smtpPort}
+                      onChange={(e) => setCommSettings({ ...commSettings, smtpPort: parseInt(e.target.value) })}
+                      placeholder="587"
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Username</label>
+                    <input
+                      type="text"
+                      value={commSettings.smtpUser}
+                      onChange={(e) => setCommSettings({ ...commSettings, smtpUser: e.target.value })}
+                      placeholder="your-email@gmail.com"
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Password</label>
+                    <input
+                      type="password"
+                      value={commSettings.smtpPassword || ''}
+                      onChange={(e) => setCommSettings({ ...commSettings, smtpPassword: e.target.value })}
+                      placeholder="Leave empty to keep current"
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Name</label>
+                    <input
+                      type="text"
+                      value={commSettings.smtpFromName}
+                      onChange={(e) => setCommSettings({ ...commSettings, smtpFromName: e.target.value })}
+                      placeholder="School Name"
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="smtpSecure"
+                      checked={commSettings.smtpSecure}
+                      onChange={(e) => setCommSettings({ ...commSettings, smtpSecure: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="smtpSecure" className="text-sm text-gray-700 dark:text-gray-300">Use SSL/TLS (Port 465)</label>
+                  </div>
+                </div>
+              </div>
+
+              {/* SMS Settings */}
+              <div className="border-b pb-4">
+                <h4 className="font-medium mb-4 dark:text-white">SMS (Nigerian Providers)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMS Provider</label>
+                    <select
+                      value={commSettings.smsProvider}
+                      onChange={(e) => setCommSettings({ ...commSettings, smsProvider: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="">Select provider...</option>
+                      <option value="BETACODE">Betacode</option>
+                      <option value="SMARTSMS">SmartSMS</option>
+                      <option value="TWISTED">Twisted</option>
+                      <option value="TERMII">Termii</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sender ID</label>
+                    <input
+                      type="text"
+                      value={commSettings.smsSenderId}
+                      onChange={(e) => setCommSettings({ ...commSettings, smsSenderId: e.target.value })}
+                      placeholder="EDUSCH"
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
+                    <input
+                      type="password"
+                      value={commSettings.smsApiKey || ''}
+                      onChange={(e) => setCommSettings({ ...commSettings, smsApiKey: e.target.value })}
+                      placeholder="Leave empty to keep current"
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Environment</label>
+                    <select
+                      value={commSettings.smsEnvironment}
+                      onChange={(e) => setCommSettings({ ...commSettings, smsEnvironment: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="">Select...</option>
+                      <option value="DEMO">Demo/Sandbox</option>
+                      <option value="LIVE">Live/Production</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* WhatsApp Settings */}
+              <div className="border-b pb-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <input
+                    type="checkbox"
+                    id="whatsappEnabled"
+                    checked={commSettings.whatsappEnabled}
+                    onChange={(e) => setCommSettings({ ...commSettings, whatsappEnabled: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <h4 className="font-medium dark:text-white">Enable WhatsApp Notifications</h4>
+                </div>
+                {commSettings.whatsappEnabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">WhatsApp API URL</label>
+                      <input
+                        type="text"
+                        value={commSettings.whatsappApiUrl}
+                        onChange={(e) => setCommSettings({ ...commSettings, whatsappApiUrl: e.target.value })}
+                        placeholder="https://api.whatsapp.com"
+                        className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone ID</label>
+                      <input
+                        type="text"
+                        value={commSettings.whatsappPhoneId}
+                        onChange={(e) => setCommSettings({ ...commSettings, whatsappPhoneId: e.target.value })}
+                        placeholder="Your WhatsApp Phone ID"
+                        className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">WhatsApp API Token</label>
+                      <input
+                        type="password"
+                        value={commSettings.whatsappApiToken || ''}
+                        onChange={(e) => setCommSettings({ ...commSettings, whatsappApiToken: e.target.value })}
+                        placeholder="Leave empty to keep current"
+                        className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Exam Notification Settings */}
+              <div className="border-b pb-4">
+                <h4 className="font-medium mb-4 dark:text-white">Exam Notifications</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="examRequiresHodReview"
+                      checked={commSettings.examRequiresHodReview}
+                      onChange={(e) => setCommSettings({ ...commSettings, examRequiresHodReview: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="examRequiresHodReview" className="text-sm text-gray-700 dark:text-gray-300">Require HOD Review before publishing exams</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="examResultsRequirePublish"
+                      checked={commSettings.examResultsRequirePublish}
+                      onChange={(e) => setCommSettings({ ...commSettings, examResultsRequirePublish: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="examResultsRequirePublish" className="text-sm text-gray-700 dark:text-gray-300">Require manual publish for exam results</label>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 ml-6 mt-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="examNotifyInApp"
+                        checked={commSettings.examNotifyInApp}
+                        onChange={(e) => setCommSettings({ ...commSettings, examNotifyInApp: e.target.checked })}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="examNotifyInApp" className="text-sm text-gray-700 dark:text-gray-300">In-App</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="examNotifyEmail"
+                        checked={commSettings.examNotifyEmail}
+                        onChange={(e) => setCommSettings({ ...commSettings, examNotifyEmail: e.target.checked })}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="examNotifyEmail" className="text-sm text-gray-700 dark:text-gray-300">Email</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="examNotifySms"
+                        checked={commSettings.examNotifySms}
+                        onChange={(e) => setCommSettings({ ...commSettings, examNotifySms: e.target.checked })}
+                        className="w-4 h-4"
+                      />
+                      <label htmlFor="examNotifySms" className="text-sm text-gray-700 dark:text-gray-300">SMS</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bulk Communication Settings */}
+              <div>
+                <h4 className="font-medium mb-4 dark:text-white">Bulk Communication</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="bulkEmailEnabled"
+                      checked={commSettings.bulkEmailEnabled}
+                      onChange={(e) => setCommSettings({ ...commSettings, bulkEmailEnabled: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="bulkEmailEnabled" className="text-sm text-gray-700 dark:text-gray-300">Bulk Email</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="bulkSmsEnabled"
+                      checked={commSettings.bulkSmsEnabled}
+                      onChange={(e) => setCommSettings({ ...commSettings, bulkSmsEnabled: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="bulkSmsEnabled" className="text-sm text-gray-700 dark:text-gray-300">Bulk SMS</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="bulkWhatsappEnabled"
+                      checked={commSettings.bulkWhatsappEnabled}
+                      onChange={(e) => setCommSettings({ ...commSettings, bulkWhatsappEnabled: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="bulkWhatsappEnabled" className="text-sm text-gray-700 dark:text-gray-300">Bulk WhatsApp</label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleSaveCommSettings} disabled={saving}>
+                  {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Communication Settings'}
                 </Button>
               </div>
             </CardContent>
