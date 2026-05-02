@@ -11,14 +11,23 @@ interface Tier {
   code: string;
 }
 
+interface Teacher {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  position?: string;
+}
+
 interface Department {
   id: string;
   name: string;
   code: string;
   alias?: string | null;
   isActive: boolean;
-  tierId: string;
+  tierId: string | null;
   tier?: Tier;
+  teachers?: Teacher[];
   _count?: {
     subjects: number;
     classes: number;
@@ -29,12 +38,16 @@ export default function DepartmentsPage() {
   const { selectedBranch } = useBranch();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [tiers, setTiers] = useState<Tier[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [selectedTierId, setSelectedTierId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showDefaultsModal, setShowDefaultsModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showHODModal, setShowHODModal] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
+  const [hodDepartment, setHODDepartment] = useState<Department | null>(null);
+  const [selectedHODId, setSelectedHODId] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -46,6 +59,7 @@ export default function DepartmentsPage() {
 
   useEffect(() => {
     loadTiers();
+    loadTeachers();
   }, [selectedBranch]);
 
   useEffect(() => {
@@ -77,6 +91,16 @@ export default function DepartmentsPage() {
       console.error('Failed to load tiers:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTeachers = async () => {
+    try {
+      const res = await authFetch('/api/sms/teachers');
+      const data = await res.json();
+      setTeachers(data.teachers || []);
+    } catch (err) {
+      console.error('Failed to load teachers:', err);
     }
   };
 
@@ -124,7 +148,7 @@ export default function DepartmentsPage() {
         }),
       });
 
-      if (res.ok) {
+if (res.ok) {
         setShowEditModal(false);
         setEditingDept(null);
         setFormData({ name: '', code: '', alias: '', tierId: '' });
@@ -140,81 +164,38 @@ export default function DepartmentsPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAssignHOD = (dept: Department) => {
+    setHODDepartment(dept);
+    const currentHOD = dept.teachers?.find(t => t.position === 'HOD');
+    setSelectedHODId(currentHOD?.id || '');
+    setShowHODModal(true);
+  };
+
+  const handleSaveHOD = async () => {
+    if (!hodDepartment) return;
+    
     setSubmitting(true);
     setError('');
-
     try {
-      const res = await authFetch('/api/sms/departments', {
-        method: 'POST',
+      const res = await authFetch(`/api/sms/departments/${hodDepartment.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ headId: selectedHODId || null }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Failed to create department');
+        setError(data.error || 'Failed to assign HOD');
         return;
       }
 
-      setShowModal(false);
-      setFormData({ name: '', code: '', alias: '', tierId: selectedTierId });
+      setShowHODModal(false);
+      setHODDepartment(null);
       loadDepartments(selectedTierId);
     } catch {
       setError('An error occurred');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleApplyDefaults = async () => {
-    setSubmitting(true);
-    setError('');
-    try {
-      const res = await authFetch('/api/sms/departments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          applyDefaults: true,
-          tierId: selectedTierId,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || 'Failed to create default departments');
-        return;
-      }
-
-      setShowDefaultsModal(false);
-      loadDepartments(selectedTierId);
-    } catch {
-      setError('An error occurred');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (dept: Department) => {
-    if (!confirm(`Are you sure you want to delete "${dept.name}"?`)) {
-      return;
-    }
-
-    try {
-      const res = await authFetch(`/api/sms/departments/${dept.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || 'Failed to delete department');
-        return;
-      }
-
-      loadDepartments(selectedTierId);
-    } catch (err) {
-      console.error('Error:', err);
     }
   };
 
@@ -347,9 +328,23 @@ export default function DepartmentsPage() {
                   <span className="text-gray-500 dark:text-gray-400">Classes:</span>
                   <span className="font-medium dark:text-white">{dept._count?.classes || 0}</span>
                 </div>
+                {dept.teachers && dept.teachers.length > 0 && (
+                  <div className="pt-2 border-t dark:border-gray-700">
+                    <span className="text-gray-500 dark:text-gray-400">HOD: </span>
+                    <span className="font-medium text-purple-600 dark:text-purple-400">
+                      {dept.teachers[0].firstName} {dept.teachers[0].lastName}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 pt-4 border-t dark:border-gray-700 flex gap-2">
+                <button
+                  onClick={() => handleAssignHOD(dept)}
+                  className="flex-1 px-3 py-2 text-sm bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50"
+                >
+                  {dept.teachers?.length ? 'Change HOD' : 'Assign HOD'}
+                </button>
                 <button
                   onClick={() => handleEdit(dept)}
                   className="flex-1 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
@@ -553,6 +548,61 @@ export default function DepartmentsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* HOD Assignment Modal */}
+      {showHODModal && hodDepartment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">
+              Assign HOD - {hodDepartment.name}
+            </h2>
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm mb-4">
+                {error}
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Select Head of Department
+              </label>
+              <select
+                value={selectedHODId}
+                onChange={(e) => setSelectedHODId(e.target.value)}
+                className="w-full px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">-- No HOD Assigned --</option>
+                {teachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.firstName} {teacher.lastName} ({teacher.email})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                The selected teacher will have access to all exams in this department.
+              </p>
+            </div>
+            <div className="flex gap-4 pt-6">
+              <button
+                onClick={handleSaveHOD}
+                disabled={submitting}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {submitting ? 'Saving...' : 'Assign HOD'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowHODModal(false);
+                  setHODDepartment(null);
+                  setError('');
+                }}
+                className="px-6 py-2 border dark:border-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
