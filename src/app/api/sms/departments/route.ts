@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
-import { CreateDepartmentSchema } from '@/lib/schemas/tier';
+import { CreateDepartmentSchema, AssignHODSchema } from '@/lib/schemas/tier';
 import { DEFAULT_SSS_DEPARTMENTS } from '@/lib/constants/departments';
 import { SSS_TIER_CODE } from '@/lib/constants/tiers';
 
@@ -34,6 +34,10 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         tier: true,
+        teachers: {
+          where: { position: 'HOD' },
+          select: { id: true, firstName: true, lastName: true, userId: true }
+        },
       },
       orderBy: { name: 'asc' },
     });
@@ -53,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+    if (!['ADMIN', 'SUPER_ADMIN', 'PRINCIPAL'].includes(user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -133,7 +137,7 @@ export async function POST(request: NextRequest) {
       }, { status: 201 });
     }
 
-    // Create single department
+    // Create single department (tierId is now optional)
     const validation = CreateDepartmentSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
@@ -142,13 +146,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, code, alias, tierId } = validation.data;
-
-    // Check if tier exists and belongs to tenant
-    const tier = await prisma.tier.findUnique({ where: { id: tierId } });
-    if (!tier || tier.tenantId !== tenantId) {
-      return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
-    }
+    const { name, code, alias, tierId: deptTierId } = validation.data;
 
     // Check if code already exists for this tenant (considering branch)
     const existingDept = await prisma.department.findFirst({
@@ -174,7 +172,7 @@ export async function POST(request: NextRequest) {
         name,
         code,
         alias,
-        tierId,
+        tierId: deptTierId || null,
         tenantId,
         branchId,
       },

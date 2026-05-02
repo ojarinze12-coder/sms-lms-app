@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/lib/hooks/use-auth';
 import { examApi } from '@/lib/api';
 import type { Exam, Question, Answer } from '@/types/exam-take';
 import ExamStartScreen from '@/components/exam-take/ExamStartScreen';
@@ -14,6 +15,7 @@ export default function TakeExamPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { user, role, loading: authLoading } = useAuth();
   const [exam, setExam] = useState<Exam | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -24,6 +26,18 @@ export default function TakeExamPage() {
   const [examStarted, setExamStarted] = useState(false);
 
   const examId = params.id as string;
+
+  // Role-based access control - only students can take exams
+  useEffect(() => {
+    if (!authLoading && role !== 'STUDENT') {
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'Only students can take exams. Please use the Student Portal.',
+      });
+      router.push('/lms/exams');
+    }
+  }, [authLoading, role, router, toast]);
 
   useEffect(() => {
     loadExam();

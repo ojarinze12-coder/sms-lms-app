@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
-import { UpdateDepartmentSchema } from '@/lib/schemas/tier';
+import { UpdateDepartmentSchema, AssignHODSchema } from '@/lib/schemas/tier';
 
 export async function GET(
   request: NextRequest,
@@ -19,6 +19,13 @@ export async function GET(
       where: { id },
       include: {
         tier: true,
+        subjects: {
+          select: { id: true, name: true, code: true, teacherId: true }
+        },
+        teachers: {
+          where: { position: 'HOD' },
+          select: { id: true, firstName: true, lastName: true, email: true }
+        },
       },
     });
 
@@ -49,7 +56,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+    if (!['ADMIN', 'SUPER_ADMIN', 'PRINCIPAL'].includes(user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -64,6 +71,62 @@ export async function PUT(
     }
 
     const body = await request.json();
+    
+    // Handle HOD assignment separately
+    if (body.headId !== undefined) {
+      // Find teacher by ID and update their position
+      if (body.headId) {
+        const teacher = await prisma.teacher.findFirst({
+          where: { id: body.headId, tenantId: user.tenantId }
+        });
+        
+        if (!teacher) {
+          return NextResponse.json({ error: 'Teacher not found' }, { status: 404 });
+        }
+        
+        // Remove HOD from previous head if exists
+        await prisma.teacher.updateMany({
+          where: { 
+            position: 'HOD',
+            departmentId: id 
+          },
+          data: { position: null }
+        });
+        
+        // Assign new HOD
+        await prisma.teacher.update({
+          where: { id: teacher.id },
+          data: { 
+            position: 'HOD',
+            departmentId: id
+          }
+        });
+      } else {
+        // Remove HOD from current department head
+        await prisma.teacher.updateMany({
+          where: { 
+            position: 'HOD',
+            departmentId: id 
+          },
+          data: { position: null }
+        });
+      }
+      
+      const updatedDept = await prisma.department.findUnique({
+        where: { id },
+        include: {
+          tier: true,
+          teachers: {
+            where: { position: 'HOD' },
+            select: { id: true, firstName: true, lastName: true }
+          },
+        },
+      });
+      
+      return NextResponse.json({ data: updatedDept });
+    }
+    
+    // Handle regular department update
     const validation = UpdateDepartmentSchema.safeParse(body);
     
     if (!validation.success) {
@@ -100,7 +163,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+    if (!['ADMIN', 'SUPER_ADMIN', 'PRINCIPAL'].includes(user.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

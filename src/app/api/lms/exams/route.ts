@@ -44,6 +44,44 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // RBAC: Filter exams by user role and scope
+    let subjectIdFilter: string[] | null = null;
+
+    // TEACHER: Only exams for subjects they teach
+    if (authUser.role === 'TEACHER') {
+      const teacherSubjects = await prisma.subject.findMany({
+        where: { teacherId: authUser.userId, isActive: true },
+        select: { id: true }
+      });
+      subjectIdFilter = teacherSubjects.map(s => s.id);
+      
+      if (subjectIdFilter.length === 0) {
+        return NextResponse.json([]);
+      }
+    }
+
+    // HOD: Exams for all subjects in their department
+    const teacherRecord = await prisma.teacher.findFirst({
+      where: { userId: authUser.userId },
+      include: { 
+        department: { 
+          include: { subjects: { select: { id: true } } }
+        } 
+      }
+    });
+    
+    if (teacherRecord?.position === 'HOD' && teacherRecord.department?.subjects) {
+      subjectIdFilter = teacherRecord.department.subjects.map(s => s.id);
+      if (subjectIdFilter.length === 0) {
+        return NextResponse.json([]);
+      }
+    }
+
+    // Apply subject scope filter if applicable
+    if (subjectIdFilter && subjectIdFilter.length > 0) {
+      tenantFilter.subjectId = { in: subjectIdFilter };
+    }
+
     // For STUDENT role: filter by enrolled subjects and time window
     if (authUser.role === 'STUDENT') {
       // Find the student record
@@ -72,13 +110,13 @@ export async function GET(request: NextRequest) {
         });
 
         // Collect all subject IDs the student is enrolled in
-        const subjectIds = enrollments.flatMap(e => 
+        const studentSubjectIds = enrollments.flatMap(e => 
           e.academicClass?.subjects?.map(s => s.id) || []
         );
 
         // Filter exams by enrolled subjects
-        if (subjectIds.length > 0) {
-          tenantFilter.subjectId = { in: subjectIds };
+        if (studentSubjectIds.length > 0) {
+          tenantFilter.subjectId = { in: studentSubjectIds };
         } else {
           // No subjects enrolled, return empty
           return NextResponse.json([]);

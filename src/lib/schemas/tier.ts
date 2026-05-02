@@ -33,13 +33,18 @@ export const CreateDepartmentSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   code: z.string().min(1, 'Code is required').max(10).toUpperCase(),
   alias: z.string().max(100).optional(),
-  tierId: z.string().uuid('Invalid tier ID'),
+  tierId: z.string().uuid('Invalid tier ID').optional().nullable(),
 });
 
 export const UpdateDepartmentSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   alias: z.string().max(100).nullable().optional(),
   isActive: z.boolean().optional(),
+  headId: z.string().uuid().nullable().optional(),
+});
+
+export const AssignHODSchema = z.object({
+  teacherId: z.string().uuid('Invalid teacher ID'),
 });
 
 export const TierCurriculumSchema = z.object({

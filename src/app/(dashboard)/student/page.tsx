@@ -210,7 +210,7 @@ export default function StudentPortalPage() {
               {[
                 { id: 'overview', label: 'Overview', icon: TrendingUp },
                 { id: 'results', label: 'Results', icon: Award },
-                { id: 'courses', label: 'Courses', icon: BookOpen },
+{ id: 'courses', label: 'Class/Subjects', icon: BookOpen },
                 { id: 'assignments', label: 'Tasks', icon: FileText },
                 { id: 'attendance', label: 'Attendance', icon: Calendar },
                 { id: 'announcements', label: 'Notices', icon: Bell },
@@ -243,7 +243,7 @@ export default function StudentPortalPage() {
           {[
             { id: 'overview', label: 'Overview', icon: TrendingUp },
             { id: 'results', label: 'Results', icon: Award },
-            { id: 'courses', label: 'Courses', icon: BookOpen },
+            { id: 'courses', label: 'Class/Subjects', icon: BookOpen },
             { id: 'assignments', label: 'Tasks', icon: FileText },
             { id: 'attendance', label: 'Attendance', icon: Calendar },
             { id: 'announcements', label: 'Notices', icon: Bell },
@@ -279,7 +279,7 @@ export default function StudentPortalPage() {
             </CardContent>
           </Card>
           <Card className="dark:bg-gray-800 dark:border-gray-700 p-4 sm:p-6">
-            <CardHeader className="pb-2 px-0 pt-0"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Courses</CardTitle></CardHeader>
+            <CardHeader className="pb-2 px-0 pt-0"><CardTitle className="text-sm text-gray-500 dark:text-gray-400">Subjects</CardTitle></CardHeader>
             <CardContent className="px-0 pb-0">
               <div className="text-4xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">{data.enrollments?.length || 0}</div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enrolled</p>
@@ -396,13 +396,13 @@ export default function StudentPortalPage() {
         </div>
       )}
 
-      {/* Courses Tab */}
+      {/* Subjects Tab */}
       {viewMode === 'courses' && (
         <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader><CardTitle className="dark:text-white">My Courses</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="dark:text-white">My Subjects</CardTitle></CardHeader>
           <CardContent>
             {data.enrollments?.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">No courses enrolled</p>
+              <p className="text-gray-500 dark:text-gray-400">No subjects enrolled</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {data.enrollments.map(e => (

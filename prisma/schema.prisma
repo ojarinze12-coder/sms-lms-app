@@ -464,6 +464,7 @@ model Subject {
   exams           Exam[]
   academicClass   AcademicClass?  @relation(fields: [academicClassId], references: [id], onDelete: Cascade)
   teacher         Teacher?        @relation(fields: [teacherId], references: [id])
+  department      Department?      @relation("SubjectDepartments", fields: [departmentId], references: [id])
   timetableSlots  TimetableSlot[]
 
   @@unique([academicClassId, code], map: "subjects_academicClassId_code_unique")
@@ -503,16 +504,17 @@ model Department {
   code      String
   alias     String?
   isActive  Boolean  @default(true)
-  tierId    String   @db.Uuid
+  tierId    String?  @db.Uuid
   tenantId  String   @db.Uuid
   branchId  String?  @db.Uuid
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
-  tier            Tier            @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  tier            Tier?           @relation(fields: [tierId], references: [id], onDelete: Cascade)
   academicClasses AcademicClass[]
   teachers        Teacher[]       @relation("TeacherDepartments")
   branch          Branch?         @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  subjects       Subject[]       @relation("SubjectDepartments")
 
   @@unique([tenantId, code], map: "departments_tenantId_code_unique")
   @@index([tenantId], map: "idx_departments_tenant")

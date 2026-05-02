@@ -19,13 +19,14 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, code, teacherId, isActive } = body;
+    const { name, code, teacherId, isActive, departmentId } = body;
 
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (code !== undefined) updateData.code = code;
     if (teacherId !== undefined) updateData.teacherId = teacherId || null;
     if (isActive !== undefined) updateData.isActive = isActive;
+    if (departmentId !== undefined) updateData.departmentId = departmentId || null;
 
     const subject = await prisma.subject.update({
       where: { id },

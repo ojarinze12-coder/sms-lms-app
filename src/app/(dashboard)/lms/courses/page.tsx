@@ -63,7 +63,7 @@ export default function CoursesPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold dark:text-white">
-              {isTeacher ? 'My Courses' : 'Courses'}
+              {isTeacher ? 'My Subjects' : 'Courses'}
             </h1>
           </div>
         </div>
@@ -85,10 +85,10 @@ export default function CoursesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">
-            {isTeacher ? 'My Courses' : 'Courses'}
+            {isTeacher ? 'My Subjects' : 'Courses'}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {isTeacher ? 'Your assigned courses' : 'Manage all courses'}
+            {isTeacher ? 'Your assigned subjects' : 'Manage all courses'}
           </p>
         </div>
       </div>

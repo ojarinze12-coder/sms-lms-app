@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
       include: {
         academicClass: { select: { id: true, name: true, level: true } },
         teacher: { select: { id: true, firstName: true, lastName: true } },
+        department: { select: { id: true, name: true } },
       },
       orderBy: [
         { isActive: 'desc' },
