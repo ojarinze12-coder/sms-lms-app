@@ -162,14 +162,20 @@ export async function GET(request: NextRequest) {
     if (authUser.role === 'HOD') {
       const teacher = await prisma.teacher.findFirst({
         where: { userId: authUser.userId },
-        include: { department: { include: { subjects: { select: { id: true } } } } }
       });
       
-      if (teacher?.department?.subjects) {
-        const deptSubjectIds = teacher.department.subjects.map(s => s.id);
-        where.AND = [
-          { subjectId: { in: deptSubjectIds } }
-        ];
+      if (teacher?.departmentId) {
+        const department = await prisma.department.findUnique({
+          where: { id: teacher.departmentId },
+          include: { subjects: { select: { id: true } } }
+        });
+        
+        if (department?.subjects) {
+          const deptSubjectIds = department.subjects.map((s: any) => s.id);
+          where.AND = [
+            { subjectId: { in: deptSubjectIds } }
+          ];
+        }
       }
     }
 
