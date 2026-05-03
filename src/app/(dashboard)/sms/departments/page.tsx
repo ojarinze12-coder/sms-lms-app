@@ -98,7 +98,7 @@ export default function DepartmentsPage() {
     try {
       const res = await authFetch('/api/sms/teachers');
       const data = await res.json();
-      setTeachers(data.teachers || []);
+      setTeachers(data.data || []);
     } catch (err) {
       console.error('Failed to load teachers:', err);
     }
