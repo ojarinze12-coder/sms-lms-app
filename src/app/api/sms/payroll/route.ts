@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth-server';
 import { z } from 'zod';
+import { calculatePAYETax } from '@/lib/nigeria-tax';
 
 const createPayrollSchema = z.object({
-  teacherId: z.string().uuid(),
+  employeeType: z.enum(['TEACHER', 'STAFF']),
+  teacherId: z.string().uuid().optional(),
+  staffId: z.string().uuid().optional(),
   month: z.number().min(1).max(12),
   year: z.number().min(2020),
   basicSalary: z.number().min(0),
@@ -25,13 +28,18 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    const employeeType = searchParams.get('employeeType');
     const teacherId = searchParams.get('teacherId');
+    const staffId = searchParams.get('staffId');
     const month = searchParams.get('month');
     const year = searchParams.get('year');
     const status = searchParams.get('status');
 
-    const where: any = {};
+    const where: any = { tenantId: authUser.tenantId };
+    
+    if (employeeType) where.employeeType = employeeType;
     if (teacherId) where.teacherId = teacherId;
+    if (staffId) where.staffId = staffId;
     if (month) where.month = parseInt(month);
     if (year) where.year = parseInt(year);
     if (status) where.status = status;
@@ -40,6 +48,7 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         teacher: { select: { id: true, firstName: true, lastName: true, employeeId: true } },
+        staff: { select: { id: true, firstName: true, lastName: true, employeeId: true } },
       },
       orderBy: [{ year: 'desc' }, { month: 'desc' }],
     });
@@ -77,13 +86,13 @@ export async function POST(request: NextRequest) {
 
     const netPay = totalEarnings - totalDeductions;
 
-    const existing = await prisma.payroll.findUnique({
+    const existing = await prisma.payroll.findFirst({
       where: {
-        teacherId_month_year: {
-          teacherId: data.teacherId,
-          month: data.month,
-          year: data.year,
-        }
+        employeeType: data.employeeType,
+        teacherId: data.teacherId || null,
+        staffId: data.staffId || null,
+        month: data.month,
+        year: data.year,
       }
     });
 
@@ -93,7 +102,19 @@ export async function POST(request: NextRequest) {
 
     const payroll = await prisma.payroll.create({
       data: {
-        ...data,
+        employeeType: data.employeeType,
+        teacherId: data.employeeType === 'TEACHER' ? data.teacherId : null,
+        staffId: data.employeeType === 'STAFF' ? data.staffId : null,
+        month: data.month,
+        year: data.year,
+        basicSalary: data.basicSalary,
+        housingAllowance: data.housingAllowance || 0,
+        transportAllowance: data.transportAllowance || 0,
+        otherAllowances: data.otherAllowances || 0,
+        pensionDeduction: data.pensionDeduction || 0,
+        taxDeduction: data.taxDeduction || 0,
+        nhfDeduction: data.nhfDeduction || 0,
+        otherDeductions: data.otherDeductions || 0,
         totalEarnings,
         totalDeductions,
         netPay,

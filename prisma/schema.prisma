@@ -66,6 +66,8 @@ model Branch {
   departments    Department[]
   users          User[]
   AcademicYear   AcademicYear[]
+  allowanceConfigs AllowanceConfig[]
+  deductionConfigs DeductionConfig[]
 
   @@unique([tenantId, code], map: "branches_tenantId_code_unique")
   @@index([tenantId], map: "idx_branches_tenant")
@@ -197,7 +199,7 @@ model Teacher {
   position            String? // "HOD", "SENIOR_TEACHER", "FORM_MASTER", "CLASS_TEACHER"
   departmentId        String?         @map("department_id") @db.Uuid // For HOD - links to Department
   qualification       String?
-  salary              Float?
+  basicSalary         Float?
   stateOfOrigin       String?
   status              String          @default("ACTIVE")
   barcode             String?
@@ -214,6 +216,8 @@ model Teacher {
   classTeacherClasses AcademicClass[] @relation("ClassTeacherClasses")
   formMasterClasses   AcademicClass[] @relation("FormMasterClasses")
   branch              Branch?         @relation(fields: [branchId], references: [id])
+  teacherAllowances   TeacherAllowance[]
+  teacherDeductions   TeacherDeduction[]
 
   @@unique([tenantId, employeeId], map: "teachers_tenantId_employeeId_unique")
   @@index([tenantId], map: "idx_teachers_tenant")
@@ -242,7 +246,7 @@ model Staff {
   employmentType   StaffEmploymentType @default(FULL_TIME)
   department       String?
   position         String?
-  salary           Float?
+  basicSalary      Float?
   pensionPin       String?
   nhfNumber        String?
   bvn              String?
@@ -263,6 +267,9 @@ model Staff {
   staffLeaves      StaffLeave[]
   caregiverClasses AcademicClass[]     @relation("CaregiverClasses")
   branch           Branch?             @relation(fields: [branchId], references: [id])
+  staffAllowances  StaffAllowance[]
+  staffDeductions  StaffDeduction[]
+  payrolls         Payroll[]
 
   @@unique([tenantId, employeeId], map: "staff_tenantId_employeeId_unique")
   @@index([tenantId], map: "idx_staff_tenant")
@@ -289,15 +296,130 @@ model Payroll {
   status             String    @default("DRAFT")
   paymentDate        DateTime? @db.Timestamptz(6)
   paymentReference   String?
-  teacherId          String    @db.Uuid
+  employeeType       String    @default("TEACHER") // TEACHER or STAFF
+  teacherId          String?   @db.Uuid
+  staffId            String?   @db.Uuid
   tenantId           String    @db.Uuid
   createdAt          DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt          DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
-  teacher            Teacher   @relation(fields: [teacherId], references: [id])
+  teacher            Teacher?  @relation(fields: [teacherId], references: [id])
+  staff              Staff?    @relation(fields: [staffId], references: [id])
 
-  @@unique([teacherId, month, year], map: "payroll_teacher_month_year_unique")
+  @@unique([employeeType, teacherId, staffId, month, year], map: "payroll_employee_month_year_unique")
   @@index([tenantId, year, month], map: "payroll_tenant_year_month")
+  @@index([employeeType], map: "payroll_employee_type")
   @@map("payrolls")
+}
+
+model AllowanceConfig {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  description  String?
+  type         AllowanceType @default(FIXED)
+  defaultValue Float?
+  isActive     Boolean  @default(true)
+  isTaxable   Boolean  @default(true)
+  tenantId     String   @db.Uuid
+  branchId     String?  @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  branch       Branch?  @relation(fields: [branchId], references: [id])
+
+  teacherAllowances TeacherAllowance[]
+  staffAllowances   StaffAllowance[]
+
+  @@index([tenantId], map: "idx_allowance_config_tenant")
+  @@index([branchId], map: "idx_allowance_config_branch")
+  @@map("allowance_configs")
+}
+
+model DeductionConfig {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  description  String?
+  type         DeductionType @default(PERCENTAGE)
+  defaultRate  Float?
+  isActive     Boolean  @default(true)
+  isMandatory  Boolean  @default(true)
+  isPaye       Boolean  @default(false) // True for PAYE tax
+  tenantId     String   @db.Uuid
+  branchId     String?  @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  branch       Branch?  @relation(fields: [branchId], references: [id])
+
+  teacherDeductions TeacherDeduction[]
+  staffDeductions   StaffDeduction[]
+
+  @@index([tenantId], map: "idx_deduction_config_tenant")
+  @@index([branchId], map: "idx_deduction_config_branch")
+  @@map("deduction_configs")
+}
+
+model TeacherAllowance {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId   String          @db.Uuid
+  configId    String          @db.Uuid
+  value       Float?
+  isCustom    Boolean         @default(false)
+  tenantId    String          @db.Uuid
+  createdAt   DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  teacher     Teacher        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  config      AllowanceConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, configId], map: "teacher_allowance_unique")
+  @@index([tenantId], map: "idx_teacher_allowance_tenant")
+  @@map("teacher_allowances")
+}
+
+model TeacherDeduction {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId   String           @db.Uuid
+  configId    String           @db.Uuid
+  value       Float?
+  tenantId    String           @db.Uuid
+  createdAt   DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
+  teacher     Teacher         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  config      DeductionConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, configId], map: "teacher_deduction_unique")
+  @@index([tenantId], map: "idx_teacher_deduction_tenant")
+  @@map("teacher_deductions")
+}
+
+model StaffAllowance {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId     String          @db.Uuid
+  configId    String          @db.Uuid
+  value       Float?
+  isCustom    Boolean         @default(false)
+  tenantId    String          @db.Uuid
+  createdAt   DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  staff       Staff          @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  config      AllowanceConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, configId], map: "staff_allowance_unique")
+  @@index([tenantId], map: "idx_staff_allowance_tenant")
+  @@map("staff_allowances")
+}
+
+model StaffDeduction {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId     String           @db.Uuid
+  configId    String           @db.Uuid
+  value       Float?
+  tenantId    String           @db.Uuid
+  createdAt   DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
+  staff       Staff           @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  config      DeductionConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, configId], map: "staff_deduction_unique")
+  @@index([tenantId], map: "idx_staff_deduction_tenant")
+  @@map("staff_deductions")
 }
 
 model Parent {
@@ -2122,6 +2244,16 @@ enum StaffEmploymentType {
   PART_TIME
   CONTRACT
   CASUAL
+}
+
+enum AllowanceType {
+  FIXED
+  PERCENTAGE
+}
+
+enum DeductionType {
+  FIXED
+  PERCENTAGE
 }
 
 enum ParentRelationship {
