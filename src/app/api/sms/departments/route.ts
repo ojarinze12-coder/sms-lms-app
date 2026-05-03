@@ -28,16 +28,11 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         tier: true,
-        teachers: {
-          where: { position: 'HOD' },
-          select: { id: true, firstName: true, lastName: true, userId: true }
-        },
-        _count: { select: { subjects: true, academicClasses: true } }
       },
       orderBy: { name: 'asc' },
     });
 
-    console.log('Departments query:', { tenantId, tierId, branchId, count: departments.length, whereClause });
+    console.log('Departments query:', { tenantId, tierId, count: departments.length });
 
     return NextResponse.json({ data: departments });
   } catch (error) {
