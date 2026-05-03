@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    return NextResponse.json(teachers || []);
+    return NextResponse.json({ data: teachers || [] });
   } catch (error: any) {
     console.error('[TEACHERS GET] Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
