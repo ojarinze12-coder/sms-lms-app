@@ -17,11 +17,15 @@ export async function GET(request: NextRequest) {
     const academicYearId = searchParams.get('academicYearId');
     const tenantId = user.tenantId;
 
-    // Simple query - skip branch filtering to avoid 500 errors
+    console.log('[TIERS] branchId param:', branchId);
+
+    // Query tiers for tenant without branch filtering
     const tiers = await prisma.tier.findMany({
       where: { tenantId },
       orderBy: { order: 'asc' },
     });
+
+    console.log('[TIERS] tiers found:', tiers.length);
 
     // Get department counts separately
     const tierIds = tiers.map(t => t.id);
@@ -57,7 +61,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: tiersWithCounts });
   } catch (error: any) {
     console.error('[TIERS GET] Error:', error.message || error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    console.error('[TIERS GET] Stack:', error.stack);
+    return NextResponse.json({ 
+      error: error.message || 'Internal server error',
+      details: error.stack 
+    }, { status: 500 });
   }
 }
 
