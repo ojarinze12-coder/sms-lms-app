@@ -50,7 +50,7 @@ export default function TeachersPage() {
         branchesRes.json().catch(() => ({ branches: [] })),
       ]);
       
-      setTeachers(teachersData.teachers || teachersData || []);
+      setTeachers(teachersData.data || teachersData.teachers || []);
       setBranches(branchesData.branches || []);
     } catch (err) {
       console.error('Error:', err);
