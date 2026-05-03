@@ -27,24 +27,36 @@ export async function GET(request: NextRequest) {
       orderBy: { order: 'asc' },
     });
 
-    // Get department counts separately
+    console.log('[TIERS] Got', tiers.length, 'tiers for tenant:', tenantId, 'branchId:', branchId);
+
     const tierIds = tiers.map(t => t.id);
+    console.log('[TIERS] tierIds:', tierIds);
+
+    // Get department counts separately
     const deptCounts = tierIds.length > 0 ? await prisma.department.groupBy({
       by: ['tierId'],
       where: { tierId: { in: tierIds } },
       _count: true,
     }) : [];
 
+    console.log('[TIERS] deptCounts:', deptCounts.length);
+
     // Get class counts per tier, filtered by branch and academic year
-    const classCounts = await prisma.academicClass.groupBy({
-      by: ['tierId'],
-      where: {
-        tierId: { in: tierIds },
-        ...(academicYearId ? { academicYearId } : {}),
-        ...(branchId ? { branchId: { in: [branchId, null] } } : {}),
-      },
-      _count: true,
-    });
+    let classCounts: any[] = [];
+    try {
+      classCounts = await prisma.academicClass.groupBy({
+        by: ['tierId'],
+        where: {
+          tierId: { in: tierIds },
+          ...(academicYearId ? { academicYearId } : {}),
+          ...(branchId ? { branchId: { in: [branchId, null] } } : {}),
+        },
+        _count: true,
+      });
+      console.log('[TIERS] classCounts:', classCounts.length);
+    } catch (e) {
+      console.error('[TIERS] classCounts error:', e);
+    }
 
     const deptCountMap = new Map(deptCounts.map(d => [d.tierId, d._count]));
     const classCountMap = new Map(classCounts.map(c => [c.tierId, c._count]));
@@ -57,9 +69,9 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({ data: tiersWithClassCount });
-  } catch (error) {
-    console.error('Error fetching tiers:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[TIERS GET] Error:', error.message || error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
