@@ -250,7 +250,7 @@ export default function LeavesPage() {
               Request Leave
             </Button>
           </DialogTrigger>
-          <DialogContent className="dark:bg-gray-800">
+          <DialogContent className="dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="dark:text-white">Request Leave</DialogTitle>
             </DialogHeader>
