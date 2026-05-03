@@ -50,8 +50,11 @@ export default function PayrollPage() {
       const teachersData = await teachersRes.json();
       const payrollData = await payrollRes.json();
       
-      setTeachers(Array.isArray(teachersData) ? teachersData : []);
-      setPayrolls(Array.isArray(payrollData) ? payrollData : []);
+      const teachersList = Array.isArray(teachersData) ? teachersData : (Array.isArray(teachersData.data) ? teachersData.data : []);
+      const payrollList = Array.isArray(payrollData) ? payrollData : (Array.isArray(payrollData.data) ? payrollData.data : []);
+      
+      setTeachers(teachersList);
+      setPayrolls(payrollList);
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
