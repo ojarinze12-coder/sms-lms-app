@@ -745,5 +745,142 @@ Current implementation shows tabs directly on mobile (horizontal scroll) which w
 
 ---
 
+## 29. Payroll System Enhancement - May 2026
+
+### Overview
+Enhanced the payroll system to support bulk processing, non-teaching staff, and configurable allowances/deductions.
+
+### Database Schema Changes (`prisma/schema.prisma`)
+
+| Change | Description |
+|--------|-------------|
+| Teacher.salary → basicSalary | Renamed salary field to basicSalary |
+| Staff.salary → basicSalary | Renamed salary field to basicSalary |
+| Payroll.employeeType | Added field to distinguish TEACHER vs STAFF |
+| Payroll.staffId | Added nullable staffId for non-teaching staff |
+| Payroll.teacherId | Made nullable (now optional based on employeeType) |
+
+### New Tables Added
+
+| Table | Purpose |
+|-------|---------|
+| `AllowanceConfig` | Configurable allowance types (Housing, Transport, etc.) |
+| `DeductionConfig` | Configurable deduction types (Pension, Tax, NHF, etc.) |
+| `TeacherAllowance` | Per-teacher allowance overrides |
+| `TeacherDeduction` | Per-teacher deduction overrides |
+| `StaffAllowance` | Per-staff allowance overrides |
+| `StaffDeduction` | Per-staff deduction overrides |
+
+### New Enums Added
+- `AllowanceType` - FIXED, PERCENTAGE
+- `DeductionType` - FIXED, PERCENTAGE
+
+### API Endpoints Created
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/sms/payroll/allowances` | GET/POST/PATCH/DELETE | CRUD allowance configurations |
+| `/api/sms/payroll/deductions` | GET/POST/PATCH/DELETE | CRUD deduction configurations |
+| `/api/sms/payroll/employee-config` | GET/POST/DELETE | Assign/configure allowances per employee |
+| `/api/sms/payroll/bulk` | POST | Bulk payroll processing for all/selected employees |
+
+### API Endpoints Updated
+
+| Endpoint | Changes |
+|----------|---------|
+| `/api/sms/payroll` | Added employeeType, staffId support; GET supports filtering by employeeType |
+| `/api/sms/staff` | Added basicSalary field support (backward compatible with salary) |
+
+### Frontend Pages Created
+
+| Page | Path | Purpose |
+|------|------|---------|
+| Payroll Settings | `/sms/payroll/settings` | Configure allowances, deductions, and employee-specific overrides |
+
+### Frontend Pages Updated
+
+| Page | Changes |
+|------|---------|
+| `/sms/payroll` | Added Tabs for Teachers/Staff, Individual Run form, Bulk Run dialog with branch filter |
+
+### Key Features Implemented
+
+1. **Bulk Payroll Run**
+   - Option A: Run for all employees by branch
+   - Option B: Run for all branches
+   - Override default values (basic salary, allowances) for bulk run
+   - Uses PAYE tax calculation automatically
+
+2. **Staff Payroll Support**
+   - Separate tabs for Teachers vs Non-Teaching Staff
+   - Same payroll calculation for both employee types
+   - Remita integration works for both
+
+3. **Allowance/Deduction Configuration**
+   - Finance Admin can define custom allowances (Fixed or Percentage)
+   - Finance Admin can define custom deductions with rates
+   - Mark deductions as PAYE tax (mandatory)
+   - Per-employee custom overrides
+
+4. **PAYE Tax Calculation**
+   - Uses existing Nigerian tax brackets (7%, 11%, 15%, 19%, 21%, 24%)
+   - Consolidated relief: ₦200,000 + 1% of gross income
+   - Pension: 8% of basic salary (configurable)
+   - NHF: 2.5% of basic salary (configurable)
+
+### Files Modified Summary
+
+```
+prisma/schema.prisma                           - Schema updates
+src/lib/nigeria-tax.ts                         - PAYE calculation (already existed)
+src/app/api/sms/payroll/route.ts              - Updated for staff support
+src/app/api/sms/payroll/allowances/route.ts   - NEW
+src/app/api/sms/payroll/deductions/route.ts   - NEW
+src/app/api/sms/payroll/employee-config/route.ts - NEW
+src/app/api/sms/payroll/bulk/route.ts         - NEW
+src/app/api/sms/staff/route.ts                - basicSalary support
+src/app/(dashboard)/sms/payroll/page.tsx      - Updated UI
+src/app/(dashboard)/sms/payroll/settings/page.tsx - NEW
+```
+
+### Bug Fixes Included
+
+| Issue | Fix |
+|-------|-----|
+| Select with empty value "" causing React error | Changed to "all" for branch filter |
+| Teachers not appearing in dropdown | Fixed API response parsing (handled {data: []} format) |
+| Dialog content not scrollable | Added max-h-[90vh] overflow-y-auto |
+
+### Status
+✅ Completed - Deployed and ready for testing
+
+---
+
+## 30. SMS > Payroll & Leave Management - API Response Fix
+
+### Problem
+Payroll and Leave Management pages showed "Something went wrong" error with TypeError: t.map/e.map is not a function.
+
+### Root Cause
+API endpoints returned `{ data: [...] }` object but pages used `data || []` fallback which doesn't handle truthy non-array objects.
+
+### Files Fixed
+
+| File | Change |
+|------|--------|
+| `src/app/(dashboard)/sms/payroll/page.tsx` | Added Array.isArray() check for teachers and payroll |
+| `src/app/(dashboard)/sms/leaves/page.tsx` | Added Array.isArray() check for teachers, staff, leaves |
+
+### Solution Pattern
+```typescript
+const teachersData = await teachersRes.json();
+setTeachers(Array.isArray(teachersData) ? teachersData : (Array.isArray(teachersData.data) ? teachersData.data : []));
+```
+
+### Status
+✅ Completed
+
+---
+
 ## Date Updated
-April 30, 2026
+May 3, 2026
