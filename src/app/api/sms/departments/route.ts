@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
-    console.log('[DEPARTMENTS] DB result:', departments.length, 'depts, branches:', departments.map(d => d.branchId));
+    console.log('[DEPARTMENTS] DB result:', departments.length, 'depts:', departments.map(d => ({ id: d.id, name: d.name, tierId: d.tierId, branchId: d.branchId })));
 
     // Filter by branch in JS if branchId provided
     let filteredDepts = departments;
