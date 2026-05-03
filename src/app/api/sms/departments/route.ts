@@ -43,7 +43,31 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
-    return NextResponse.json({ data: departments });
+    // Get subject and class counts separately to avoid issues
+    const deptIds = departments.map(d => d.id);
+    const subjectCounts = await prisma.subject.groupBy({
+      by: ['departmentId'],
+      where: { departmentId: { in: deptIds } },
+      _count: true,
+    });
+    const classCounts = await prisma.academicClass.groupBy({
+      by: ['departmentId'],
+      where: { departmentId: { in: deptIds } },
+      _count: true,
+    });
+
+    const subjectCountMap = new Map(subjectCounts.map(s => [s.departmentId, s._count]));
+    const classCountMap = new Map(classCounts.map(c => [c.departmentId, c._count]));
+
+    const departmentsWithCounts = departments.map(dept => ({
+      ...dept,
+      _count: {
+        subjects: subjectCountMap.get(dept.id) || 0,
+        classes: classCountMap.get(dept.id) || 0,
+      }
+    }));
+
+    return NextResponse.json({ data: departmentsWithCounts });
   } catch (error) {
     console.error('Error fetching departments:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

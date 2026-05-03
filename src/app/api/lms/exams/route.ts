@@ -184,11 +184,11 @@ export async function GET(request: NextRequest) {
     if (subjectId && authUser.role !== 'STUDENT') where.subjectId = subjectId;
     if (search) where.title = { contains: search, mode: 'insensitive' };
 
-    const exams = await prisma.exam.findMany({
+const exams = await prisma.exam.findMany({
       where,
       include: {
         term: true,
-        subject: { include: { teacher: { select: { userId: true, firstName: true, lastName: true } } } },
+        subject: true,
         _count: { select: { questions: true } },
       },
       orderBy: { createdAt: 'desc' }
