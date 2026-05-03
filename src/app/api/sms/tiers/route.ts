@@ -25,17 +25,17 @@ export async function GET(request: NextRequest) {
     const tiers = await prisma.tier.findMany({
       where: whereClause,
       orderBy: { order: 'asc' },
-      include: {
-        _count: {
-          select: {
-            departments: true,
-          },
-        },
-      },
     });
 
-    // Get class counts per tier, filtered by branch and academic year
+    // Get department counts separately
     const tierIds = tiers.map(t => t.id);
+    const deptCounts = tierIds.length > 0 ? await prisma.department.groupBy({
+      by: ['tierId'],
+      where: { tierId: { in: tierIds } },
+      _count: true,
+    }) : [];
+
+    // Get class counts per tier, filtered by branch and academic year
     const classCounts = await prisma.academicClass.groupBy({
       by: ['tierId'],
       where: {
@@ -46,11 +46,12 @@ export async function GET(request: NextRequest) {
       _count: true,
     });
 
+    const deptCountMap = new Map(deptCounts.map(d => [d.tierId, d._count]));
     const classCountMap = new Map(classCounts.map(c => [c.tierId, c._count]));
     const tiersWithClassCount = tiers.map(tier => ({
       ...tier,
       _count: {
-        ...tier._count,
+        departments: deptCountMap.get(tier.id) || 0,
         classes: classCountMap.get(tier.id) || 0,
       },
     }));
