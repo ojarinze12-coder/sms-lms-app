@@ -18,66 +18,45 @@ export async function GET(request: NextRequest) {
 
     const tenantId = user.tenantId;
 
-    // Build where clause - handle branch filtering properly
-    let whereClause: any = { tenantId };
-    
+    // Simple query - first get all departments for tenant/tier, then filter by branch in JS
+    const query: any = { tenantId };
     if (tierId) {
-      if (branchId) {
-        // Both tierId and branchId: need OR for branch but tierId must be in each branch
-        whereClause = {
-          AND: [
-            { tierId },
-            {
-              OR: [
-                { branchId },
-                { branchId: null }
-              ]
-            }
-          ]
-        };
-      } else {
-        // Only tierId
-        whereClause = { tierId };
-      }
-    } else if (branchId) {
-      // Only branchId
-      whereClause = {
-        OR: [
-          { branchId },
-          { branchId: null }
-        ]
-      };
+      query.tierId = tierId;
     }
 
     const departments = await prisma.department.findMany({
-      where: whereClause,
-      include: {
-        tier: true,
-        teachers: {
-          where: { position: 'HOD' },
-          select: { id: true, firstName: true, lastName: true, userId: true }
-        },
-      },
+      where: query,
+      include: { tier: true },
       orderBy: { name: 'asc' },
     });
 
-    // Get subject and class counts separately to avoid issues
-    const deptIds = departments.map(d => d.id);
-    const subjectCounts = await prisma.subject.groupBy({
+    // Filter by branch in JS if branchId provided
+    let filteredDepts = departments;
+    if (branchId) {
+      filteredDepts = departments.filter(d => 
+        d.branchId === branchId || d.branchId === null
+      );
+    }
+
+    console.log('[DEPARTMENTS]', { tenantId, tierId, branchId, total: departments.length, filtered: filteredDepts.length });
+
+    // Get counts for filtered departments
+    const deptIds = filteredDepts.map(d => d.id);
+    const subjectCounts = deptIds.length > 0 ? await prisma.subject.groupBy({
       by: ['departmentId'],
       where: { departmentId: { in: deptIds } },
       _count: true,
-    });
-    const classCounts = await prisma.academicClass.groupBy({
+    }) : [];
+    const classCounts = deptIds.length > 0 ? await prisma.academicClass.groupBy({
       by: ['departmentId'],
       where: { departmentId: { in: deptIds } },
       _count: true,
-    });
+    }) : [];
 
     const subjectCountMap = new Map(subjectCounts.map(s => [s.departmentId, s._count]));
     const classCountMap = new Map(classCounts.map(c => [c.departmentId, c._count]));
 
-    const departmentsWithCounts = departments.map(dept => ({
+    const departmentsWithCounts = filteredDepts.map(dept => ({
       ...dept,
       _count: {
         subjects: subjectCountMap.get(dept.id) || 0,
