@@ -35,13 +35,14 @@ export async function GET(request: NextRequest) {
     console.log('[DEPARTMENTS] DB result:', departments.length, 'depts:', departments.map(d => ({ id: d.id, name: d.name, tierId: d.tierId, branchId: d.branchId })));
 
     // Filter by branch in JS if branchId provided
+    // Show only departments for this specific branch (NOT shared null)
     let filteredDepts = departments;
     if (branchId) {
-      filteredDepts = departments.filter(d => 
-        d.branchId === branchId || d.branchId === null
-      );
+      // Only show departments assigned to this specific branch
+      filteredDepts = departments.filter(d => d.branchId === branchId);
       console.log('[DEPARTMENTS] After filter by', branchId, ':', filteredDepts.length);
     }
+    // If no branchId, show all departments (including shared/null)
 
     // Get counts for filtered departments
     const deptIds = filteredDepts.map(d => d.id);
