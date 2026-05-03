@@ -19,7 +19,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Plus, Send, Users, GraduationCap } from 'lucide-react';
+import { Plus, Send, Users, GraduationCap, Settings } from 'lucide-react';
+import Link from 'next/link';
 import { calculateMonthlyPayroll } from '@/lib/nigeria-tax';
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -329,6 +330,12 @@ export default function PayrollPage() {
             <Users className="h-4 w-4 mr-2" />
             Bulk Run
           </Button>
+          <Link href="/sms/payroll/settings">
+            <Button variant="outline">
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+          </Link>
           <Dialog open={showForm} onOpenChange={setShowForm}>
             <DialogTrigger asChild>
               <Button onClick={() => setShowForm(true)}>
@@ -652,14 +659,14 @@ export default function PayrollPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Branch (Optional - leave empty for all)</label>
               <Select 
-                value={bulkFormData.branchId} 
-                onValueChange={(v) => setBulkFormData({ ...bulkFormData, branchId: v })}
+                value={bulkFormData.branchId || 'all'} 
+                onValueChange={(v) => setBulkFormData({ ...bulkFormData, branchId: v === 'all' ? '' : v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Branches" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Branches</SelectItem>
+                  <SelectItem value="all">All Branches</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
                   ))}
