@@ -24,15 +24,13 @@ export async function GET(request: NextRequest) {
     };
 
     // If branchId is provided, include departments that belong to that branch OR are shared (null)
-    // If no branchId is provided, only show shared departments (null)
     if (branchId) {
       whereClause.OR = [
         { branchId },
         { branchId: null },
       ];
-    } else {
-      whereClause.branchId = null;
     }
+    // If no branchId, show all departments (both branch-specific and shared)
 
     const departments = await prisma.department.findMany({
       where: whereClause,
