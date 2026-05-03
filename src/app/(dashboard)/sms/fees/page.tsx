@@ -530,7 +530,7 @@ export default function FeesPage() {
                 Add Fee Structure
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create Fee Structure</DialogTitle>
               <DialogDescription>Add a new fee type for the academic year</DialogDescription>
