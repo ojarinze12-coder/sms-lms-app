@@ -45,6 +45,8 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
+    console.log('Departments query:', { tenantId, tierId, branchId, count: departments.length });
+
     return NextResponse.json({ data: departments });
   } catch (error) {
     console.error('Error fetching departments:', error);
