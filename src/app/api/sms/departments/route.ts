@@ -23,11 +23,15 @@ export async function GET(request: NextRequest) {
       ...(tierId && { tierId }),
     };
 
+    // If branchId is provided, include departments that belong to that branch OR are shared (null)
+    // If no branchId is provided, only show shared departments (null)
     if (branchId) {
       whereClause.OR = [
         { branchId },
         { branchId: null },
       ];
+    } else {
+      whereClause.branchId = null;
     }
 
     const departments = await prisma.department.findMany({
