@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
 
     const tenantId = user.tenantId;
 
+    console.log('[DEPARTMENTS] START - tenantId:', tenantId, 'tierId:', tierId, 'branchId:', branchId);
+
     // Simple query - first get all departments for tenant/tier, then filter by branch in JS
     const query: any = { tenantId };
     if (tierId) {
@@ -30,15 +32,16 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
+    console.log('[DEPARTMENTS] DB result:', departments.length, 'depts, branches:', departments.map(d => d.branchId));
+
     // Filter by branch in JS if branchId provided
     let filteredDepts = departments;
     if (branchId) {
       filteredDepts = departments.filter(d => 
         d.branchId === branchId || d.branchId === null
       );
+      console.log('[DEPARTMENTS] After filter by', branchId, ':', filteredDepts.length);
     }
-
-    console.log('[DEPARTMENTS]', { tenantId, tierId, branchId, total: departments.length, filtered: filteredDepts.length });
 
     // Get counts for filtered departments
     const deptIds = filteredDepts.map(d => d.id);
