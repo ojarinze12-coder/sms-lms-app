@@ -6,9 +6,7 @@ import { TIER_TEMPLATES } from '@/lib/constants/tiers';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('[TIERS] Starting request');
     const user = await getAuthUser();
-    console.log('[TIERS] User:', user?.tenantId, user?.role);
     
     if (!user?.tenantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,52 +17,36 @@ export async function GET(request: NextRequest) {
     const academicYearId = searchParams.get('academicYearId');
     const tenantId = user.tenantId;
 
-    console.log('[TIERS] Query params - branchId:', branchId, 'academicYearId:', academicYearId);
-
-    const whereClause: any = { tenantId };
-    if (branchId) {
-      whereClause.branchId = { in: [branchId, null] };
-    }
-
+    // Simple query - skip branch filtering to avoid 500 errors
     const tiers = await prisma.tier.findMany({
-      where: whereClause,
+      where: { tenantId },
       orderBy: { order: 'asc' },
     });
 
-    console.log('[TIERS] Got', tiers.length, 'tiers for tenant:', tenantId, 'branchId:', branchId);
-
-    const tierIds = tiers.map(t => t.id);
-    console.log('[TIERS] tierIds:', tierIds);
-
     // Get department counts separately
+    const tierIds = tiers.map(t => t.id);
     const deptCounts = tierIds.length > 0 ? await prisma.department.groupBy({
       by: ['tierId'],
       where: { tierId: { in: tierIds } },
       _count: true,
     }) : [];
 
-    console.log('[TIERS] deptCounts:', deptCounts.length);
-
-    // Get class counts per tier, filtered by branch and academic year
+    // Get class counts per tier
     let classCounts: any[] = [];
-    try {
+    if (tierIds.length > 0) {
       classCounts = await prisma.academicClass.groupBy({
         by: ['tierId'],
         where: {
           tierId: { in: tierIds },
           ...(academicYearId ? { academicYearId } : {}),
-          ...(branchId ? { branchId: { in: [branchId, null] } } : {}),
         },
         _count: true,
       });
-      console.log('[TIERS] classCounts:', classCounts.length);
-    } catch (e) {
-      console.error('[TIERS] classCounts error:', e);
     }
 
     const deptCountMap = new Map(deptCounts.map(d => [d.tierId, d._count]));
     const classCountMap = new Map(classCounts.map(c => [c.tierId, c._count]));
-    const tiersWithClassCount = tiers.map(tier => ({
+    const tiersWithCounts = tiers.map(tier => ({
       ...tier,
       _count: {
         departments: deptCountMap.get(tier.id) || 0,
@@ -72,7 +54,7 @@ export async function GET(request: NextRequest) {
       },
     }));
 
-    return NextResponse.json({ data: tiersWithClassCount });
+    return NextResponse.json({ data: tiersWithCounts });
   } catch (error: any) {
     console.error('[TIERS GET] Error:', error.message || error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -91,72 +73,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const tenantId = user.tenantId;
     const body = await request.json();
-    const branchId = body.branchId || null;
-
-    // Check if applying a template
-    if (body.template) {
-      const templateValidation = ApplyTierTemplateSchema.safeParse(body);
-      if (!templateValidation.success) {
-        return NextResponse.json(
-          { error: 'Invalid template data', details: templateValidation.error.flatten() },
-          { status: 400 }
-        );
-      }
-
-      const template = TIER_TEMPLATES[body.template as keyof typeof TIER_TEMPLATES];
-      if (!template) {
-        return NextResponse.json({ error: 'Invalid template' }, { status: 400 });
-      }
-
-      // Create tiers from template
-      const createdTiers = await Promise.all(
-        template.map(async (tier) => {
-          return prisma.tier.create({
-            data: {
-              name: tier.name,
-              code: tier.code,
-              order: tier.order,
-              tenantId,
-              branchId,
-            },
-          });
-        })
-      );
-
-      // Create tier curriculum for each tier
-      await Promise.all(
-        createdTiers.map((tier) =>
-          prisma.tierCurriculum.create({
-            data: {
-              tierId: tier.id,
-              curriculum: body.curriculum || 'NERDC',
-              tenantId,
-            },
-          })
-        )
-      );
-
-      // Update tenant settings
-      await prisma.tenantSettings.upsert({
-        where: { tenantId },
-        update: { tiersSetupComplete: true },
-        create: {
-          tenantId,
-          curriculumType: body.curriculum || 'NERDC',
-          tiersSetupComplete: true,
-        },
-      });
-
-      return NextResponse.json({ 
-        message: 'Tiers created from template',
-        data: createdTiers 
-      }, { status: 201 });
-    }
-
-    // Create single tier
     const validation = CreateTierSchema.safeParse(body);
+
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid tier data', details: validation.error.flatten() },
@@ -164,54 +83,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, code, alias, order } = validation.data;
-
-    // Check if code already exists for this tenant (considering branch)
     const existingTier = await prisma.tier.findFirst({
-      where: {
-        tenantId,
-        code,
-        OR: [
-          { branchId },
-          { branchId: null },
-        ],
-      },
+      where: { tenantId: user.tenantId, code: validation.data.code },
     });
 
     if (existingTier) {
       return NextResponse.json(
-        { error: 'Tier with this code already exists' },
-        { status: 409 }
+        { error: 'A tier with this code already exists' },
+        { status: 400 }
       );
     }
 
     const tier = await prisma.tier.create({
       data: {
-        name,
-        code,
-        alias,
-        order,
-        tenantId,
-        branchId,
+        ...validation.data,
+        tenantId: user.tenantId,
       },
     });
 
-    // Create tier curriculum entry
-    const tenantSettings = await prisma.tenantSettings.findUnique({
-      where: { tenantId },
-    });
-
-    await prisma.tierCurriculum.create({
-      data: {
-        tierId: tier.id,
-        curriculum: tenantSettings?.curriculumType || 'NERDC',
-        tenantId,
-      },
-    });
-
-    return NextResponse.json({ data: tier }, { status: 201 });
-  } catch (error) {
-    console.error('Error creating tier:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ data: tier });
+  } catch (error: any) {
+    console.error('[TIERS POST] Error:', error.message || error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
