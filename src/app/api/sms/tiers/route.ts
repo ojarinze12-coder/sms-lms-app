@@ -6,7 +6,9 @@ import { TIER_TEMPLATES } from '@/lib/constants/tiers';
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('[TIERS] Starting request');
     const user = await getAuthUser();
+    console.log('[TIERS] User:', user?.tenantId, user?.role);
     
     if (!user?.tenantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,6 +18,8 @@ export async function GET(request: NextRequest) {
     const branchId = searchParams.get('branchId');
     const academicYearId = searchParams.get('academicYearId');
     const tenantId = user.tenantId;
+
+    console.log('[TIERS] Query params - branchId:', branchId, 'academicYearId:', academicYearId);
 
     const whereClause: any = { tenantId };
     if (branchId) {
