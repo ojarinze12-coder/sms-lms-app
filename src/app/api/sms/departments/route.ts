@@ -18,19 +18,11 @@ export async function GET(request: NextRequest) {
 
     const tenantId = user.tenantId;
 
+    // Simplified: just filter by tenantId and tierId
     const whereClause: any = {
       tenantId,
       ...(tierId && { tierId }),
     };
-
-    // If branchId is provided, include departments that belong to that branch OR are shared (null)
-    if (branchId) {
-      whereClause.OR = [
-        { branchId },
-        { branchId: null },
-      ];
-    }
-    // If no branchId, show all departments (both branch-specific and shared)
 
     const departments = await prisma.department.findMany({
       where: whereClause,
@@ -45,7 +37,7 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
-    console.log('Departments query:', { tenantId, tierId, branchId, count: departments.length });
+    console.log('Departments query:', { tenantId, tierId, branchId, count: departments.length, whereClause });
 
     return NextResponse.json({ data: departments });
   } catch (error) {
