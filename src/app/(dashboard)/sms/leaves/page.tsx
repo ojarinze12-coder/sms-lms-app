@@ -107,13 +107,16 @@ export default function LeavesPage() {
       let leavesData: any[] = [];
       
       if (teachersRes.ok) {
-        teachersData = await teachersRes.json() || [];
+        const data = await teachersRes.json();
+        teachersData = Array.isArray(data) ? data : [];
       }
       if (staffRes.ok) {
-        staffData = await staffRes.json() || [];
+        const data = await staffRes.json();
+        staffData = Array.isArray(data) ? data : [];
       }
       if (leavesRes.ok) {
-        leavesData = await leavesRes.json() || [];
+        const data = await leavesRes.json();
+        leavesData = Array.isArray(data) ? data : [];
       }
       
       setTeachers(teachersData);
