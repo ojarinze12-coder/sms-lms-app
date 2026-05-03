@@ -18,21 +18,30 @@ export async function GET(request: NextRequest) {
 
     const tenantId = user.tenantId;
 
-    // Simplified: just filter by tenantId and tierId
     const whereClause: any = {
       tenantId,
       ...(tierId && { tierId }),
     };
 
+    // If branchId is provided, include departments that belong to that branch OR are shared (null)
+    if (branchId) {
+      whereClause.OR = [
+        { branchId },
+        { branchId: null },
+      ];
+    }
+
     const departments = await prisma.department.findMany({
       where: whereClause,
       include: {
         tier: true,
+        teachers: {
+          where: { position: 'HOD' },
+          select: { id: true, firstName: true, lastName: true, userId: true }
+        },
       },
       orderBy: { name: 'asc' },
     });
-
-    console.log('Departments query:', { tenantId, tierId, count: departments.length });
 
     return NextResponse.json({ data: departments });
   } catch (error) {
