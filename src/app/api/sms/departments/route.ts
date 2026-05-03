@@ -18,17 +18,35 @@ export async function GET(request: NextRequest) {
 
     const tenantId = user.tenantId;
 
-    const whereClause: any = {
-      tenantId,
-      ...(tierId && { tierId }),
-    };
-
-    // If branchId is provided, include departments that belong to that branch OR are shared (null)
-    if (branchId) {
-      whereClause.OR = [
-        { branchId },
-        { branchId: null },
-      ];
+    // Build where clause - handle branch filtering properly
+    let whereClause: any = { tenantId };
+    
+    if (tierId) {
+      if (branchId) {
+        // Both tierId and branchId: need OR for branch but tierId must be in each branch
+        whereClause = {
+          AND: [
+            { tierId },
+            {
+              OR: [
+                { branchId },
+                { branchId: null }
+              ]
+            }
+          ]
+        };
+      } else {
+        // Only tierId
+        whereClause = { tierId };
+      }
+    } else if (branchId) {
+      // Only branchId
+      whereClause = {
+        OR: [
+          { branchId },
+          { branchId: null }
+        ]
+      };
     }
 
     const departments = await prisma.department.findMany({
