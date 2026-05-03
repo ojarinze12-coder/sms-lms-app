@@ -70,11 +70,8 @@ export default function DepartmentsPage() {
 
   const loadTiers = async () => {
     try {
-      const params = new URLSearchParams();
-      if (selectedBranch) {
-        params.set('branchId', selectedBranch.id);
-      }
-      const url = '/api/sms/tiers' + (params.toString() ? '?' + params.toString() : '');
+      // Don't pass branchId to tiers API - just get all tiers
+      const url = '/api/sms/tiers';
       const res = await authFetch(url);
       const data = await res.json();
       const allTiers = data.data || [];
