@@ -35,14 +35,21 @@ export async function GET(request: NextRequest) {
       _count: true,
     }) : [];
 
-    // Get class counts per tier
+    // Get class counts per tier - only for active academic year if not specified
     let classCounts: any[] = [];
     if (tierIds.length > 0) {
+      const activeYear = await prisma.academicYear.findFirst({
+        where: { tenantId, isActive: true },
+        select: { id: true }
+      });
+      
+      const yearIdForCount = academicYearId || activeYear?.id;
+      
       classCounts = await prisma.academicClass.groupBy({
         by: ['tierId'],
         where: {
           tierId: { in: tierIds },
-          ...(academicYearId ? { academicYearId } : {}),
+          ...(yearIdForCount ? { academicYearId: yearIdForCount } : {}),
         },
         _count: true,
       });
