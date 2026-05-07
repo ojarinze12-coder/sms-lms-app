@@ -18,6 +18,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { NIGERIAN_STATES, NIGERIAN_LGAS } from '@/lib/nigeria';
 import { Loader2, Wand2 } from 'lucide-react';
 import { useBranch } from '@/lib/hooks/use-branch';
+import { banks } from '@/types/staff';
 
 export default function NewTeacherPage() {
   const { toast } = useToast();
@@ -39,8 +40,20 @@ export default function NewTeacherPage() {
     address: '',
     stateOfOrigin: '',
     lgaOfOrigin: '',
+    dateOfBirth: '',
     gender: 'MALE',
     branchId: '',
+    position: '',
+    departmentId: '',
+    employmentType: 'FULL_TIME',
+    pensionPin: '',
+    nhfNumber: '',
+    bvn: '',
+    nin: '',
+    payeTin: '',
+    bankName: '',
+    bankAccount: '',
+    bankSortCode: '',
   });
 
   const stateCode = useMemo(() => {
@@ -74,6 +87,7 @@ export default function NewTeacherPage() {
           experience: formData.experience ? parseInt(formData.experience) : null,
           salary: formData.salary ? parseFloat(formData.salary) : null,
           joinDate: formData.joinDate || null,
+          dateOfBirth: formData.dateOfBirth || null,
         }),
       });
 
@@ -281,6 +295,39 @@ export default function NewTeacherPage() {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
+                <label className="block text-sm font-medium mb-2">Employment Type</label>
+                <Select value={formData.employmentType} onValueChange={(v) => setFormData({ ...formData, employmentType: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FULL_TIME">Full Time</SelectItem>
+                    <SelectItem value="PART_TIME">Part Time</SelectItem>
+                    <SelectItem value="CONTRACT">Contract</SelectItem>
+                    <SelectItem value="CASUAL">Casual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Position</label>
+                <Input 
+                  placeholder="e.g., HOD, Senior Teacher"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Salary (Monthly)</label>
+                <Input 
+                  type="number"
+                  placeholder="e.g., 150000"
+                  value={formData.salary}
+                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
                 <label className="block text-sm font-medium mb-2">Years of Experience</label>
                 <Input 
                   type="number"
@@ -297,15 +344,6 @@ export default function NewTeacherPage() {
                   onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Salary (Monthly)</label>
-                <Input 
-                  type="number"
-                  placeholder="e.g., 150000"
-                  value={formData.salary}
-                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                />
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -314,7 +352,7 @@ export default function NewTeacherPage() {
         <Card>
           <CardHeader>
             <CardTitle>Nigerian Information</CardTitle>
-            <CardDescription>State of origin and LGA</CardDescription>
+            <CardDescription>State of origin, LGA, and date of birth</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -351,6 +389,111 @@ export default function NewTeacherPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Date of Birth</label>
+                <Input 
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Nigerian Compliance & Banking */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Nigerian Compliance & Banking</CardTitle>
+            <CardDescription>Pension, NHF, BVN, and bank details for payroll</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Pension PIN</label>
+                <Input 
+                  placeholder="e.g., PEN/123456789"
+                  value={formData.pensionPin}
+                  onChange={(e) => setFormData({ ...formData, pensionPin: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">NHF Number</label>
+                <Input 
+                  placeholder="e.g., NHF/123456"
+                  value={formData.nhfNumber}
+                  onChange={(e) => setFormData({ ...formData, nhfNumber: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">BVN</label>
+                <Input 
+                  placeholder="11-digit BVN"
+                  value={formData.bvn}
+                  onChange={(e) => setFormData({ ...formData, bvn: e.target.value })}
+                  maxLength={11}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">NIN</label>
+                <Input 
+                  placeholder="11-digit NIN"
+                  value={formData.nin}
+                  onChange={(e) => setFormData({ ...formData, nin: e.target.value })}
+                  maxLength={11}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">PAYE TIN</label>
+                <Input 
+                  placeholder="e.g., 12345678-0001"
+                  value={formData.payeTin}
+                  onChange={(e) => setFormData({ ...formData, payeTin: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Bank Name</label>
+                <Select value={formData.bankName} onValueChange={(v) => setFormData({ ...formData, bankName: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select bank" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {banks.map((bank) => (
+                      <SelectItem key={bank} value={bank}>
+                        {bank}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Account Number</label>
+                <Input 
+                  placeholder="10-digit account number"
+                  value={formData.bankAccount}
+                  onChange={(e) => setFormData({ ...formData, bankAccount: e.target.value })}
+                  maxLength={10}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Bank Sort Code</label>
+                <Input 
+                  placeholder="6-digit sort code"
+                  value={formData.bankSortCode}
+                  onChange={(e) => setFormData({ ...formData, bankSortCode: e.target.value })}
+                  maxLength={6}
+                />
               </div>
             </div>
           </CardContent>

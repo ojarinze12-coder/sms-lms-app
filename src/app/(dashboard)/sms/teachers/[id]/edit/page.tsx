@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Select, 
   SelectContent, 
@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useBranch } from '@/lib/hooks/use-branch';
+import { NIGERIAN_STATES, NIGERIAN_LGAS } from '@/lib/nigeria';
+import { banks } from '@/types/staff';
 
 interface Teacher {
   id: string;
@@ -23,12 +25,29 @@ interface Teacher {
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
-  specialty?: string;
-  qualification?: string;
-  experience?: number;
+  phone?: string | null;
+  specialty?: string | null;
+  qualification?: string | null;
+  experience?: number | null;
+  basicSalary?: number | null;
+  joinDate?: string | null;
+  address?: string | null;
+  stateOfOrigin?: string | null;
+  lgaOfOrigin?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
   status?: string;
   branchId?: string | null;
+  position?: string | null;
+  departmentId?: string | null;
+  employmentType?: string | null;
+  pensionPin?: string | null;
+  nhfNumber?: string | null;
+  bvn?: string | null;
+  bankName?: string | null;
+  bankAccount?: string | null;
+  bankSortCode?: string | null;
+  departmentRelation?: { id: string; name: string; code: string } | null;
 }
 
 export default function EditTeacherPage() {
@@ -39,8 +58,7 @@ export default function EditTeacherPage() {
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [teacher, setTeacher] = useState<Teacher>({
-    id: '',
+  const [formData, setFormData] = useState({
     employeeId: '',
     firstName: '',
     lastName: '',
@@ -48,10 +66,38 @@ export default function EditTeacherPage() {
     phone: '',
     specialty: '',
     qualification: '',
-    experience: 0,
+    experience: '',
+    salary: '',
+    joinDate: '',
+    address: '',
+    stateOfOrigin: '',
+    lgaOfOrigin: '',
+    dateOfBirth: '',
+    gender: 'MALE',
     status: 'ACTIVE',
     branchId: '',
+    position: '',
+    departmentId: '',
+    employmentType: 'FULL_TIME',
+    pensionPin: '',
+    nhfNumber: '',
+    bvn: '',
+    nin: '',
+    payeTin: '',
+    bankName: '',
+    bankAccount: '',
+    bankSortCode: '',
   });
+
+  const stateCode = useMemo(() => {
+    const state = NIGERIAN_STATES.find(s => s.name === formData.stateOfOrigin);
+    return state?.code || '';
+  }, [formData.stateOfOrigin]);
+
+  const lgas = useMemo(() => {
+    if (!stateCode) return [];
+    return NIGERIAN_LGAS[stateCode] || [];
+  }, [stateCode]);
 
   useEffect(() => {
     fetchTeacher();
@@ -62,7 +108,37 @@ export default function EditTeacherPage() {
       const res = await authFetch(`/api/sms/teachers/${teacherId}`);
       if (res.ok) {
         const data = await res.json();
-        setTeacher(data.teacher || data);
+        const teacher: Teacher = data.teacher || data;
+        setFormData({
+          employeeId: teacher.employeeId || '',
+          firstName: teacher.firstName || '',
+          lastName: teacher.lastName || '',
+          email: teacher.email || '',
+          phone: teacher.phone || '',
+          specialty: teacher.specialty || '',
+          qualification: teacher.qualification || '',
+          experience: teacher.experience?.toString() || '',
+          salary: teacher.basicSalary?.toString() || '',
+          joinDate: teacher.joinDate ? teacher.joinDate.split('T')[0] : '',
+          address: teacher.address || '',
+          stateOfOrigin: teacher.stateOfOrigin || '',
+          lgaOfOrigin: teacher.lgaOfOrigin || '',
+          dateOfBirth: teacher.dateOfBirth ? teacher.dateOfBirth.split('T')[0] : '',
+          gender: teacher.gender || 'MALE',
+          status: teacher.status || 'ACTIVE',
+          branchId: teacher.branchId || '',
+          position: teacher.position || '',
+          departmentId: teacher.departmentId || '',
+          employmentType: teacher.employmentType || 'FULL_TIME',
+          pensionPin: teacher.pensionPin || '',
+          nhfNumber: teacher.nhfNumber || '',
+          bvn: teacher.bvn || '',
+          nin: (teacher as any).nin || '',
+          payeTin: (teacher as any).payeTin || '',
+          bankName: teacher.bankName || '',
+          bankAccount: teacher.bankAccount || '',
+          bankSortCode: teacher.bankSortCode || '',
+        });
       }
     } catch (err) {
       console.error('Failed to fetch teacher:', err);
@@ -79,7 +155,14 @@ export default function EditTeacherPage() {
       const res = await authFetch(`/api/sms/teachers/${teacherId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(teacher),
+        body: JSON.stringify({
+          ...formData,
+          branchId: formData.branchId || null,
+          experience: formData.experience ? parseInt(formData.experience) : null,
+          salary: formData.salary ? parseFloat(formData.salary) : null,
+          joinDate: formData.joinDate || null,
+          dateOfBirth: formData.dateOfBirth || null,
+        }),
       });
 
       if (res.ok) {
@@ -104,38 +187,38 @@ export default function EditTeacherPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="max-w-4xl">
+      <div className="mb-6">
         <Link
           href={`/sms/teachers/${teacherId}`}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="text-sm text-gray-600 hover:text-gray-900"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Teacher
+          ← Back to Teacher
         </Link>
+        <h1 className="text-2xl font-bold mt-2">Edit Teacher</h1>
+        <p className="text-gray-500">Update teacher details including Nigerian-specific information</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Teacher</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+            <CardDescription>Teacher identification and personal details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Employee ID</label>
-                <Input
-                  value={teacher.employeeId}
-                  onChange={(e) => setTeacher({ ...teacher, employeeId: e.target.value })}
+                <label className="block text-sm font-medium mb-2">Employee ID *</label>
+                <Input 
+                  value={formData.employeeId}
+                  onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Status</label>
-                <Select
-                  value={teacher.status}
-                  onValueChange={(v) => setTeacher({ ...teacher, status: v })}
-                >
+                <label className="block text-sm font-medium mb-2">Status</label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -148,10 +231,10 @@ export default function EditTeacherPage() {
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">School Branch</label>
-                <Select
-                  value={teacher.branchId || ''}
-                  onValueChange={(v) => setTeacher({ ...teacher, branchId: v || null })}
+                <label className="block text-sm font-medium mb-2">School Branch</label>
+                <Select 
+                  value={formData.branchId} 
+                  onValueChange={(v) => setFormData({ ...formData, branchId: v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select branch" />
@@ -165,97 +248,331 @@ export default function EditTeacherPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Gender</label>
+                <Select value={formData.gender} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MALE">Male</SelectItem>
+                    <SelectItem value="FEMALE">Female</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">First Name</label>
-                <Input
-                  value={teacher.firstName}
-                  onChange={(e) => setTeacher({ ...teacher, firstName: e.target.value })}
+                <label className="block text-sm font-medium mb-2">First Name *</label>
+                <Input 
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Last Name</label>
-                <Input
-                  value={teacher.lastName}
-                  onChange={(e) => setTeacher({ ...teacher, lastName: e.target.value })}
+                <label className="block text-sm font-medium mb-2">Last Name *</label>
+                <Input 
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   required
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Address</label>
+              <Input 
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Contact Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact Information</CardTitle>
+            <CardDescription>Email and phone for communication</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <Input
+                <label className="block text-sm font-medium mb-2">Email *</label>
+                <Input 
                   type="email"
-                  value={teacher.email}
-                  onChange={(e) => setTeacher({ ...teacher, email: e.target.value })}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Phone</label>
-                <Input
-                  value={teacher.phone || ''}
-                  onChange={(e) => setTeacher({ ...teacher, phone: e.target.value })}
+                <label className="block text-sm font-medium mb-2">Phone</label>
+                <Input 
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Professional Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Professional Information</CardTitle>
+            <CardDescription>Qualifications and experience</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Specialty/Subject</label>
-                <Input
-                  value={teacher.specialty || ''}
-                  onChange={(e) => setTeacher({ ...teacher, specialty: e.target.value })}
-                  placeholder="e.g., Mathematics"
+                <label className="block text-sm font-medium mb-2">Specialty/Subject</label>
+                <Input 
+                  value={formData.specialty}
+                  onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Qualification</label>
-                <Input
-                  value={teacher.qualification || ''}
-                  onChange={(e) => setTeacher({ ...teacher, qualification: e.target.value })}
-                  placeholder="e.g., B.Sc Education"
-                />
+                <label className="block text-sm font-medium mb-2">Qualification</label>
+                <Select value={formData.qualification} onValueChange={(v) => setFormData({ ...formData, qualification: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select qualification" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NCE">NCE</SelectItem>
+                    <SelectItem value="OND">OND</SelectItem>
+                    <SelectItem value="HND">HND</SelectItem>
+                    <SelectItem value="BSc">BSc</SelectItem>
+                    <SelectItem value="BEd">BEd</SelectItem>
+                    <SelectItem value="BA">BA</SelectItem>
+                    <SelectItem value="PGDE">PGDE</SelectItem>
+                    <SelectItem value="MA">MA</SelectItem>
+                    <SelectItem value="MSc">MSc</SelectItem>
+                    <SelectItem value="PhD">PhD</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Years of Experience</label>
-                <Input
+                <label className="block text-sm font-medium mb-2">Employment Type</label>
+                <Select value={formData.employmentType} onValueChange={(v) => setFormData({ ...formData, employmentType: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FULL_TIME">Full Time</SelectItem>
+                    <SelectItem value="PART_TIME">Part Time</SelectItem>
+                    <SelectItem value="CONTRACT">Contract</SelectItem>
+                    <SelectItem value="CASUAL">Casual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Position</label>
+                <Input 
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Salary (Monthly)</label>
+                <Input 
                   type="number"
-                  value={teacher.experience || 0}
-                  onChange={(e) => setTeacher({ ...teacher, experience: parseInt(e.target.value) || 0 })}
+                  value={formData.salary}
+                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
                 />
               </div>
             </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => router.back()}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Years of Experience</label>
+                <Input 
+                  type="number"
+                  value={formData.experience}
+                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Join Date</label>
+                <Input 
+                  type="date"
+                  value={formData.joinDate}
+                  onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+                />
+              </div>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Nigerian Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Nigerian Information</CardTitle>
+            <CardDescription>State of origin, LGA, and date of birth</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">State of Origin</label>
+                <Select value={formData.stateOfOrigin} onValueChange={(v) => setFormData({ ...formData, stateOfOrigin: v, lgaOfOrigin: '' })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {NIGERIAN_STATES.map((state) => (
+                      <SelectItem key={state.code} value={state.name}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">LGA of Origin</label>
+                <Select 
+                  value={formData.lgaOfOrigin} 
+                  onValueChange={(v) => setFormData({ ...formData, lgaOfOrigin: v })}
+                  disabled={!formData.stateOfOrigin}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.stateOfOrigin ? "Select LGA" : "Select state first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lgas.map((lga) => (
+                      <SelectItem key={lga} value={lga}>
+                        {lga}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Date of Birth</label>
+                <Input 
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Nigerian Compliance & Banking */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Nigerian Compliance & Banking</CardTitle>
+            <CardDescription>Pension, NHF, BVN, and bank details for payroll</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Pension PIN</label>
+                <Input 
+                  value={formData.pensionPin}
+                  onChange={(e) => setFormData({ ...formData, pensionPin: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">NHF Number</label>
+                <Input 
+                  value={formData.nhfNumber}
+                  onChange={(e) => setFormData({ ...formData, nhfNumber: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">BVN</label>
+                <Input 
+                  value={formData.bvn}
+                  onChange={(e) => setFormData({ ...formData, bvn: e.target.value })}
+                  maxLength={11}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">NIN</label>
+                <Input 
+                  value={formData.nin}
+                  onChange={(e) => setFormData({ ...formData, nin: e.target.value })}
+                  maxLength={11}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">PAYE TIN</label>
+                <Input 
+                  value={formData.payeTin}
+                  onChange={(e) => setFormData({ ...formData, payeTin: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Bank Name</label>
+                <Select value={formData.bankName} onValueChange={(v) => setFormData({ ...formData, bankName: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select bank" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {banks.map((bank) => (
+                      <SelectItem key={bank} value={bank}>
+                        {bank}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Account Number</label>
+                <Input 
+                  value={formData.bankAccount}
+                  onChange={(e) => setFormData({ ...formData, bankAccount: e.target.value })}
+                  maxLength={10}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Bank Sort Code</label>
+                <Input 
+                  value={formData.bankSortCode}
+                  onChange={(e) => setFormData({ ...formData, bankSortCode: e.target.value })}
+                  maxLength={6}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Submit Buttons */}
+        <div className="flex gap-4">
+          <Button type="submit" disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </Button>
+          <Link href={`/sms/teachers/${teacherId}`}>
+            <Button variant="outline" type="button">Cancel</Button>
+          </Link>
+        </div>
+      </form>
     </div>
   );
 }

@@ -43,6 +43,8 @@ export interface StaffFormData {
   pensionPin: string;
   nhfNumber: string;
   bvn: string;
+  nin: string;
+  payeTin: string;
   bankName: string;
   bankAccount: string;
   bankSortCode: string;
@@ -129,6 +131,8 @@ export const getInitialFormData = (): StaffFormData => ({
   pensionPin: '',
   nhfNumber: '',
   bvn: '',
+  nin: '',
+  payeTin: '',
   bankName: '',
   bankAccount: '',
   bankSortCode: '',

@@ -136,6 +136,8 @@ export default function StaffPage() {
       pensionPin: '',
       nhfNumber: '',
       bvn: '',
+      nin: '',
+      payeTin: '',
       bankName: '',
       bankAccount: '',
       bankSortCode: '',

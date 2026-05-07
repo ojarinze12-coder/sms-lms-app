@@ -187,6 +187,8 @@ model Teacher {
   bankName            String?
   bankSortCode        String?
   bvn                 String?
+  nin                 String?
+  payeTin             String?
   dateOfBirth         DateTime?       @db.Date
   department          String?
   employmentType      String?
@@ -250,6 +252,8 @@ model Staff {
   pensionPin       String?
   nhfNumber        String?
   bvn              String?
+  nin              String?
+  payeTin          String?
   bankName         String?
   bankAccount      String?
   bankSortCode     String?

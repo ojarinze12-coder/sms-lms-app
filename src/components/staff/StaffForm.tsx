@@ -336,6 +336,27 @@ export default function StaffForm({
                 maxLength={11}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="nin">NIN</Label>
+              <Input
+                id="nin"
+                value={formData.nin}
+                onChange={(e) => handleChange('nin', e.target.value)}
+                placeholder="11-digit NIN"
+                maxLength={11}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-3">
+            <div className="space-y-2">
+              <Label htmlFor="payeTin">PAYE TIN</Label>
+              <Input
+                id="payeTin"
+                value={formData.payeTin}
+                onChange={(e) => handleChange('payeTin', e.target.value)}
+                placeholder="e.g., 12345678-0001"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4 mt-3">
             <div className="space-y-2">

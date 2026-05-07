@@ -26,6 +26,9 @@ export async function GET(
         },
         formMasterClasses: {
           select: { id: true, name: true, stream: true }
+        },
+        branch: {
+          select: { id: true, name: true, code: true }
         }
       },
     });
@@ -54,23 +57,47 @@ export async function PUT(
 
     const body = await request.json();
     
+    const processedData: any = {
+      employeeId: body.employeeId,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      email: body.email,
+      phone: body.phone,
+      specialty: body.specialty,
+      qualification: body.qualification,
+      experience: body.experience,
+      status: body.status,
+      cardStatus: body.cardStatus,
+      position: body.position || null,
+      departmentId: body.departmentId || null,
+      branchId: body.branchId || null,
+      address: body.address,
+      stateOfOrigin: body.stateOfOrigin,
+      lgaOfOrigin: body.lgaOfOrigin,
+      employmentType: body.employmentType,
+      pensionPin: body.pensionPin,
+      nhfNumber: body.nhfNumber,
+      bvn: body.bvn,
+      nin: body.nin,
+      payeTin: body.payeTin,
+      bankName: body.bankName,
+      bankAccount: body.bankAccount,
+      bankSortCode: body.bankSortCode,
+    };
+
+    if (body.dateOfBirth) {
+      processedData.dateOfBirth = new Date(body.dateOfBirth);
+    }
+    if (body.joinDate) {
+      processedData.joinDate = new Date(body.joinDate);
+    }
+    if (body.salary !== undefined) {
+      processedData.basicSalary = body.salary;
+    }
+
     const teacher = await prisma.teacher.update({
       where: { id: params.id },
-      data: {
-        employeeId: body.employeeId,
-        firstName: body.firstName,
-        lastName: body.lastName,
-        email: body.email,
-        phone: body.phone,
-        specialty: body.specialty,
-        qualification: body.qualification,
-        experience: body.experience,
-        status: body.status,
-        cardStatus: body.cardStatus,
-        position: body.position || null,
-        departmentId: body.departmentId || null,
-        branchId: body.branchId || null,
-      },
+      data: processedData,
     });
 
     return NextResponse.json({ teacher });

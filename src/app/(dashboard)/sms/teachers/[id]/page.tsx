@@ -29,10 +29,28 @@ interface Teacher {
   specialty: string | null;
   qualification: string | null;
   experience: number | null;
-  salary: number | null;
+  basicSalary: number | null;
   joinDate: string | null;
   status: string;
   address: string | null;
+  stateOfOrigin: string | null;
+  lgaOfOrigin: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  branchId: string | null;
+  position: string | null;
+  departmentId: string | null;
+  employmentType: string | null;
+  pensionPin: string | null;
+  nhfNumber: string | null;
+  bvn: string | null;
+  nin: string | null;
+  payeTin: string | null;
+  bankName: string | null;
+  bankAccount: string | null;
+  bankSortCode: string | null;
+  branch?: { id: string; name: string; code: string } | null;
+  departmentRelation?: { id: string; name: string; code: string } | null;
   subjects: Array<{
     id: string;
     name: string;
@@ -51,7 +69,7 @@ export default function TeacherDetailPage() {
   const params = useParams();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'details' | 'subjects' | 'leaves'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'nigerian' | 'employment' | 'banking' | 'subjects' | 'leaves'>('details');
 
   useEffect(() => {
     const fetchTeacher = async () => {
@@ -134,7 +152,7 @@ export default function TeacherDetailPage() {
               <p className="text-gray-500">Employee ID: {teacher.employeeId}</p>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2 border-b mb-4">
+              <div className="flex gap-2 border-b mb-4 flex-wrap">
                 <button
                   onClick={() => setActiveTab('details')}
                   className={`px-4 py-2 -mb-px border-b-2 ${
@@ -144,6 +162,36 @@ export default function TeacherDetailPage() {
                   }`}
                 >
                   Details
+                </button>
+                <button
+                  onClick={() => setActiveTab('nigerian')}
+                  className={`px-4 py-2 -mb-px border-b-2 ${
+                    activeTab === 'nigerian'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500'
+                  }`}
+                >
+                  Nigerian Info
+                </button>
+                <button
+                  onClick={() => setActiveTab('employment')}
+                  className={`px-4 py-2 -mb-px border-b-2 ${
+                    activeTab === 'employment'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500'
+                  }`}
+                >
+                  Employment
+                </button>
+                <button
+                  onClick={() => setActiveTab('banking')}
+                  className={`px-4 py-2 -mb-px border-b-2 ${
+                    activeTab === 'banking'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500'
+                  }`}
+                >
+                  Banking
                 </button>
                 <button
                   onClick={() => setActiveTab('subjects')}
@@ -202,8 +250,105 @@ export default function TeacherDetailPage() {
                   <div>
                     <p className="text-sm text-gray-500">Salary</p>
                     <p className="font-medium">
-                      {teacher.salary ? `₦${teacher.salary.toLocaleString()}` : '-'}
+                      {teacher.basicSalary ? `₦${teacher.basicSalary.toLocaleString()}` : '-'}
                     </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Branch</p>
+                    <p className="font-medium">{teacher.branch?.name || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Gender</p>
+                    <p className="font-medium">{teacher.gender || '-'}</p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'nigerian' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">State of Origin</p>
+                    <p className="font-medium">{teacher.stateOfOrigin || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">LGA of Origin</p>
+                    <p className="font-medium">{teacher.lgaOfOrigin || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Date of Birth</p>
+                    <p className="font-medium">
+                      {teacher.dateOfBirth ? new Date(teacher.dateOfBirth).toLocaleDateString() : '-'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'employment' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Employment Type</p>
+                    <p className="font-medium">{teacher.employmentType || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Position</p>
+                    <p className="font-medium">{teacher.position || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Department</p>
+                    <p className="font-medium">{teacher.departmentRelation?.name || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Monthly Salary</p>
+                    <p className="font-medium">
+                      {teacher.basicSalary ? `₦${teacher.basicSalary.toLocaleString()}` : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Join Date</p>
+                    <p className="font-medium">
+                      {teacher.joinDate ? new Date(teacher.joinDate).toLocaleDateString() : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Years of Experience</p>
+                    <p className="font-medium">{teacher.experience || '-'}</p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'banking' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Pension PIN</p>
+                    <p className="font-medium">{teacher.pensionPin || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">NHF Number</p>
+                    <p className="font-medium">{teacher.nhfNumber || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">BVN</p>
+                    <p className="font-medium">{teacher.bvn || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">NIN</p>
+                    <p className="font-medium">{teacher.nin || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">PAYE TIN</p>
+                    <p className="font-medium">{teacher.payeTin || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Bank Name</p>
+                    <p className="font-medium">{teacher.bankName || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Account Number</p>
+                    <p className="font-medium">{teacher.bankAccount || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Bank Sort Code</p>
+                    <p className="font-medium">{teacher.bankSortCode || '-'}</p>
                   </div>
                 </div>
               )}
