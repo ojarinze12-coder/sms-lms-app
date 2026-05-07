@@ -326,6 +326,7 @@ export default function NewTeacherPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
                 <label className="block text-sm font-medium mb-2">Qualification</label>
                 <Select value={formData.qualification} onValueChange={(v) => setFormData({ ...formData, qualification: v })}>
                   <SelectTrigger>
