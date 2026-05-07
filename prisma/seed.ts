@@ -10,7 +10,23 @@ const prisma = new PrismaClient({
 });
 
 // Nigerian school tier structure
+// Early Childhood tiers (NOT part of K1-12 academic levels - levels 0-2)
+const EARLY_CHILDHOOD_TIERS = [
+  { name: 'Creche', code: 'CRE', order: 0 },
+  { name: 'Pre-Nursery', code: 'PRE_NUR', order: 1 },
+  { name: 'Nursery', code: 'NUR', order: 2 },
+];
+
+// K1-12 Academic tiers (Level 1-12)
+const K12_TIERS = [
+  { name: 'Primary', code: 'PRI', order: 1 },  // Levels 1-6
+  { name: 'JSS', code: 'JSS', order: 2 },      // Levels 7-9
+  { name: 'SSS', code: 'SSS', order: 3 },      // Levels 10-12
+];
+
+// Combined tiers for full school
 const ALL_TIERS = [
+  { name: 'Creche', code: 'CRE', order: 0 },
   { name: 'Pre-Nursery', code: 'PRE_NUR', order: 1 },
   { name: 'Nursery', code: 'NUR', order: 2 },
   { name: 'Primary', code: 'PRI', order: 3 },
@@ -38,33 +54,41 @@ const SSS_DEPARTMENTS = [
 ];
 
 // Nigerian curriculum classes per tier
+// K1-12 Academic Levels: Primary 1 = Level 1 to SSS 3 = Level 12
 const NIGERIAN_CLASSES: Record<string, { name: string; level: number }[]> = {
+  CRE: [
+    { name: 'Creche 1', level: 0 },
+    { name: 'Creche 2', level: 0 },
+  ],
   PRE_NUR: [
-    { name: 'Pre-Nursery 1', level: 1 },
-    { name: 'Pre-Nursery 2', level: 2 },
+    { name: 'Pre-Nursery 1', level: 0 },
+    { name: 'Pre-Nursery 2', level: 0 },
   ],
   NUR: [
-    { name: 'Nursery 1', level: 3 },
-    { name: 'Nursery 2', level: 4 },
-    { name: 'Nursery 3', level: 5 },
+    { name: 'Nursery 1', level: 0 },
+    { name: 'Nursery 2', level: 0 },
+    { name: 'Nursery 3', level: 0 },
   ],
+  // K1-12: Primary 1 = Level 1 to Primary 6 = Level 6
   PRI: [
-    { name: 'Primary 1', level: 6 },
-    { name: 'Primary 2', level: 7 },
-    { name: 'Primary 3', level: 8 },
-    { name: 'Primary 4', level: 9 },
-    { name: 'Primary 5', level: 10 },
-    { name: 'Primary 6', level: 11 },
+    { name: 'Primary 1', level: 1 },
+    { name: 'Primary 2', level: 2 },
+    { name: 'Primary 3', level: 3 },
+    { name: 'Primary 4', level: 4 },
+    { name: 'Primary 5', level: 5 },
+    { name: 'Primary 6', level: 6 },
   ],
+  // K1-12: JSS 1 = Level 7 to JSS 3 = Level 9
   JSS: [
-    { name: 'JSS 1', level: 12 },
-    { name: 'JSS 2', level: 13 },
-    { name: 'JSS 3', level: 14 },
+    { name: 'JSS 1', level: 7 },
+    { name: 'JSS 2', level: 8 },
+    { name: 'JSS 3', level: 9 },
   ],
+  // K1-12: SSS 1 = Level 10 to SSS 3 = Level 12
   SSS: [
-    { name: 'SSS 1', level: 15 },
-    { name: 'SSS 2', level: 16 },
-    { name: 'SSS 3', level: 17 },
+    { name: 'SSS 1', level: 10 },
+    { name: 'SSS 2', level: 11 },
+    { name: 'SSS 3', level: 12 },
   ],
 };
 

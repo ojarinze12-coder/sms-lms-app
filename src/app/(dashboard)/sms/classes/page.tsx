@@ -407,12 +407,12 @@ export default function ClassesPage() {
   };
 
   const getLevelName = (level: number) => {
-    if (level === 0) return 'Creche';
-    if (level === 1) return 'Pre-Nursery';
-    if (level >= 2 && level <= 4) return `Nursery ${level - 1}`;
-    if (level >= 5 && level <= 10) return `Primary ${level - 4}`;
-    if (level >= 11 && level <= 13) return `JSS ${level - 10}`;
-    if (level >= 14 && level <= 16) return `SSS ${level - 13}`;
+    // Early Childhood (NOT part of K1-12)
+    if (level === 0) return 'Early Childhood';
+    // K1-12 Academic Levels: Primary 1 to SSS 3
+    if (level >= 1 && level <= 6) return `Primary ${level}`;
+    if (level >= 7 && level <= 9) return `JSS ${level - 6}`;
+    if (level >= 10 && level <= 12) return `SSS ${level - 9}`;
     return `Level ${level}`;
   };
 
@@ -604,32 +604,26 @@ export default function ClassesPage() {
                     required
                   >
                     <option value="">Select...</option>
-                    <optgroup label="Pre-School">
-                      <option value="0">Creche</option>
-                      <option value="1">Pre-Nursery</option>
+                    <optgroup label="Early Childhood (NOT K1-12)">
+                      <option value="0">Early Childhood</option>
                     </optgroup>
-                    <optgroup label="Nursery">
-                      <option value="2">Nursery 1</option>
-                      <option value="3">Nursery 2</option>
-                      <option value="4">Nursery 3</option>
+                    <optgroup label="K1-12 Primary (Levels 1-6)">
+                      <option value="1">Primary 1</option>
+                      <option value="2">Primary 2</option>
+                      <option value="3">Primary 3</option>
+                      <option value="4">Primary 4</option>
+                      <option value="5">Primary 5</option>
+                      <option value="6">Primary 6</option>
                     </optgroup>
-                    <optgroup label="Primary">
-                      <option value="5">Primary 1</option>
-                      <option value="6">Primary 2</option>
-                      <option value="7">Primary 3</option>
-                      <option value="8">Primary 4</option>
-                      <option value="9">Primary 5</option>
-                      <option value="10">Primary 6</option>
+                    <optgroup label="K1-12 JSS (Levels 7-9)">
+                      <option value="7">JSS 1</option>
+                      <option value="8">JSS 2</option>
+                      <option value="9">JSS 3</option>
                     </optgroup>
-                    <optgroup label="Junior Secondary (JSS)">
-                      <option value="11">JSS 1</option>
-                      <option value="12">JSS 2</option>
-                      <option value="13">JSS 3</option>
-                    </optgroup>
-                    <optgroup label="Senior Secondary (SSS)">
-                      <option value="14">SSS 1</option>
-                      <option value="15">SSS 2</option>
-                      <option value="16">SSS 3</option>
+                    <optgroup label="K1-12 SSS (Levels 10-12)">
+                      <option value="10">SSS 1</option>
+                      <option value="11">SSS 2</option>
+                      <option value="12">SSS 3</option>
                     </optgroup>
                   </select>
                 </div>
@@ -876,32 +870,26 @@ export default function ClassesPage() {
                     required
                   >
                     <option value="">Select...</option>
-                    <optgroup label="Pre-School">
-                      <option value="0">Creche</option>
-                      <option value="1">Pre-Nursery</option>
+                    <optgroup label="Early Childhood (NOT K1-12)">
+                      <option value="0">Early Childhood</option>
                     </optgroup>
-                    <optgroup label="Nursery">
-                      <option value="2">Nursery 1</option>
-                      <option value="3">Nursery 2</option>
-                      <option value="4">Nursery 3</option>
+                    <optgroup label="K1-12 Primary (Levels 1-6)">
+                      <option value="1">Primary 1</option>
+                      <option value="2">Primary 2</option>
+                      <option value="3">Primary 3</option>
+                      <option value="4">Primary 4</option>
+                      <option value="5">Primary 5</option>
+                      <option value="6">Primary 6</option>
                     </optgroup>
-                    <optgroup label="Primary">
-                      <option value="5">Primary 1</option>
-                      <option value="6">Primary 2</option>
-                      <option value="7">Primary 3</option>
-                      <option value="8">Primary 4</option>
-                      <option value="9">Primary 5</option>
-                      <option value="10">Primary 6</option>
+                    <optgroup label="K1-12 JSS (Levels 7-9)">
+                      <option value="7">JSS 1</option>
+                      <option value="8">JSS 2</option>
+                      <option value="9">JSS 3</option>
                     </optgroup>
-                    <optgroup label="Junior Secondary (JSS)">
-                      <option value="11">JSS 1</option>
-                      <option value="12">JSS 2</option>
-                      <option value="13">JSS 3</option>
-                    </optgroup>
-                    <optgroup label="Senior Secondary (SSS)">
-                      <option value="14">SSS 1</option>
-                      <option value="15">SSS 2</option>
-                      <option value="16">SSS 3</option>
+                    <optgroup label="K1-12 SSS (Levels 10-12)">
+                      <option value="10">SSS 1</option>
+                      <option value="11">SSS 2</option>
+                      <option value="12">SSS 3</option>
                     </optgroup>
                   </select>
                 </div>

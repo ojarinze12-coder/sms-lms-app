@@ -21,36 +21,33 @@ interface Step3SubjectsProps {
   onBack: () => void;
 }
 
+// K1-12 Level system: Primary 1-6 (1-6), JSS 1-3 (7-9), SSS 1-3 (10-12)
 const TIER_LEVEL_RANGES: Record<string, number[]> = {
-  'PRE-SCHOOL': [0, 1, 2, 3, 4],
-  'PRE_NUR': [0, 1, 2, 3, 4],
-  'PRE': [0, 1, 2, 3, 4],
-  'NURSERY': [2, 3, 4],
-  'NUR': [2, 3, 4],
-  'PRIMARY': [5, 6, 7, 8, 9, 10],
-  'PRI': [5, 6, 7, 8, 9, 10],
-  'PRY': [5, 6, 7, 8, 9, 10],
-  'JSS': [11, 12, 13],
-  'JUNIOR': [11, 12, 13],
-  'SSS': [14, 15, 16],
-  'SENIOR': [14, 15, 16],
-  'SS': [14, 15, 16],
+  'CRE': [0],  // Early Childhood - NOT part of K1-12
+  'PRE_NUR': [0],  // Early Childhood - NOT part of K1-12
+  'NUR': [0],  // Early Childhood - NOT part of K1-12
+  'PRIMARY': [1, 2, 3, 4, 5, 6],  // K1-12: Primary 1-6
+  'PRI': [1, 2, 3, 4, 5, 6],  // K1-12: Primary 1-6
+  'PRY': [1, 2, 3, 4, 5, 6],  // K1-12: Primary 1-6
+  'JSS': [7, 8, 9],  // K1-12: JSS 1-3
+  'JUNIOR': [7, 8, 9],  // K1-12: JSS 1-3
+  'SSS': [10, 11, 12],  // K1-12: SSS 1-3
+  'SENIOR': [10, 11, 12],  // K1-12: SSS 1-3
+  'SS': [10, 11, 12],  // K1-12: SSS 1-3
 };
 
 const DEFAULT_TIER_LEVELS: Record<string, number[]> = {
-  'PRE-SCHOOL': [0, 1, 2, 3, 4],
-  'PRE_NUR': [0, 1, 2, 3, 4],
-  'PRE': [0, 1, 2, 3, 4],
-  'NURSERY': [2, 3, 4],
-  'NUR': [2, 3, 4],
-  'PRIMARY': [5, 6, 7, 8, 9, 10],
-  'PRI': [5, 6, 7, 8, 9, 10],
-  'PRY': [5, 6, 7, 8, 9, 10],
-  'JSS': [11, 12, 13],
-  'JUNIOR': [11, 12, 13],
-  'SSS': [14, 15, 16],
-  'SENIOR': [14, 15, 16],
-  'SS': [14, 15, 16],
+  'CRE': [0],  // Early Childhood - NOT part of K1-12
+  'PRE_NUR': [0],  // Early Childhood - NOT part of K1-12
+  'NUR': [0],  // Early Childhood - NOT part of K1-12
+  'PRIMARY': [1, 2, 3, 4, 5, 6],  // K1-12: Primary 1-6
+  'PRI': [1, 2, 3, 4, 5, 6],  // K1-12: Primary 1-6
+  'PRY': [1, 2, 3, 4, 5, 6],  // K1-12: Primary 1-6
+  'JSS': [7, 8, 9],  // K1-12: JSS 1-3
+  'JUNIOR': [7, 8, 9],  // K1-12: JSS 1-3
+  'SSS': [10, 11, 12],  // K1-12: SSS 1-3
+  'SENIOR': [10, 11, 12],  // K1-12: SSS 1-3
+  'SS': [10, 11, 12],  // K1-12: SSS 1-3
 };
 
 function getTierLevels(tierCode: string): number[] {
@@ -199,7 +196,8 @@ export default function Step3Subjects({
                   </div>
                   <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                     Will add subjects for: {levels.map(l => {
-                      const names = ['', 'Creche', 'Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 'Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6', 'JSS 1', 'JSS 2', 'JSS 3', 'SSS 1', 'SSS 2', 'SSS 3'];
+                      // K1-12 Level names: Level 0 = Early Childhood, Levels 1-12 = Primary 1 to SSS 3
+const names = ['', 'Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6', 'JSS 1', 'JSS 2', 'JSS 3', 'SSS 1', 'SSS 2', 'SSS 3'];
                       return names[l] || `Level ${l}`;
                     }).join(', ')}
                   </div>
