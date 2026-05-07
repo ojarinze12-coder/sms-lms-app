@@ -123,11 +123,11 @@ export default function StaffConfigPage() {
     <div className="max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/sms/hr" className="text-sm text-gray-600 hover:text-gray-900">
+          <Link href="/sms/hr" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
             ← Back to HR
           </Link>
-          <h1 className="text-2xl font-bold mt-2">Staff Configuration</h1>
-          <p className="text-gray-500">Configure staff positions, categories, departments, and roles</p>
+          <h1 className="text-2xl font-bold mt-2 dark:text-white">Staff Configuration</h1>
+          <p className="text-gray-500 dark:text-gray-400">Configure staff positions, categories, departments, and roles</p>
         </div>
         <Button onClick={saveConfig} disabled={saving}>
           {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
@@ -138,8 +138,8 @@ export default function StaffConfigPage() {
       {/* Teacher Positions */}
       <Card>
         <CardHeader>
-          <CardTitle>Teacher Positions</CardTitle>
-          <CardDescription>Available positions for teaching staff</CardDescription>
+          <CardTitle className="dark:text-white">Teacher Positions</CardTitle>
+          <CardDescription className="dark:text-gray-400">Available positions for teaching staff</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -148,6 +148,7 @@ export default function StaffConfigPage() {
               value={newValues.teacherPosition}
               onChange={(e) => setNewValues({ ...newValues, teacherPosition: e.target.value })}
               onKeyDown={(e) => e.key === 'Enter' && addItem('teacherPositions', newValues.teacherPosition)}
+              className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
             <Button type="button" onClick={() => addItem('teacherPositions', newValues.teacherPosition)}>
               <Plus className="w-4 h-4" />
@@ -155,9 +156,9 @@ export default function StaffConfigPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {config.teacherPositions.map((pos, idx) => (
-              <div key={idx} className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full">
-                <span className="text-sm">{getLabel('teacherPositions', pos)}</span>
-                <button onClick={() => removeItem('teacherPositions', idx)} className="text-gray-500 hover:text-red-500">
+              <div key={idx} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                <span className="text-sm dark:text-gray-200">{getLabel('teacherPositions', pos)}</span>
+                <button onClick={() => removeItem('teacherPositions', idx)} className="text-gray-500 dark:text-gray-400 hover:text-red-500">
                   <X className="w-3 h-3" />
                 </button>
               </div>
@@ -169,8 +170,8 @@ export default function StaffConfigPage() {
       {/* Staff Categories */}
       <Card>
         <CardHeader>
-          <CardTitle>Staff Categories</CardTitle>
-          <CardDescription>Categories for non-teaching staff</CardDescription>
+          <CardTitle className="dark:text-white">Staff Categories</CardTitle>
+          <CardDescription className="dark:text-gray-400">Categories for non-teaching staff</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -179,6 +180,7 @@ export default function StaffConfigPage() {
               value={newValues.staffCategory}
               onChange={(e) => setNewValues({ ...newValues, staffCategory: e.target.value })}
               onKeyDown={(e) => e.key === 'Enter' && addItem('staffCategories', newValues.staffCategory)}
+              className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
             <Button type="button" onClick={() => addItem('staffCategories', newValues.staffCategory)}>
               <Plus className="w-4 h-4" />
@@ -186,9 +188,9 @@ export default function StaffConfigPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {config.staffCategories.map((cat, idx) => (
-              <div key={idx} className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full">
-                <span className="text-sm">{getLabel('staffCategories', cat)}</span>
-                <button onClick={() => removeItem('staffCategories', idx)} className="text-gray-500 hover:text-red-500">
+              <div key={idx} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                <span className="text-sm dark:text-gray-200">{getLabel('staffCategories', cat)}</span>
+                <button onClick={() => removeItem('staffCategories', idx)} className="text-gray-500 dark:text-gray-400 hover:text-red-500">
                   <X className="w-3 h-3" />
                 </button>
               </div>
@@ -200,8 +202,8 @@ export default function StaffConfigPage() {
       {/* Staff Departments */}
       <Card>
         <CardHeader>
-          <CardTitle>Staff Departments</CardTitle>
-          <CardDescription>Departments for non-teaching staff</CardDescription>
+          <CardTitle className="dark:text-white">Staff Departments</CardTitle>
+          <CardDescription className="dark:text-gray-400">Departments for non-teaching staff</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -210,6 +212,7 @@ export default function StaffConfigPage() {
               value={newValues.staffDepartment}
               onChange={(e) => setNewValues({ ...newValues, staffDepartment: e.target.value })}
               onKeyDown={(e) => e.key === 'Enter' && addItem('staffDepartments', newValues.staffDepartment)}
+              className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
             <Button type="button" onClick={() => addItem('staffDepartments', newValues.staffDepartment)}>
               <Plus className="w-4 h-4" />
@@ -217,9 +220,9 @@ export default function StaffConfigPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {config.staffDepartments.map((dept, idx) => (
-              <div key={idx} className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full">
-                <span className="text-sm">{getLabel('staffDepartments', dept)}</span>
-                <button onClick={() => removeItem('staffDepartments', idx)} className="text-gray-500 hover:text-red-500">
+              <div key={idx} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                <span className="text-sm dark:text-gray-200">{getLabel('staffDepartments', dept)}</span>
+                <button onClick={() => removeItem('staffDepartments', idx)} className="text-gray-500 dark:text-gray-400 hover:text-red-500">
                   <X className="w-3 h-3" />
                 </button>
               </div>
@@ -231,8 +234,8 @@ export default function StaffConfigPage() {
       {/* Staff Positions */}
       <Card>
         <CardHeader>
-          <CardTitle>Staff Positions</CardTitle>
-          <CardDescription>Positions for non-teaching staff</CardDescription>
+          <CardTitle className="dark:text-white">Staff Positions</CardTitle>
+          <CardDescription className="dark:text-gray-400">Positions for non-teaching staff</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -241,6 +244,7 @@ export default function StaffConfigPage() {
               value={newValues.staffPosition}
               onChange={(e) => setNewValues({ ...newValues, staffPosition: e.target.value })}
               onKeyDown={(e) => e.key === 'Enter' && addItem('staffPositions', newValues.staffPosition)}
+              className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
             <Button type="button" onClick={() => addItem('staffPositions', newValues.staffPosition)}>
               <Plus className="w-4 h-4" />
@@ -248,9 +252,9 @@ export default function StaffConfigPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {config.staffPositions.map((pos, idx) => (
-              <div key={idx} className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full">
-                <span className="text-sm">{getLabel('staffPositions', pos)}</span>
-                <button onClick={() => removeItem('staffPositions', idx)} className="text-gray-500 hover:text-red-500">
+              <div key={idx} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                <span className="text-sm dark:text-gray-200">{getLabel('staffPositions', pos)}</span>
+                <button onClick={() => removeItem('staffPositions', idx)} className="text-gray-500 dark:text-gray-400 hover:text-red-500">
                   <X className="w-3 h-3" />
                 </button>
               </div>
