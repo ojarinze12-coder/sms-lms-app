@@ -407,9 +407,20 @@ export default function ClassesPage() {
   };
 
   const getLevelName = (level: number) => {
+    // Handle legacy level values (old system: 5-16) for backward compatibility
+    // Legacy mapping: Primary 1-6 = 5-10, JSS 1-3 = 11-13, SSS 1-3 = 14-16
+    const legacyMap: Record<number, string> = {
+      5: 'Primary 1', 6: 'Primary 2', 7: 'Primary 3', 8: 'Primary 4', 9: 'Primary 5', 10: 'Primary 6',
+      11: 'JSS 1', 12: 'JSS 2', 13: 'JSS 3',
+      14: 'SSS 1', 15: 'SSS 2', 16: 'SSS 3',
+    };
+    
+    // Check legacy levels first (for existing data)
+    if (legacyMap[level]) return legacyMap[level];
+    
     // Early Childhood (NOT part of K1-12)
     if (level === 0) return 'Early Childhood';
-    // K1-12 Academic Levels: Primary 1 to SSS 3
+    // K1-12 Academic Levels: Primary 1 to SSS 3 (new system: 1-12)
     if (level >= 1 && level <= 6) return `Primary ${level}`;
     if (level >= 7 && level <= 9) return `JSS ${level - 6}`;
     if (level >= 10 && level <= 12) return `SSS ${level - 9}`;
@@ -624,6 +635,21 @@ export default function ClassesPage() {
                       <option value="10">SSS 1</option>
                       <option value="11">SSS 2</option>
                       <option value="12">SSS 3</option>
+                    </optgroup>
+                    {/* Legacy levels for backward compatibility */}
+                    <optgroup label="Legacy Levels">
+                      <option value="5">Primary 1 (Legacy)</option>
+                      <option value="6">Primary 2 (Legacy)</option>
+                      <option value="7">Primary 3 (Legacy)</option>
+                      <option value="8">Primary 4 (Legacy)</option>
+                      <option value="9">Primary 5 (Legacy)</option>
+                      <option value="10">Primary 6 (Legacy)</option>
+                      <option value="11">JSS 1 (Legacy)</option>
+                      <option value="12">JSS 2 (Legacy)</option>
+                      <option value="13">JSS 3 (Legacy)</option>
+                      <option value="14">SSS 1 (Legacy)</option>
+                      <option value="15">SSS 2 (Legacy)</option>
+                      <option value="16">SSS 3 (Legacy)</option>
                     </optgroup>
                   </select>
                 </div>
@@ -890,6 +916,21 @@ export default function ClassesPage() {
                       <option value="10">SSS 1</option>
                       <option value="11">SSS 2</option>
                       <option value="12">SSS 3</option>
+                    </optgroup>
+                    {/* Legacy levels for backward compatibility with existing data */}
+                    <optgroup label="Legacy Levels (Existing Classes)">
+                      <option value="5">Primary 1 (Legacy)</option>
+                      <option value="6">Primary 2 (Legacy)</option>
+                      <option value="7">Primary 3 (Legacy)</option>
+                      <option value="8">Primary 4 (Legacy)</option>
+                      <option value="9">Primary 5 (Legacy)</option>
+                      <option value="10">Primary 6 (Legacy)</option>
+                      <option value="11">JSS 1 (Legacy)</option>
+                      <option value="12">JSS 2 (Legacy)</option>
+                      <option value="13">JSS 3 (Legacy)</option>
+                      <option value="14">SSS 1 (Legacy)</option>
+                      <option value="15">SSS 2 (Legacy)</option>
+                      <option value="16">SSS 3 (Legacy)</option>
                     </optgroup>
                   </select>
                 </div>
