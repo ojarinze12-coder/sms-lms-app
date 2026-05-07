@@ -27,6 +27,24 @@ export default function NewTeacherPage() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [teacherPositions, setTeacherPositions] = useState<string[]>(defaultTeacherPositions);
+  const [departments, setDepartments] = useState<{id: string, name: string, code: string}[]>([]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (selectedBranch) params.append('branchId', selectedBranch.id);
+        const res = await authFetch(`/api/sms/departments?${params}`);
+        if (res.ok) {
+          const data = await res.json();
+          setDepartments(data.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch departments:', err);
+      }
+    };
+    if (selectedBranch) fetchDepartments();
+  }, [selectedBranch]);
   
   useEffect(() => {
     const fetchStaffConfig = async () => {
@@ -291,6 +309,23 @@ export default function NewTeacherPage() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium mb-2">Department</label>
+                <Select 
+                  value={formData.departmentId} 
+                  onValueChange={(v) => setFormData({ ...formData, departmentId: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
                 <label className="block text-sm font-medium mb-2">Qualification</label>
                 <Select value={formData.qualification} onValueChange={(v) => setFormData({ ...formData, qualification: v })}>
                   <SelectTrigger>

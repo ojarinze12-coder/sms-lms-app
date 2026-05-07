@@ -59,6 +59,7 @@ export default function EditTeacherPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [teacherPositions, setTeacherPositions] = useState<string[]>(defaultTeacherPositions);
+  const [departments, setDepartments] = useState<{id: string, name: string, code: string}[]>([]);
 
   useEffect(() => {
     const fetchStaffConfig = async () => {
@@ -75,6 +76,21 @@ export default function EditTeacherPage() {
       }
     };
     fetchStaffConfig();
+  }, []);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await authFetch('/api/sms/departments');
+        if (res.ok) {
+          const data = await res.json();
+          setDepartments(data.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch departments:', err);
+      }
+    };
+    fetchDepartments();
   }, []);
 
   const [formData, setFormData] = useState({
@@ -354,6 +370,26 @@ export default function EditTeacherPage() {
                   onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Department</label>
+                <Select 
+                  value={formData.departmentId} 
+                  onValueChange={(v) => setFormData({ ...formData, departmentId: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Qualification</label>
                 <Select value={formData.qualification} onValueChange={(v) => setFormData({ ...formData, qualification: v })}>
