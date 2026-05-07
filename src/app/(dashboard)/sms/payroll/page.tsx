@@ -343,29 +343,29 @@ export default function PayrollPage() {
                 Run Payroll
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-gray-900">
               <DialogHeader>
-                <DialogTitle>Run Monthly Payroll</DialogTitle>
+                <DialogTitle className="dark:text-white">Run Monthly Payroll</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Employee Type</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-200">Employee Type</label>
                     <Select 
                       value={formData.employeeType} 
                       onValueChange={(v: 'TEACHER' | 'STAFF') => setFormData({ ...formData, employeeType: v, teacherId: '', staffId: '' })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="dark:bg-gray-800 dark:text-white dark:border-gray-600">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="TEACHER">Teacher</SelectItem>
-                        <SelectItem value="STAFF">Non-Teaching Staff</SelectItem>
+                      <SelectContent className="dark:bg-gray-800 dark:text-white">
+                        <SelectItem value="TEACHER" className="dark:text-white">Teacher</SelectItem>
+                        <SelectItem value="STAFF" className="dark:text-white">Non-Teaching Staff</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Select Employee</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-200">Select Employee</label>
                     <Select 
                       value={formData.employeeType === 'TEACHER' ? formData.teacherId : formData.staffId}
                       onValueChange={(v) => {
@@ -380,12 +380,12 @@ export default function PayrollPage() {
                         });
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="dark:bg-gray-800 dark:text-white dark:border-gray-600">
                         <SelectValue placeholder="Select employee" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dark:bg-gray-800">
                         {employeeList.map((emp) => (
-                          <SelectItem key={emp.id} value={emp.id}>
+                          <SelectItem key={emp.id} value={emp.id} className="dark:text-white">
                             {emp.firstName} {emp.lastName} ({emp.employeeId})
                           </SelectItem>
                         ))}
@@ -396,21 +396,21 @@ export default function PayrollPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Period</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-200">Period</label>
                     <div className="flex gap-2">
                       <Select value={formData.month.toString()} onValueChange={(v) => setFormData({ ...formData, month: parseInt(v) })}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="dark:bg-gray-800">
                           {months.map((m, i) => (
-                            <SelectItem key={i} value={(i + 1).toString()}>{m}</SelectItem>
+                            <SelectItem key={i} value={(i + 1).toString()} className="dark:text-white">{m}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       <Input 
                         type="number" 
-                        className="w-24" 
+                        className="w-24 dark:bg-gray-800 dark:text-white dark:border-gray-600" 
                         value={formData.year} 
                         onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
                       />
@@ -418,94 +418,101 @@ export default function PayrollPage() {
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
-                  <h3 className="font-medium mb-3">Earnings</h3>
+                <div className="border-t pt-4 dark:border-gray-600">
+                  <h3 className="font-medium mb-3 dark:text-white">Earnings</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Basic Salary *</label>
+                      <label className="block text-sm font-medium mb-1 dark:text-gray-200">Basic Salary *</label>
                       <Input 
                         type="number" 
                         value={formData.basicSalary} 
                         onChange={(e) => setFormData({ ...formData, basicSalary: e.target.value })}
                         placeholder="0"
                         required
+                        className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Housing Allowance</label>
+                      <label className="block text-sm font-medium mb-1 dark:text-gray-200">Housing Allowance</label>
                       <Input 
                         type="number" 
                         value={formData.housingAllowance} 
                         onChange={(e) => setFormData({ ...formData, housingAllowance: e.target.value })}
                         placeholder="0"
+                        className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Transport Allowance</label>
+                      <label className="block text-sm font-medium mb-1 dark:text-gray-200">Transport Allowance</label>
                       <Input 
                         type="number" 
                         value={formData.transportAllowance} 
                         onChange={(e) => setFormData({ ...formData, transportAllowance: e.target.value })}
                         placeholder="0"
+                        className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Other Allowances</label>
+                      <label className="block text-sm font-medium mb-1 dark:text-gray-200">Other Allowances</label>
                       <Input 
                         type="number" 
                         value={formData.otherAllowances} 
                         onChange={(e) => setFormData({ ...formData, otherAllowances: e.target.value })}
                         placeholder="0"
+                        className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
-                  <h3 className="font-medium mb-3">Deductions</h3>
+                <div className="border-t pt-4 dark:border-gray-600">
+                  <h3 className="font-medium mb-3 dark:text-white">Deductions</h3>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Pension (%)</label>
+                      <label className="block text-sm font-medium mb-1 dark:text-gray-200">Pension (%)</label>
                       <Input 
                         type="number" 
                         value={formData.pensionRate} 
                         onChange={(e) => setFormData({ ...formData, pensionRate: e.target.value })}
                         placeholder="8"
+                        className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Tax (%)</label>
+                      <label className="block text-sm font-medium mb-1 dark:text-gray-200">Tax (%)</label>
                       <Input 
                         type="number" 
                         value={formData.taxRate} 
                         onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })}
                         placeholder="20"
+                        className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">NHF (%)</label>
+                      <label className="block text-sm font-medium mb-1 dark:text-gray-200">NHF (%)</label>
                       <Input 
                         type="number" 
                         value={formData.nhfRate} 
                         onChange={(e) => setFormData({ ...formData, nhfRate: e.target.value })}
                         placeholder="2.5"
+                        className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2 dark:text-white">
                   <div className="flex justify-between">
-                    <span>Total Earnings:</span>
-                    <span className="font-medium">{calc.totalEarnings.toLocaleString()}</span>
+                    <span className="dark:text-gray-300">Total Earnings:</span>
+                    <span className="font-medium dark:text-white">{calc.totalEarnings.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Total Deductions:</span>
-                    <span className="font-medium text-red-600">-{calc.totalDeductions.toLocaleString()}</span>
+                    <span className="dark:text-gray-300">Total Deductions:</span>
+                    <span className="font-medium text-red-600 dark:text-red-400">-{calc.totalDeductions.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between border-t pt-2 font-bold">
-                    <span>Net Pay:</span>
-                    <span className="text-green-600">{calc.netPay.toLocaleString()}</span>
+                  <div className="flex justify-between border-t pt-2 font-bold dark:border-gray-600">
+                    <span className="dark:text-gray-300">Net Pay:</span>
+                    <span className="text-green-600 dark:text-green-400">{calc.netPay.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -636,99 +643,103 @@ export default function PayrollPage() {
       )}
 
       <Dialog open={showBulkForm} onOpenChange={setShowBulkForm}>
-        <DialogContent>
+        <DialogContent className="dark:bg-gray-900">
           <DialogHeader>
-            <DialogTitle>Bulk Payroll Run</DialogTitle>
+            <DialogTitle className="dark:text-white">Bulk Payroll Run</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Employee Type</label>
+              <label className="block text-sm font-medium mb-1 dark:text-gray-200">Employee Type</label>
               <Select 
                 value={bulkFormData.employeeType} 
                 onValueChange={(v: 'TEACHER' | 'STAFF') => setBulkFormData({ ...bulkFormData, employeeType: v })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="dark:bg-gray-800 dark:text-white dark:border-gray-600">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="TEACHER">All Teachers</SelectItem>
-                  <SelectItem value="STAFF">All Non-Teaching Staff</SelectItem>
+                <SelectContent className="dark:bg-gray-800">
+                  <SelectItem value="TEACHER" className="dark:text-white">All Teachers</SelectItem>
+                  <SelectItem value="STAFF" className="dark:text-white">All Non-Teaching Staff</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Branch (Optional - leave empty for all)</label>
+              <label className="block text-sm font-medium mb-1 dark:text-gray-200">Branch (Optional - leave empty for all)</label>
               <Select 
                 value={bulkFormData.branchId || 'all'} 
                 onValueChange={(v) => setBulkFormData({ ...bulkFormData, branchId: v === 'all' ? '' : v })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="dark:bg-gray-800 dark:text-white dark:border-gray-600">
                   <SelectValue placeholder="All Branches" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Branches</SelectItem>
+                <SelectContent className="dark:bg-gray-800">
+                  <SelectItem value="all" className="dark:text-white">All Branches</SelectItem>
                   {branches.map((branch) => (
-                    <SelectItem key={branch.id} value={branch.id}>{branch.name}</SelectItem>
+                    <SelectItem key={branch.id} value={branch.id} className="dark:text-white">{branch.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Month</label>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-200">Month</label>
                 <Select value={bulkFormData.month.toString()} onValueChange={(v) => setBulkFormData({ ...bulkFormData, month: parseInt(v) })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="dark:bg-gray-800 dark:text-white dark:border-gray-600">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-gray-800">
                     {months.map((m, i) => (
-                      <SelectItem key={i} value={(i + 1).toString()}>{m}</SelectItem>
+                      <SelectItem key={i} value={(i + 1).toString()} className="dark:text-white">{m}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Year</label>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-200">Year</label>
                 <Input 
                   type="number" 
                   value={bulkFormData.year} 
                   onChange={(e) => setBulkFormData({ ...bulkFormData, year: parseInt(e.target.value) })}
+                  className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                 />
               </div>
             </div>
-            <div className="border-t pt-4">
-              <p className="text-sm font-medium mb-2">Override Values (Optional - leave empty to use employee defaults)</p>
+            <div className="border-t pt-4 dark:border-gray-600">
+              <p className="text-sm font-medium mb-2 dark:text-gray-200">Override Values (Optional - leave empty to use employee defaults)</p>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs mb-1">Basic Salary</label>
+                  <label className="block text-xs mb-1 dark:text-gray-300">Basic Salary</label>
                   <Input 
                     type="number" 
                     placeholder="Use default"
                     value={bulkFormData.overrideBasicSalary}
                     onChange={(e) => setBulkFormData({ ...bulkFormData, overrideBasicSalary: e.target.value })}
+                    className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs mb-1">Housing</label>
+                  <label className="block text-xs mb-1 dark:text-gray-300">Housing</label>
                   <Input 
                     type="number" 
                     value={bulkFormData.overrideHousingAllowance}
                     onChange={(e) => setBulkFormData({ ...bulkFormData, overrideHousingAllowance: e.target.value })}
+                    className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs mb-1">Transport</label>
+                  <label className="block text-xs mb-1 dark:text-gray-300">Transport</label>
                   <Input 
                     type="number" 
                     value={bulkFormData.overrideTransportAllowance}
                     onChange={(e) => setBulkFormData({ ...bulkFormData, overrideTransportAllowance: e.target.value })}
+                    className="dark:bg-gray-800 dark:text-white dark:border-gray-600"
                   />
                 </div>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBulkForm(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowBulkForm(false)} className="dark:bg-gray-800 dark:text-white dark:border-gray-600">Cancel</Button>
             <Button onClick={handleBulkSubmit} disabled={bulkProcessing}>
               {bulkProcessing ? 'Processing...' : 'Run Bulk Payroll'}
             </Button>
@@ -737,13 +748,13 @@ export default function PayrollPage() {
       </Dialog>
 
       <Dialog open={showRemitaDialog} onOpenChange={setShowRemitaDialog}>
-        <DialogContent>
+        <DialogContent className="dark:bg-gray-900">
           <DialogHeader>
-            <DialogTitle>Pay via Remita</DialogTitle>
+            <DialogTitle className="dark:text-white">Pay via Remita</DialogTitle>
           </DialogHeader>
-          <p>Process payment for {approvedCount} approved payroll records via Remita?</p>
+          <p className="dark:text-gray-200">Process payment for {approvedCount} approved payroll records via Remita?</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRemitaDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowRemitaDialog(false)} className="dark:bg-gray-800 dark:text-white dark:border-gray-600">Cancel</Button>
             <Button onClick={handleRemitaPayment} disabled={remitaProcessing}>
               {remitaProcessing ? 'Processing...' : 'Process Payment'}
             </Button>
