@@ -775,6 +775,12 @@ model TenantSettings {
   promotionMinAttendance   Float   @default(75.0) // Percentage
   promotionAutoEnroll      Boolean @default(true)
 
+  // Staff Configuration
+  teacherPositions  String[] @default(["PRINCIPAL", "VICE_PRINCIPAL", "HOD", "SENIOR_TEACHER", "CLASS_TEACHER", "FORM_MASTER", "SUBJECT_TEACHER", "ASSISTANT_TEACHER"])
+  staffCategories   String[] @default(["ADMINISTRATIVE", "BURSAR", "LIBRARIAN", "SECURITY", "CLEANER", "DRIVER", "COOK", "MAINTENANCE", "IT_SUPPORT", "COUNSELOR", "NURSE", "TRANSPORT"])
+  staffDepartments  String[] @default(["FINANCE", "ADMINISTRATION", "TRANSPORT", "LIBRARY", "ICT", "SECURITY", "MEDICAL", "KITCHEN", "MAINTENANCE"])
+  staffPositions    String[] @default(["BURSAR", "ACCOUNTANT", "CASHIER", "ADMIN_OFFICER", "RECEPTIONIST", "LIBRARIAN", "LIBRARY_ASSISTANT", "CHIEF_SECURITY", "SECURITY_GUARD", "TRANSPORT_MANAGER", "DRIVER", "NURSE", "MEDICAL_OFFICER", "COOK", "KITCHEN_STAFF", "MAINTENANCE_OFFICER", "IT_SUPPORT_SPECIALIST"])
+
   @@map("tenant_settings")
 }
 

@@ -17,7 +17,7 @@ import {
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useBranch } from '@/lib/hooks/use-branch';
 import { NIGERIAN_STATES, NIGERIAN_LGAS } from '@/lib/nigeria';
-import { banks } from '@/types/staff';
+import { banks, teacherPositionLabels, defaultTeacherPositions } from '@/types/staff';
 
 interface Teacher {
   id: string;
@@ -58,6 +58,25 @@ export default function EditTeacherPage() {
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [teacherPositions, setTeacherPositions] = useState<string[]>(defaultTeacherPositions);
+
+  useEffect(() => {
+    const fetchStaffConfig = async () => {
+      try {
+        const res = await authFetch('/api/sms/staff-config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.teacherPositions?.length > 0) {
+            setTeacherPositions(data.teacherPositions);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch staff config:', err);
+      }
+    };
+    fetchStaffConfig();
+  }, []);
+
   const [formData, setFormData] = useState({
     employeeId: '',
     firstName: '',
@@ -374,10 +393,36 @@ export default function EditTeacherPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Position</label>
-                <Input 
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                />
+                <Select 
+                  value={teacherPositions.includes(formData.position) ? formData.position : ''} 
+                  onValueChange={(v) => {
+                    if (v === '__custom__') {
+                      setFormData({ ...formData, position: '' });
+                    } else {
+                      setFormData({ ...formData, position: v });
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teacherPositions.map((pos) => (
+                      <SelectItem key={pos} value={pos}>
+                        {teacherPositionLabels[pos] || pos}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="__custom__">Custom (Enter below)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {!teacherPositions.includes(formData.position) && formData.position !== '' && (
+                  <Input 
+                    className="mt-2"
+                    placeholder="Enter custom position"
+                    value={formData.position}
+                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Salary (Monthly)</label>

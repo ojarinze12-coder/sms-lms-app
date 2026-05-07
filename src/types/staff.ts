@@ -138,3 +138,126 @@ export const getInitialFormData = (): StaffFormData => ({
   bankSortCode: '',
   branchId: '',
 });
+
+export interface StaffConfig {
+  teacherPositions: string[];
+  staffCategories: string[];
+  staffDepartments: string[];
+  staffPositions: string[];
+}
+
+export const defaultTeacherPositions = [
+  'PRINCIPAL',
+  'VICE_PRINCIPAL',
+  'HOD',
+  'SENIOR_TEACHER',
+  'CLASS_TEACHER',
+  'FORM_MASTER',
+  'SUBJECT_TEACHER',
+  'ASSISTANT_TEACHER'
+];
+
+export const defaultStaffCategories = [
+  'ADMINISTRATIVE',
+  'BURSAR',
+  'LIBRARIAN',
+  'SECURITY',
+  'CLEANER',
+  'DRIVER',
+  'COOK',
+  'MAINTENANCE',
+  'IT_SUPPORT',
+  'COUNSELOR',
+  'NURSE',
+  'TRANSPORT'
+];
+
+export const defaultStaffDepartments = [
+  'FINANCE',
+  'ADMINISTRATION',
+  'TRANSPORT',
+  'LIBRARY',
+  'ICT',
+  'SECURITY',
+  'MEDICAL',
+  'KITCHEN',
+  'MAINTENANCE'
+];
+
+export const defaultStaffPositions = [
+  'BURSAR',
+  'ACCOUNTANT',
+  'CASHIER',
+  'ADMIN_OFFICER',
+  'RECEPTIONIST',
+  'LIBRARIAN',
+  'LIBRARY_ASSISTANT',
+  'CHIEF_SECURITY',
+  'SECURITY_GUARD',
+  'TRANSPORT_MANAGER',
+  'DRIVER',
+  'NURSE',
+  'MEDICAL_OFFICER',
+  'COOK',
+  'KITCHEN_STAFF',
+  'MAINTENANCE_OFFICER',
+  'IT_SUPPORT_SPECIALIST'
+];
+
+export const teacherPositionLabels: Record<string, string> = {
+  PRINCIPAL: 'Principal',
+  VICE_PRINCIPAL: 'Vice Principal',
+  HOD: 'Head of Department (HOD)',
+  SENIOR_TEACHER: 'Senior Teacher',
+  CLASS_TEACHER: 'Class Teacher',
+  FORM_MASTER: 'Form Master/Mistress',
+  SUBJECT_TEACHER: 'Subject Teacher',
+  ASSISTANT_TEACHER: 'Assistant Teacher',
+};
+
+export const staffCategoryLabels: Record<string, string> = {
+  ADMINISTRATIVE: 'Administrative',
+  BURSAR: 'Bursar/Finance',
+  LIBRARIAN: 'Librarian',
+  SECURITY: 'Security',
+  CLEANER: 'Cleaner',
+  DRIVER: 'Driver',
+  COOK: 'Cook',
+  MAINTENANCE: 'Maintenance',
+  IT_SUPPORT: 'IT Support',
+  COUNSELOR: 'Counselor',
+  NURSE: 'Nurse',
+  TRANSPORT: 'Transport',
+};
+
+export const staffDepartmentLabels: Record<string, string> = {
+  FINANCE: 'Finance',
+  ADMINISTRATION: 'Administration',
+  TRANSPORT: 'Transport',
+  LIBRARY: 'Library',
+  ICT: 'ICT',
+  SECURITY: 'Security',
+  MEDICAL: 'Medical',
+  KITCHEN: 'Kitchen',
+  MAINTENANCE: 'Maintenance',
+};
+
+export const staffPositionLabels: Record<string, string> = {
+  BURSAR: 'Bursar',
+  ACCOUNTANT: 'Accountant',
+  CASHIER: 'Cashier',
+  ADMIN_OFFICER: 'Admin Officer',
+  RECEPTIONIST: 'Receptionist',
+  LIBRARIAN: 'Librarian',
+  LIBRARY_ASSISTANT: 'Library Assistant',
+  CHIEF_SECURITY: 'Chief Security Officer',
+  SECURITY_GUARD: 'Security Guard',
+  TRANSPORT_MANAGER: 'Transport Manager',
+  DRIVER: 'Driver',
+  NURSE: 'Nurse',
+  MEDICAL_OFFICER: 'Medical Officer',
+  COOK: 'Cook',
+  KITCHEN_STAFF: 'Kitchen Staff',
+  MAINTENANCE_OFFICER: 'Maintenance Officer',
+  IT_SUPPORT_SPECIALIST: 'IT Support Specialist',
+};

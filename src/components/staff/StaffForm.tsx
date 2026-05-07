@@ -10,10 +10,17 @@ import {
   employmentTypes, 
   nigerianStates, 
   banks,
-  type StaffFormData 
+  type StaffFormData,
+  staffCategoryLabels,
+  staffDepartmentLabels,
+  staffPositionLabels,
+  defaultStaffCategories,
+  defaultStaffDepartments,
+  defaultStaffPositions,
 } from '@/types/staff';
 import { Loader2, Wand2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface StaffFormProps {
   formData: StaffFormData;
@@ -41,6 +48,26 @@ export default function StaffForm({
   branches = [],
 }: StaffFormProps) {
   const [generating, setGenerating] = useState(false);
+  const [staffCategories, setStaffCategories] = useState<string[]>(defaultStaffCategories);
+  const [staffDepartments, setStaffDepartments] = useState<string[]>(defaultStaffDepartments);
+  const [staffPositions, setStaffPositions] = useState<string[]>(defaultStaffPositions);
+
+  useEffect(() => {
+    const fetchStaffConfig = async () => {
+      try {
+        const res = await authFetch('/api/sms/staff-config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.staffCategories?.length > 0) setStaffCategories(data.staffCategories);
+          if (data.staffDepartments?.length > 0) setStaffDepartments(data.staffDepartments);
+          if (data.staffPositions?.length > 0) setStaffPositions(data.staffPositions);
+        }
+      } catch (err) {
+        console.error('Failed to fetch staff config:', err);
+      }
+    };
+    fetchStaffConfig();
+  }, []);
 
   const handleChange = (field: keyof StaffFormData, value: string) => {
     onChange({ ...formData, [field]: value });
@@ -119,18 +146,36 @@ export default function StaffForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
-            <Select value={formData.category} onValueChange={(v) => handleChange('category', v)}>
+            <Select 
+              value={staffCategories.includes(formData.category) ? formData.category : ''} 
+              onValueChange={(v) => {
+                if (v === '__custom__') {
+                  handleChange('category', '');
+                } else {
+                  handleChange('category', v);
+                }
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {staffCategories.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
+                  <SelectItem key={cat} value={cat}>
+                    {staffCategoryLabels[cat] || cat}
                   </SelectItem>
                 ))}
+                <SelectItem value="__custom__">Custom (Enter below)</SelectItem>
               </SelectContent>
             </Select>
+            {!staffCategories.includes(formData.category) && formData.category !== '' && (
+              <Input 
+                className="mt-2"
+                placeholder="Enter custom category"
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+              />
+            )}
           </div>
           {branches.length > 0 && (
             <div className="space-y-2">
@@ -162,19 +207,69 @@ export default function StaffForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="department">Department</Label>
-            <Input
-              id="department"
-              value={formData.department}
-              onChange={(e) => handleChange('department', e.target.value)}
-            />
+            <Select 
+              value={staffDepartments.includes(formData.department) ? formData.department : ''} 
+              onValueChange={(v) => {
+                if (v === '__custom__') {
+                  handleChange('department', '');
+                } else {
+                  handleChange('department', v);
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {staffDepartments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {staffDepartmentLabels[dept] || dept}
+                  </SelectItem>
+                ))}
+                <SelectItem value="__custom__">Custom (Enter below)</SelectItem>
+              </SelectContent>
+            </Select>
+            {!staffDepartments.includes(formData.department) && formData.department !== '' && (
+              <Input 
+                className="mt-2"
+                placeholder="Enter custom department"
+                value={formData.department}
+                onChange={(e) => handleChange('department', e.target.value)}
+              />
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="position">Position</Label>
-            <Input
-              id="position"
-              value={formData.position}
-              onChange={(e) => handleChange('position', e.target.value)}
-            />
+            <Select 
+              value={staffPositions.includes(formData.position) ? formData.position : ''} 
+              onValueChange={(v) => {
+                if (v === '__custom__') {
+                  handleChange('position', '');
+                } else {
+                  handleChange('position', v);
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select position" />
+              </SelectTrigger>
+              <SelectContent>
+                {staffPositions.map((pos) => (
+                  <SelectItem key={pos} value={pos}>
+                    {staffPositionLabels[pos] || pos}
+                  </SelectItem>
+                ))}
+                <SelectItem value="__custom__">Custom (Enter below)</SelectItem>
+              </SelectContent>
+            </Select>
+            {!staffPositions.includes(formData.position) && formData.position !== '' && (
+              <Input 
+                className="mt-2"
+                placeholder="Enter custom position"
+                value={formData.position}
+                onChange={(e) => handleChange('position', e.target.value)}
+              />
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">

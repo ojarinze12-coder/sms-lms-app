@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -18,7 +18,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { NIGERIAN_STATES, NIGERIAN_LGAS } from '@/lib/nigeria';
 import { Loader2, Wand2 } from 'lucide-react';
 import { useBranch } from '@/lib/hooks/use-branch';
-import { banks } from '@/types/staff';
+import { banks, teacherPositionLabels, defaultTeacherPositions } from '@/types/staff';
 
 export default function NewTeacherPage() {
   const { toast } = useToast();
@@ -26,6 +26,25 @@ export default function NewTeacherPage() {
   const { selectedBranch, branches } = useBranch();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [teacherPositions, setTeacherPositions] = useState<string[]>(defaultTeacherPositions);
+  
+  useEffect(() => {
+    const fetchStaffConfig = async () => {
+      try {
+        const res = await authFetch('/api/sms/staff-config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.teacherPositions?.length > 0) {
+            setTeacherPositions(data.teacherPositions);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch staff config:', err);
+      }
+    };
+    fetchStaffConfig();
+  }, []);
+
   const [formData, setFormData] = useState({
     employeeId: '',
     firstName: '',
@@ -310,11 +329,36 @@ export default function NewTeacherPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Position</label>
-                <Input 
-                  placeholder="e.g., HOD, Senior Teacher"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                />
+                <Select 
+                    value={teacherPositions.includes(formData.position) ? formData.position : ''} 
+                    onValueChange={(v) => {
+                      if (v === '__custom__') {
+                        setFormData({ ...formData, position: '' });
+                      } else {
+                        setFormData({ ...formData, position: v });
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teacherPositions.map((pos) => (
+                        <SelectItem key={pos} value={pos}>
+                          {teacherPositionLabels[pos] || pos}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="__custom__">Custom (Enter below)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {!teacherPositions.includes(formData.position) && formData.position !== '' && (
+                    <Input 
+                      className="mt-2"
+                      placeholder="Enter custom position"
+                      value={formData.position}
+                      onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                    />
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Salary (Monthly)</label>

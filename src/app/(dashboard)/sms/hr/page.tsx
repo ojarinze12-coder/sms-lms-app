@@ -14,7 +14,8 @@ import {
   ArrowRight,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Settings
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -353,6 +354,12 @@ export default function HRDashboard() {
               <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
                 <Calendar className="h-5 w-5" />
                 <span className="text-sm">Leave Requests</span>
+              </Button>
+            </Link>
+            <Link href="/sms/settings/staff-config">
+              <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                <Settings className="h-5 w-5" />
+                <span className="text-sm">Staff Config</span>
               </Button>
             </Link>
           </div>
