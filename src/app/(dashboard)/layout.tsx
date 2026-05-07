@@ -85,9 +85,9 @@ const smsNavItems = [
 ];
 
 const lmsNavItems = [
-  { label: 'All Courses', href: '/lms/courses', icon: '📚' },
   { label: 'Enrollments', href: '/lms/enrollments', icon: '👥' },
   { label: 'Exams', href: '/lms/exams', icon: '📝' },
+  { label: 'Assignments', href: '/lms/assignments', icon: '📝' },
   { label: 'Results', href: '/lms/results', icon: '📊' },
   { label: 'Badges', href: '/lms/badges', icon: '🏅' },
   { label: 'Certificates', href: '/lms/certificates', icon: '🎓' },
@@ -96,7 +96,7 @@ const lmsNavItems = [
 
 const teacherNavItems = [
   { label: 'Dashboard', href: '/' },
-  { label: 'My Courses', href: '/lms/courses' },
+  { label: 'Assignments', href: '/lms/assignments' },
   { label: 'Exams', href: '/lms/exams' },
   { label: 'Results', href: '/lms/results' },
 ];

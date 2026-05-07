@@ -544,11 +544,11 @@ model AcademicClass {
   classTeacherId String?         @map("class_teacher_id") @db.Uuid // Class Teacher (Pre-Nursery, Nursery, Primary)
   formMasterId   String?         @map("form_master_id") @db.Uuid // Secondary Form Master (JSS, SSS)
   caregiverId    String?         @map("caregiver_id") @db.Uuid // Pre-Nursery/Nursery Care-giver
-  academicYearId String?         @db.Uuid
+  academicYearId String?        @db.Uuid
   tenantId       String?         @db.Uuid
   branchId       String?         @db.Uuid
   createdAt      DateTime?       @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime?       @default(now()) @updatedAt @db.Timestamptz(6)
+  updatedAt      DateTime?       @default(now()) @db.Timestamptz(6)
   departmentId   String?         @db.Uuid
   tierId         String?         @db.Uuid
   department     Department?     @relation(fields: [departmentId], references: [id])
@@ -556,6 +556,10 @@ model AcademicClass {
   attendances    Attendance[]
   enrollments    Enrollment[]
   subjects       Subject[]
+  assignments    Assignment[]
+  lessons        Lesson[]
+  forums         DiscussionForum[]
+  certificates   Certificate[]
   timetableSlots TimetableSlot[]
   transcripts    Transcript[]
   applications   Application[]
@@ -588,6 +592,9 @@ model Subject {
   departmentId    String?         @db.Uuid
   isActive        Boolean         @default(true)
   exams           Exam[]
+  assignments     Assignment[]
+  lessons         Lesson[]
+  forums          DiscussionForum[]
   academicClass   AcademicClass?  @relation(fields: [academicClassId], references: [id], onDelete: Cascade)
   teacher         Teacher?        @relation(fields: [teacherId], references: [id])
   department      Department?      @relation("SubjectDepartments", fields: [departmentId], references: [id])
@@ -817,15 +824,20 @@ model Lesson {
   isPublished Boolean          @default(false)
   isFree      Boolean          @default(false)
   publishAt   DateTime?        @db.Timestamptz(6)
-  courseId    String           @db.Uuid
+  courseId    String?          @db.Uuid
   subjectId   String?          @db.Uuid
+  classId     String?          @db.Uuid
   createdById String?          @db.Uuid
   createdAt   DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
-  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course      Course?          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  subject     Subject?        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  academicClass AcademicClass? @relation(fields: [classId], references: [id], onDelete: Cascade)
   resources   LessonResource[]
 
   @@index([courseId], map: "idx_lessons_course")
+  @@index([subjectId], map: "idx_lessons_subject")
+  @@index([classId], map: "idx_lessons_class")
   @@map("lessons")
 }
 
@@ -857,16 +869,20 @@ model Assignment {
   isPublished          Boolean                @default(false)
   allowFileUpload      Boolean                @default(true)
   maxFileSize          Int?
-  courseId             String                 @db.Uuid
+  courseId             String?                @db.Uuid
   subjectId            String?                @db.Uuid
   classId              String?                @db.Uuid
   createdById          String?                @db.Uuid
   createdAt            DateTime               @default(now()) @db.Timestamptz(6)
   updatedAt            DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
   AssignmentSubmission AssignmentSubmission[]
-  course               Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course               Course?                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  subject              Subject?               @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  academicClass        AcademicClass?         @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   @@index([courseId], map: "idx_assignments_course")
+  @@index([subjectId], map: "idx_assignments_subject")
+  @@index([classId], map: "idx_assignments_class")
   @@index([dueDate], map: "idx_assignments_due")
   @@map("assignments")
 }
@@ -1602,11 +1618,14 @@ model Certificate {
   description        String?
   template           String?
   courseId           String?              @db.Uuid
+  classId            String?              @db.Uuid
   criteria           Json?
   createdAt          DateTime             @default(now()) @db.Timestamptz(6)
   updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamptz(6)
   StudentCertificate StudentCertificate[]
+  academicClass      AcademicClass?       @relation(fields: [classId], references: [id], onDelete: Cascade)
 
+  @@index([classId], map: "idx_certificates_class")
   @@map("certificates")
 }
 
@@ -1930,14 +1949,20 @@ model DiscussionForum {
   description String?
   type        String           @default("GENERAL")
   isPublished Boolean          @default(true)
-  courseId    String           @db.Uuid
+  courseId    String?          @db.Uuid
+  subjectId   String?          @db.Uuid
+  classId     String?          @db.Uuid
   createdById String?          @db.Uuid
   createdAt   DateTime         @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
-  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course      Course?          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  subject     Subject?        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  academicClass AcademicClass? @relation(fields: [classId], references: [id], onDelete: Cascade)
   posts       DiscussionPost[]
 
   @@index([courseId], map: "idx_discussion_forums_course")
+  @@index([subjectId], map: "idx_discussion_forums_subject")
+  @@index([classId], map: "idx_discussion_forums_class")
   @@map("discussion_forums")
 }
 

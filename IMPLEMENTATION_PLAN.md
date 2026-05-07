@@ -882,5 +882,92 @@ setTeachers(Array.isArray(teachersData) ? teachersData : (Array.isArray(teachers
 
 ---
 
+## 31. Assignment Management Module - Full Implementation
+
+### Overview
+Implemented complete assignment workflow for the K-12 model: Create → Publish → Student Submit → Teacher Grade
+
+### Files Created/Modified
+
+#### API Routes Created
+| File | Purpose |
+|------|---------|
+| `src/app/api/lms/assignments/[id]/route.ts` | Single assignment CRUD (GET/PUT/DELETE) |
+| `src/app/api/lms/assignments/[id]/publish/route.ts` | Publish/unpublish assignment |
+| `src/app/api/lms/assignments/[id]/submit/route.ts` | Student submission (POST/GET) |
+| `src/app/api/lms/assignments/[id]/submissions/[submissionId]/route.ts` | Teacher grading (PUT/GET) |
+
+#### UI Pages Created
+| File | Purpose |
+|------|---------|
+| `src/app/(dashboard)/lms/assignments/page.tsx` | Teacher assignment list with create, publish, delete |
+| `src/app/(dashboard)/lms/assignments/[id]/page.tsx` | Assignment detail/edit page |
+| `src/app/(dashboard)/lms/assignments/[id]/submissions/page.tsx` | View submissions and grade |
+| `src/app/(dashboard)/lms/assignments/[id]/submit/page.tsx` | Student submission page |
+
+#### Features
+- Role-based view (teacher vs student)
+- Assignment status: Draft/Published
+- Due dates with late submission support
+- Points-based grading with feedback
+- File upload support (optional)
+- Submission count tracking
+
+### Status
+✅ Completed - Deployed and ready for testing
+
+---
+
+## 32. Course to Class/Subject Migration - K-12 Model
+
+### Problem
+The system was using "Course" which is a tertiary concept. K-12 schools use:
+- **Tier** (Primary, Secondary)
+- **Class** (SS1, JSS2, Grade 5, etc.)
+- **Subject** (Math, English, etc.)
+- Students are enrolled in **Classes**, not courses
+
+### Database Schema Changes
+
+| Model | Change |
+|-------|--------|
+| Assignment | Made courseId optional, added classId, subjectId with relations |
+| Lesson | Made courseId optional, added classId, subjectId with relations |
+| DiscussionForum | Made courseId optional, added classId, subjectId with relations |
+| Certificate | Added classId support |
+| Subject | Added assignments, lessons, forums relations |
+| AcademicClass | Added assignments, lessons, forums relations |
+
+### API Routes Updated
+
+| Module | Changes |
+|--------|---------|
+| Assignments | Filter by enrolled classes for students, include academicClass + subject |
+| Lessons | Filter by enrolled classes, include academicClass + subject |
+| Forums | Filter by enrolled classes, include academicClass + subject |
+| Certificates | Added classId filter support |
+
+### UI Updates
+
+| File | Change |
+|------|--------|
+| `layout.tsx` (nav) | Removed "All Courses" from LMS nav, added Assignments |
+| Assignments pages | Class + Subject selector instead of Course |
+
+### Courses Module Status
+- **Soft Deactivated**: Removed from navigation menu
+- **API Preserved**: Still functional if needed
+- **Pages Preserved**: Available at `/lms/courses/*` but hidden
+
+### Student View Flow
+1. Student sees only published assignments/lessons/forums for their enrolled classes
+2. Filters by the class(es) they're enrolled in
+3. Can submit assignments and view results
+
+### Status
+✅ Completed - Deployed and ready for testing
+
+---
+
 ## Date Updated
-May 3, 2026
+May 7, 2026

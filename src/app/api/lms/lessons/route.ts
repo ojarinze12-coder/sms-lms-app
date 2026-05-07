@@ -10,8 +10,9 @@ const createLessonSchema = z.object({
   duration: z.number().optional(),
   order: z.number().default(0),
   isFree: z.boolean().default(false),
-  courseId: z.string().uuid('Invalid course ID'),
-  subjectId: z.string().uuid().optional(),
+  classId: z.string().uuid('Invalid class ID'),
+  subjectId: z.string().uuid('Invalid subject ID'),
+  courseId: z.string().uuid().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -22,20 +23,34 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const courseId = searchParams.get('courseId');
+    const classId = searchParams.get('classId');
+    const subjectId = searchParams.get('subjectId');
 
     const where: any = {};
-    if (courseId) where.courseId = courseId;
-    if (authUser.role !== 'SUPER_ADMIN' && authUser.role !== 'ADMIN') {
-      where.course = { tenantId: authUser.tenantId };
+    if (classId) where.classId = classId;
+    if (subjectId) where.subjectId = subjectId;
+
+    if (authUser.role === 'STUDENT') {
+      const enrollments = await prisma.enrollment.findMany({
+        where: { studentId: authUser.userId },
+        select: { classId: true },
+      });
+      const enrolledClassIds = enrollments.map(e => e.classId);
+      where.AND = [
+        { isPublished: true },
+        { classId: { in: enrolledClassIds } },
+      ];
+    } else if (authUser.role !== 'SUPER_ADMIN' && authUser.role !== 'ADMIN') {
+      where.academicClass = { tenantId: authUser.tenantId };
     }
 
     const lessons = await prisma.lesson.findMany({
       where,
       include: {
-        course: { select: { id: true, name: true, code: true } },
+        academicClass: { select: { id: true, name: true, level: true, stream: true } },
+        subject: { select: { id: true, name: true, code: true } },
       },
-      orderBy: [{ courseId: 'asc' }, { order: 'asc' }],
+      orderBy: [{ classId: 'asc' }, { order: 'asc' }],
     });
 
     return NextResponse.json(lessons || []);
@@ -59,16 +74,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createLessonSchema.parse(body);
 
-    const course = await prisma.course.findUnique({
-      where: { id: validatedData.courseId },
+    const academicClass = await prisma.academicClass.findUnique({
+      where: { id: validatedData.classId },
     });
 
-    if (!course || course.tenantId !== authUser.tenantId) {
-      return NextResponse.json({ error: 'Invalid course' }, { status: 400 });
+    if (!academicClass || academicClass.tenantId !== authUser.tenantId) {
+      return NextResponse.json({ error: 'Invalid class' }, { status: 400 });
+    }
+
+    const subject = await prisma.subject.findUnique({
+      where: { id: validatedData.subjectId },
+    });
+
+    if (!subject || subject.tenantId !== authUser.tenantId) {
+      return NextResponse.json({ error: 'Invalid subject' }, { status: 400 });
     }
 
     const maxOrderLesson = await prisma.lesson.findFirst({
-      where: { courseId: validatedData.courseId },
+      where: { classId: validatedData.classId, subjectId: validatedData.subjectId },
       orderBy: { order: 'desc' },
     });
 
@@ -80,8 +103,9 @@ export async function POST(request: NextRequest) {
         duration: validatedData.duration,
         order: validatedData.order || (maxOrderLesson?.order || 0) + 1,
         isFree: validatedData.isFree,
-        courseId: validatedData.courseId,
+        classId: validatedData.classId,
         subjectId: validatedData.subjectId,
+        courseId: validatedData.courseId,
         createdById: authUser.userId,
         isPublished: false,
       },

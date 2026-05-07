@@ -8,6 +8,7 @@ const createCertificateSchema = z.object({
   description: z.string().optional(),
   template: z.string().optional(),
   courseId: z.string().uuid().optional(),
+  classId: z.string().uuid().optional(),
   criteria: z.any().optional(),
 });
 
@@ -20,12 +21,17 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get('courseId');
+    const classId = searchParams.get('classId');
 
     const where: any = {};
     if (courseId) where.courseId = courseId;
+    if (classId) where.classId = classId;
 
     const certificates = await prisma.certificate.findMany({
       where,
+      include: {
+        academicClass: { select: { id: true, name: true, level: true, stream: true } },
+      },
       orderBy: { title: 'asc' },
     });
 

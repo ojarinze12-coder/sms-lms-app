@@ -7,7 +7,9 @@ const createForumSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   type: z.enum(['GENERAL', 'Q_A', 'ANNOUNCEMENTS']).default('GENERAL'),
-  courseId: z.string().uuid(),
+  classId: z.string().uuid('Invalid class ID'),
+  subjectId: z.string().uuid('Invalid subject ID'),
+  courseId: z.string().uuid().optional(),
 });
 
 const createPostSchema = z.object({
@@ -24,7 +26,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const courseId = searchParams.get('courseId');
+    const classId = searchParams.get('classId');
+    const subjectId = searchParams.get('subjectId');
     const forumId = searchParams.get('forumId');
 
     if (forumId) {
@@ -39,12 +42,23 @@ export async function GET(request: NextRequest) {
     }
 
     const where: any = {};
-    if (courseId) where.courseId = courseId;
+    if (classId) where.classId = classId;
+    if (subjectId) where.subjectId = subjectId;
+
+    if (authUser.role === 'STUDENT') {
+      const enrollments = await prisma.enrollment.findMany({
+        where: { studentId: authUser.userId },
+        select: { classId: true },
+      });
+      const enrolledClassIds = enrollments.map(e => e.classId);
+      where.classId = { in: enrolledClassIds };
+    }
 
     const forums = await prisma.discussionForum.findMany({
       where,
       include: {
-        course: { select: { id: true, name: true } },
+        academicClass: { select: { id: true, name: true, level: true, stream: true } },
+        subject: { select: { id: true, name: true, code: true } },
         _count: { select: { posts: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -64,6 +78,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (authUser.role !== 'SUPER_ADMIN' && authUser.role !== 'ADMIN' && authUser.role !== 'TEACHER') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await request.json();
 
     if (body.forumId) {
@@ -75,6 +93,7 @@ export async function POST(request: NextRequest) {
           forumId: data.forumId,
           parentId: data.parentId,
           userId: authUser.userId,
+          tenantId: authUser.tenantId,
         },
       });
 
@@ -83,11 +102,21 @@ export async function POST(request: NextRequest) {
 
     const data = createForumSchema.parse(body);
 
+    const academicClass = await prisma.academicClass.findUnique({
+      where: { id: data.classId },
+    });
+
+    if (!academicClass || academicClass.tenantId !== authUser.tenantId) {
+      return NextResponse.json({ error: 'Invalid class' }, { status: 400 });
+    }
+
     const forum = await prisma.discussionForum.create({
       data: {
         title: data.title,
         description: data.description,
         type: data.type,
+        classId: data.classId,
+        subjectId: data.subjectId,
         courseId: data.courseId,
         createdById: authUser.userId,
       },

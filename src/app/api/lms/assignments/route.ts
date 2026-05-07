@@ -14,9 +14,9 @@ const createAssignmentSchema = z.object({
   latePenalty: z.number().optional(),
   allowFileUpload: z.boolean().default(true),
   maxFileSize: z.number().optional(),
-  courseId: z.string().uuid('Invalid course ID'),
-  subjectId: z.string().uuid().optional(),
-  classId: z.string().uuid().optional(),
+  classId: z.string().uuid('Invalid class ID'),
+  subjectId: z.string().uuid('Invalid subject ID'),
+  courseId: z.string().uuid().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -27,22 +27,63 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const courseId = searchParams.get('courseId');
     const classId = searchParams.get('classId');
+    const subjectId = searchParams.get('subjectId');
+    const mySubmissions = searchParams.get('mySubmissions') === 'true';
 
     const where: any = {};
-    if (courseId) where.courseId = courseId;
-    if (classId) where.classId = classId;
+
+    if (authUser.role === 'STUDENT') {
+      const enrollments = await prisma.enrollment.findMany({
+        where: { studentId: authUser.userId },
+        select: { classId: true },
+      });
+      const enrolledClassIds = enrollments.map(e => e.classId);
+      
+      where.AND = [
+        { isPublished: true },
+        { classId: { in: enrolledClassIds } },
+      ];
+      
+      if (classId) {
+        where.AND.push({ classId });
+      }
+      if (subjectId) {
+        where.AND.push({ subjectId });
+      }
+    } else {
+      if (classId) where.classId = classId;
+      if (subjectId) where.subjectId = subjectId;
+    }
 
     const assignments = await prisma.assignment.findMany({
       where,
       include: {
-        course: { select: { id: true, name: true, code: true } },
+        academicClass: { select: { id: true, name: true, level: true, stream: true } },
+        subject: { select: { id: true, name: true, code: true } },
+        _count: { select: { submissions: true } },
       },
       orderBy: { dueDate: 'asc' },
     });
 
-    return NextResponse.json(assignments || []);
+    let assignmentsWithSubmissionStatus = assignments;
+    
+    if (mySubmissions && authUser.role === 'STUDENT') {
+      const submissions = await prisma.assignmentSubmission.findMany({
+        where: { studentId: authUser.userId },
+        select: { assignmentId: true, status: true, score: true },
+      });
+      const submittedMap = new Map(submissions.map(s => [s.assignmentId, s]));
+      
+      assignmentsWithSubmissionStatus = assignments.map(a => ({
+        ...a,
+        submitted: submittedMap.has(a.id),
+        submissionStatus: submittedMap.get(a.id)?.status || null,
+        score: submittedMap.get(a.id)?.score || null,
+      }));
+    }
+
+    return NextResponse.json(assignmentsWithSubmissionStatus || []);
   } catch (error) {
     console.error('Assignments GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -63,12 +104,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createAssignmentSchema.parse(body);
 
-    const course = await prisma.course.findUnique({
-      where: { id: validatedData.courseId },
+    const academicClass = await prisma.academicClass.findUnique({
+      where: { id: validatedData.classId },
     });
 
-    if (!course || course.tenantId !== authUser.tenantId) {
-      return NextResponse.json({ error: 'Invalid course' }, { status: 400 });
+    if (!academicClass || academicClass.tenantId !== authUser.tenantId) {
+      return NextResponse.json({ error: 'Invalid class' }, { status: 400 });
+    }
+
+    const subject = await prisma.subject.findUnique({
+      where: { id: validatedData.subjectId },
+    });
+
+    if (!subject || subject.tenantId !== authUser.tenantId) {
+      return NextResponse.json({ error: 'Invalid subject' }, { status: 400 });
     }
 
     const assignment = await prisma.assignment.create({
@@ -83,9 +132,9 @@ export async function POST(request: NextRequest) {
         latePenalty: validatedData.latePenalty,
         allowFileUpload: validatedData.allowFileUpload,
         maxFileSize: validatedData.maxFileSize,
-        courseId: validatedData.courseId,
-        subjectId: validatedData.subjectId,
         classId: validatedData.classId,
+        subjectId: validatedData.subjectId,
+        courseId: validatedData.courseId,
         createdById: authUser.userId,
         isPublished: false,
       },
