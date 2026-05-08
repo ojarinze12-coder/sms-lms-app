@@ -250,7 +250,8 @@ export default function AssignmentsPage() {
 
   const filteredAssignments = Array.isArray(assignments) ? assignments.filter(a => 
     a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.course?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    a.academicClass?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.subject?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   ) : [];
 
   const getStatusBadge = (assignment: Assignment) => {
