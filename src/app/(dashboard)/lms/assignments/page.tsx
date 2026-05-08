@@ -104,8 +104,8 @@ export default function AssignmentsPage() {
 
   useEffect(() => {
     loadClasses();
-    loadSubjects();
-  }, [selectedBranch]);
+    loadSubjects(selectedClassId || undefined);
+  }, [selectedBranch, selectedClassId]);
 
   useEffect(() => {
     if (selectedBranch) {
@@ -129,16 +129,14 @@ export default function AssignmentsPage() {
     }
   };
 
-  const loadSubjects = async () => {
+  const loadSubjects = async (classId?: string) => {
     try {
-      const res = await authFetch('/api/sms/subjects');
+      const params = classId ? `?academicClassId=${classId}` : '';
+      const res = await authFetch(`/api/sms/subjects${params}`);
       if (res.ok) {
         const data = await res.json();
         const subjectsData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
-        const uniqueSubjects = subjectsData.filter((sub: any, index: number, self: any[]) => 
-          self.findIndex((s: any) => s.id === sub.id) === index
-        );
-        setSubjects(uniqueSubjects);
+        setSubjects(subjectsData);
       }
     } catch (err) {
       console.error('Failed to load subjects:', err);
@@ -496,13 +494,11 @@ export default function AssignmentsPage() {
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800">
-                    {(Array.isArray(subjects) ? subjects : [])
-                      .filter((subject) => !formData.classId || subject.academicClassId === formData.classId)
-                      .map((subject) => (
-                        <SelectItem key={subject.id} value={subject.id} className="dark:text-white">
-                          {subject.name} ({subject.code})
-                        </SelectItem>
-                      ))}
+                    {(Array.isArray(subjects) ? subjects : []).map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id} className="dark:text-white">
+                        {subject.name} ({subject.code})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
