@@ -873,6 +873,7 @@ model Assignment {
   subjectId            String?                @db.Uuid
   classId              String?                @db.Uuid
   createdById          String?                @db.Uuid
+  tenantId             String?                @db.Uuid
   createdAt            DateTime               @default(now()) @db.Timestamptz(6)
   updatedAt            DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
   AssignmentSubmission AssignmentSubmission[]
@@ -880,6 +881,7 @@ model Assignment {
   subject              Subject?               @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   academicClass        AcademicClass?         @relation(fields: [classId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId], map: "idx_assignments_tenant")
   @@index([courseId], map: "idx_assignments_course")
   @@index([subjectId], map: "idx_assignments_subject")
   @@index([classId], map: "idx_assignments_class")
