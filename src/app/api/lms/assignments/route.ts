@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
       include: {
         academicClass: { select: { id: true, name: true, level: true, stream: true } },
         subject: { select: { id: true, name: true, code: true } },
+        course: { select: { id: true, name: true } },
         _count: { select: { submissions: true } },
       },
       orderBy: { dueDate: 'asc' },
