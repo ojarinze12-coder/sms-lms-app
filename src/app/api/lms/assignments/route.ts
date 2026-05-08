@@ -22,16 +22,36 @@ const createAssignmentSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const authUser = await getAuthUser();
-    if (!authUser) {
+    if (!authUser || !authUser.tenantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const classId = searchParams.get('classId');
     const subjectId = searchParams.get('subjectId');
+    const published = searchParams.get('published');
     const mySubmissions = searchParams.get('mySubmissions') === 'true';
 
-    const where: any = {};
+    console.log('[Assignments GET] Role:', authUser.role, 'mySubmissions:', mySubmissions);
+
+    const where: any = {
+      tenantId: authUser.tenantId,
+    };
+
+    if (published === 'true') {
+      where.isPublished = true;
+    } else if (published === 'false') {
+      where.isPublished = false;
+    }
+
+    if (classId) {
+      where.classId = classId;
+    }
+
+    if (subjectId) {
+      where.subjectId = subjectId;
+    }
+
     let studentId: string | null = null;
 
     if (authUser.role === 'STUDENT') {
@@ -39,38 +59,28 @@ export async function GET(request: NextRequest) {
         where: { userId: authUser.userId },
         select: { id: true },
       });
-      
+
       if (!student) {
         return NextResponse.json([]);
       }
-      
+
       studentId = student.id;
-      
+
       const enrollments = await prisma.enrollment.findMany({
         where: { studentId: student.id },
         select: { classId: true },
       });
+
       const enrolledClassIds = enrollments.map(e => e.classId);
-      
-      if (enrolledClassIds.length === 0) {
+
+      if (enrolledClassIds.length > 0) {
+        where.classId = { in: enrolledClassIds };
+      } else {
         return NextResponse.json([]);
       }
-      
-      where.AND = [
-        { isPublished: true },
-        { classId: { in: enrolledClassIds } },
-      ];
-      
-      if (classId) {
-        where.AND.push({ classId });
-      }
-      if (subjectId) {
-        where.AND.push({ subjectId });
-      }
-    } else {
-      if (classId) where.classId = classId;
-      if (subjectId) where.subjectId = subjectId;
     }
+
+    console.log('[Assignments GET] Query:', JSON.stringify(where));
 
     const assignments = await prisma.assignment.findMany({
       where,
@@ -79,27 +89,27 @@ export async function GET(request: NextRequest) {
         subject: { select: { id: true, name: true, code: true } },
         _count: { select: { submissions: true } },
       },
-      orderBy: { dueDate: 'asc' },
+      orderBy: { createdAt: 'desc' },
     });
 
-    let assignmentsWithSubmissionStatus = assignments;
-    
+    console.log('[Assignments GET] Found:', assignments.length);
+
     if (mySubmissions && studentId) {
       const submissions = await prisma.assignmentSubmission.findMany({
         where: { studentId },
         select: { assignmentId: true, status: true, score: true },
       });
       const submittedMap = new Map(submissions.map(s => [s.assignmentId, s]));
-      
-      assignmentsWithSubmissionStatus = assignments.map(a => ({
+
+      return NextResponse.json(assignments.map(a => ({
         ...a,
         submitted: submittedMap.has(a.id),
         submissionStatus: submittedMap.get(a.id)?.status || null,
         score: submittedMap.get(a.id)?.score || null,
-      }));
+      })));
     }
 
-    return NextResponse.json(assignmentsWithSubmissionStatus || []);
+    return NextResponse.json(assignments);
   } catch (error: any) {
     console.error('[Assignments GET] Error:', error.message || error);
     return NextResponse.json({ error: 'Internal server error: ' + (error.message || 'Unknown error') }, { status: 500 });
