@@ -154,9 +154,12 @@ export default function AssignmentsPage() {
       const res = await authFetch(`/api/lms/assignments?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setAssignments(Array.isArray(data) ? data : []);
+        console.log('[Assignments] API response:', data);
+        const assignmentsData = Array.isArray(data) ? data : [];
+        setAssignments(assignmentsData);
       } else {
-        console.error('API error:', res.status, await res.text());
+        const errorText = await res.text();
+        console.error('API error:', res.status, errorText);
         setAssignments([]);
       }
     } catch (err) {
@@ -248,11 +251,11 @@ export default function AssignmentsPage() {
     }
   };
 
-  const filteredAssignments = Array.isArray(assignments) ? assignments.filter(a => 
-    a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.academicClass?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.subject?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const filteredAssignments = (Array.isArray(assignments) ? assignments : []).filter((a: any) => 
+    a?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a?.academicClass?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a?.subject?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const getStatusBadge = (assignment: Assignment) => {
     if (assignment.isPublished) {
