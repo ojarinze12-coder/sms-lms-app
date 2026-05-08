@@ -82,6 +82,8 @@ export default function AssignmentsPage() {
   const isTeacher = role === 'TEACHER' || role === 'ADMIN' || role === 'SUPER_ADMIN';
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [years, setYears] = useState<any[]>([]);
+  const [selectedYearId, setSelectedYearId] = useState('');
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -103,41 +105,77 @@ export default function AssignmentsPage() {
   });
 
   useEffect(() => {
-    loadClasses();
-    loadSubjects(selectedClassId || undefined);
-  }, [selectedBranch, selectedClassId]);
+    loadYears();
+  }, []);
 
   useEffect(() => {
     if (selectedBranch) {
       loadAssignments();
     }
-  }, [selectedBranch, searchQuery, filterStatus, isTeacher, selectedClassId]);
+  }, [selectedBranch, searchQuery, filterStatus, isTeacher, selectedClassId, selectedYearId]);
 
-  const loadClasses = async () => {
+  useEffect(() => {
+    if (selectedYearId) {
+      loadClasses(selectedYearId);
+    }
+  }, [selectedYearId, selectedBranch]);
+
+  useEffect(() => {
+    if (formData.classId) {
+      loadSubjects(formData.classId);
+    } else {
+      setSubjects([]);
+    }
+  }, [formData.classId]);
+
+  const loadYears = async () => {
     try {
-      const res = await authFetch('/api/lms/classes');
-      if (res.ok) {
-        const data = await res.json();
-        const classesData = Array.isArray(data) ? data : (Array.isArray(data.classes) ? data.classes : []);
-        const uniqueClasses = classesData.filter((cls: any, index: number, self: any[]) => 
-          self.findIndex((c: any) => c.id === cls.id) === index
-        );
-        setClasses(uniqueClasses);
+      const params = new URLSearchParams();
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
       }
+      const url = '/api/sms/academic-years' + (params.toString() ? '?' + params.toString() : '');
+      const res = await authFetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      const yearList = data?.years || [];
+      setYears(Array.isArray(yearList) ? yearList : []);
+      if (yearList.length > 0) {
+        const activeYear = yearList.find((y: any) => y.isActive);
+        setSelectedYearId(activeYear?.id || yearList[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load years:', err);
+    }
+  };
+
+  const loadClasses = async (yearId: string) => {
+    try {
+      const params = new URLSearchParams();
+      params.set('academicYearId', yearId);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const res = await authFetch(`/api/sms/academic-classes?${params.toString()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const classesData = Array.isArray(data.data) ? data.data : [];
+      const uniqueClasses = classesData.filter((cls: any, index: number, self: any[]) =>
+        self.findIndex((c: any) => c.id === cls.id) === index
+      );
+      setClasses(uniqueClasses);
     } catch (err) {
       console.error('Failed to load classes:', err);
     }
   };
 
-  const loadSubjects = async (classId?: string) => {
+  const loadSubjects = async (classId: string) => {
     try {
-      const params = classId ? `?academicClassId=${classId}` : '';
-      const res = await authFetch(`/api/sms/subjects${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        const subjectsData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
-        setSubjects(subjectsData);
-      }
+      const res = await authFetch(`/api/sms/subjects?academicClassId=${classId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const subjectsData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
+      setSubjects(subjectsData);
     } catch (err) {
       console.error('Failed to load subjects:', err);
     }
@@ -312,6 +350,18 @@ export default function AssignmentsPage() {
             className="pl-10 dark:bg-gray-800 dark:text-white dark:border-gray-600"
           />
         </div>
+        <Select value={selectedYearId} onValueChange={(v) => { setSelectedYearId(v); setSelectedClassId(''); }}>
+          <SelectTrigger className="w-48 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+            <SelectValue placeholder="Select Year" />
+          </SelectTrigger>
+          <SelectContent className="dark:bg-gray-800">
+            {years.map((year) => (
+              <SelectItem key={year.id} value={year.id} className="dark:text-white">
+                {year.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {isTeacher && (
           <>
             <Select value={selectedClassId} onValueChange={setSelectedClassId}>
@@ -489,7 +539,7 @@ export default function AssignmentsPage() {
               </div>
               <div>
                 <Label className="dark:text-gray-200">Subject *</Label>
-                <Select value={formData.subjectId} onValueChange={(v) => setFormData({ ...formData, subjectId: v })}>
+                <Select value={formData.subjectId} disabled={!formData.classId} onValueChange={(v) => setFormData({ ...formData, subjectId: v })}>
                   <SelectTrigger className="dark:bg-gray-800 dark:text-white dark:border-gray-600">
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>

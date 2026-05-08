@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { examApi, academicApi } from '@/lib/api';
+import { examApi } from '@/lib/api';
+import { authFetch } from '@/lib/auth-fetch';
+import { useBranch } from '@/lib/hooks/use-branch';
 import type { ExamFormData, Question } from '@/types/exam-wizard';
 import { getInitialExamForm, createNewQuestion } from '@/types/exam-wizard';
 import ExamDetailsStep from '@/components/exam-wizard/ExamDetailsStep';
@@ -15,30 +17,99 @@ import ExamReviewStep from '@/components/exam-wizard/ExamReviewStep';
 export default function NewExamPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { selectedBranch } = useBranch();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [terms, setTerms] = useState<any[]>([]);
+  const [years, setYears] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [exam, setExam] = useState<ExamFormData>(getInitialExamForm());
   const [questions, setQuestions] = useState<Question[]>([]);
 
   useEffect(() => {
-    loadAcademicData();
+    loadTerms();
+    loadYears();
   }, []);
 
-  const loadAcademicData = async () => {
+  useEffect(() => {
+    if (exam.academicYearId) {
+      loadClasses(exam.academicYearId);
+    }
+  }, [exam.academicYearId, selectedBranch]);
+
+  useEffect(() => {
+    if (exam.classId) {
+      loadSubjects(exam.classId);
+    }
+  }, [exam.classId]);
+
+  useEffect(() => {
+    if (exam.academicYearId || exam.classId || exam.subjectId) {
+      setExam(prev => ({
+        ...prev,
+        academicYearId: exam.academicYearId,
+        classId: prev.academicYearId !== exam.academicYearId ? '' : prev.classId,
+        subjectId: prev.academicYearId !== exam.academicYearId || prev.classId !== exam.classId ? '' : prev.subjectId,
+      }));
+    }
+  }, [exam.academicYearId, exam.classId]);
+
+  const loadTerms = async () => {
     try {
-      const [termsData, subjectsData] = await Promise.all([
-        academicApi.getTerms(),
-        academicApi.getSubjects(),
-      ]) as [any, any];
-      setTerms(Array.isArray(termsData) ? termsData : (termsData?.data || []));
-      setSubjects(Array.isArray(subjectsData) ? subjectsData : (subjectsData?.data || []));
+      const res = await authFetch('/api/sms/terms');
+      if (!res.ok) return;
+      const data = await res.json();
+      const termsData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : (Array.isArray(data.terms) ? data.terms : []));
+      setTerms(termsData);
     } catch (error) {
-      console.error('Error loading academic data:', error);
+      console.error('Error loading terms:', error);
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  const loadYears = async () => {
+    try {
+      const res = await authFetch('/api/sms/academic-years');
+      if (!res.ok) return;
+      const data = await res.json();
+      const yearList = data?.years || [];
+      setYears(Array.isArray(yearList) ? yearList : []);
+      if (yearList.length > 0) {
+        const activeYear = yearList.find((y: any) => y.isActive);
+        setExam(prev => ({ ...prev, academicYearId: activeYear?.id || yearList[0].id }));
+      }
+    } catch (err) {
+      console.error('Error loading years:', err);
+    }
+  };
+
+  const loadClasses = async (yearId: string) => {
+    try {
+      const params = new URLSearchParams();
+      params.set('academicYearId', yearId);
+      if (selectedBranch) {
+        params.set('branchId', selectedBranch.id);
+      }
+      const res = await authFetch(`/api/sms/academic-classes?${params.toString()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setClasses(data.data || []);
+    } catch (err) {
+      console.error('Error loading classes:', err);
+    }
+  };
+
+  const loadSubjects = async (classId: string) => {
+    try {
+      const res = await authFetch(`/api/sms/subjects?academicClassId=${classId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setSubjects(data.data || []);
+    } catch (err) {
+      console.error('Error loading subjects:', err);
     }
   };
 
@@ -109,6 +180,14 @@ export default function NewExamPage() {
   const validateStep1 = () => {
     if (!exam.title.trim()) {
       toast({ variant: 'destructive', title: 'Error', description: 'Title is required' });
+      return false;
+    }
+    if (!exam.academicYearId) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select an academic year' });
+      return false;
+    }
+    if (!exam.classId) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a class' });
       return false;
     }
     if (!exam.termId) {
@@ -232,6 +311,8 @@ export default function NewExamPage() {
           exam={exam}
           onChange={setExam}
           terms={terms}
+          years={years}
+          classes={classes}
           subjects={subjects}
         />
       )}

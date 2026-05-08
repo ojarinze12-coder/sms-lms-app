@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const academicClassId = request.nextUrl.searchParams.get('academicClassId') || request.nextUrl.searchParams.get('academicYearId');
+  const academicClassId = request.nextUrl.searchParams.get('academicClassId');
   const search = request.nextUrl.searchParams.get('search') || '';
 
   console.log('[SUBJECTS GET] academicClassId:', academicClassId, 'tenantId:', authUser.tenantId);
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     const subjects = await prisma.subject.findMany({
       where,
-      distinct: ['name', 'academicClassId'],
+      distinct: ['id'],
       include: {
         academicClass: { select: { id: true, name: true, level: true } },
         teacher: { select: { id: true, firstName: true, lastName: true } },

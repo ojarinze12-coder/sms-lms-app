@@ -3,6 +3,8 @@ export interface ExamFormData {
   description: string;
   examType: 'QUIZ' | 'MID_TERM' | 'END_TERM' | 'ASSIGNMENT' | 'PRACTICE' | 'WAEC' | 'NECO' | 'BECE' | 'JAMB_UTME' | 'MOCK';
   duration: number;
+  academicYearId: string;
+  classId: string;
   termId: string;
   subjectId: string;
   startTime: string;
@@ -42,6 +44,8 @@ export const getInitialExamForm = (): ExamFormData => ({
   description: '',
   examType: 'QUIZ',
   duration: 30,
+  academicYearId: '',
+  classId: '',
   termId: '',
   subjectId: '',
   startTime: '',

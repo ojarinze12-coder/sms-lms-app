@@ -12,10 +12,12 @@ interface ExamDetailsStepProps {
   exam: ExamFormData;
   onChange: (exam: ExamFormData) => void;
   terms: any[];
+  years: any[];
+  classes: any[];
   subjects: any[];
 }
 
-export default function ExamDetailsStep({ exam, onChange, terms, subjects }: ExamDetailsStepProps) {
+export default function ExamDetailsStep({ exam, onChange, terms, years, classes, subjects }: ExamDetailsStepProps) {
   return (
     <Card>
       <CardHeader>
@@ -74,6 +76,45 @@ export default function ExamDetailsStep({ exam, onChange, terms, subjects }: Exa
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
+            <Label>Academic Year *</Label>
+            <Select
+              value={exam.academicYearId}
+              onValueChange={(value) => onChange({ ...exam, academicYearId: value, classId: '', subjectId: '' })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select academic year" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year.id} value={year.id}>
+                    {year.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Class *</Label>
+            <Select
+              value={exam.classId}
+              disabled={!exam.academicYearId}
+              onValueChange={(value) => onChange({ ...exam, classId: value, subjectId: '' })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select class" />
+              </SelectTrigger>
+              <SelectContent>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    {cls.name} {cls.stream ? `(${cls.stream})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
             <Label>Term *</Label>
             <Select
               value={exam.termId}
@@ -95,6 +136,7 @@ export default function ExamDetailsStep({ exam, onChange, terms, subjects }: Exa
             <Label>Subject *</Label>
             <Select
               value={exam.subjectId}
+              disabled={!exam.classId}
               onValueChange={(value) => onChange({ ...exam, subjectId: value })}
             >
               <SelectTrigger>
