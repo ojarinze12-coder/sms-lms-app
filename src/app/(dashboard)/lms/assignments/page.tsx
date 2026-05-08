@@ -306,7 +306,7 @@ export default function AssignmentsPage() {
                 <SelectValue placeholder="All Classes" />
               </SelectTrigger>
               <SelectContent className="dark:bg-gray-800">
-                <SelectItem value="" className="dark:text-white">All Classes</SelectItem>
+                <SelectItem value="all" className="dark:text-white">All Classes</SelectItem>
                 {classes.map((cls) => (
                   <SelectItem key={cls.id} value={cls.id} className="dark:text-white">
                     {cls.name} {cls.stream ? `(${cls.stream})` : ''}

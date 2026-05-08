@@ -32,10 +32,22 @@ export async function GET(request: NextRequest) {
     const mySubmissions = searchParams.get('mySubmissions') === 'true';
 
     const where: any = {};
+    let studentId: string | null = null;
 
     if (authUser.role === 'STUDENT') {
+      const student = await prisma.student.findFirst({
+        where: { userId: authUser.userId },
+        select: { id: true },
+      });
+      
+      if (!student) {
+        return NextResponse.json([]);
+      }
+      
+      studentId = student.id;
+      
       const enrollments = await prisma.enrollment.findMany({
-        where: { studentId: authUser.userId },
+        where: { studentId: student.id },
         select: { classId: true },
       });
       const enrolledClassIds = enrollments.map(e => e.classId);
@@ -68,9 +80,9 @@ export async function GET(request: NextRequest) {
 
     let assignmentsWithSubmissionStatus = assignments;
     
-    if (mySubmissions && authUser.role === 'STUDENT') {
+    if (mySubmissions && studentId) {
       const submissions = await prisma.assignmentSubmission.findMany({
-        where: { studentId: authUser.userId },
+        where: { studentId },
         select: { assignmentId: true, status: true, score: true },
       });
       const submittedMap = new Map(submissions.map(s => [s.assignmentId, s]));
@@ -84,9 +96,9 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(assignmentsWithSubmissionStatus || []);
-  } catch (error) {
-    console.error('Assignments GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[Assignments GET] Error:', error.message || error);
+    return NextResponse.json({ error: 'Internal server error: ' + (error.message || 'Unknown error') }, { status: 500 });
   }
 }
 
