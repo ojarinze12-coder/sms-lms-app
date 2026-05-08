@@ -37,7 +37,7 @@ export async function GET(
         subject: { select: { id: true, name: true, code: true } },
         course: { select: { id: true, name: true, code: true } },
         createdBy: { select: { id: true, firstName: true, lastName: true } },
-        _count: { select: { submissions: true } },
+        _count: { select: { AssignmentSubmission: true } },
       },
     });
 
@@ -45,8 +45,7 @@ export async function GET(
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
     }
 
-    const tenantId = assignment.academicClass?.tenantId || assignment.subject?.tenantId || assignment.course?.tenantId;
-    if (tenantId !== authUser.tenantId) {
+    if (assignment.tenantId !== authUser.tenantId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
