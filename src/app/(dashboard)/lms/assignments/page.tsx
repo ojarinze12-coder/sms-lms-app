@@ -118,7 +118,11 @@ export default function AssignmentsPage() {
       const res = await authFetch('/api/lms/classes');
       if (res.ok) {
         const data = await res.json();
-        setClasses(data.classes || data || []);
+        const classesData = Array.isArray(data) ? data : (Array.isArray(data.classes) ? data.classes : []);
+        const uniqueClasses = classesData.filter((cls: any, index: number, self: any[]) => 
+          self.findIndex((c: any) => c.id === cls.id) === index
+        );
+        setClasses(uniqueClasses);
       }
     } catch (err) {
       console.error('Failed to load classes:', err);
@@ -131,7 +135,10 @@ export default function AssignmentsPage() {
       if (res.ok) {
         const data = await res.json();
         const subjectsData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
-        setSubjects(subjectsData);
+        const uniqueSubjects = subjectsData.filter((sub: any, index: number, self: any[]) => 
+          self.findIndex((s: any) => s.id === sub.id) === index
+        );
+        setSubjects(uniqueSubjects);
       }
     } catch (err) {
       console.error('Failed to load subjects:', err);
