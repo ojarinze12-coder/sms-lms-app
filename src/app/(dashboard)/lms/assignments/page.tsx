@@ -496,11 +496,13 @@ export default function AssignmentsPage() {
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800">
-                    {(Array.isArray(subjects) ? subjects : []).map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id} className="dark:text-white">
-                        {subject.name}
-                      </SelectItem>
-                    ))}
+                    {(Array.isArray(subjects) ? subjects : [])
+                      .filter((subject) => !formData.classId || subject.academicClassId === formData.classId)
+                      .map((subject) => (
+                        <SelectItem key={subject.id} value={subject.id} className="dark:text-white">
+                          {subject.name} ({subject.code})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
