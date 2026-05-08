@@ -154,7 +154,10 @@ export default function AssignmentsPage() {
       const res = await authFetch(`/api/lms/assignments?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setAssignments(data || []);
+        setAssignments(Array.isArray(data) ? data : []);
+      } else {
+        console.error('API error:', res.status, await res.text());
+        setAssignments([]);
       }
     } catch (err) {
       console.error('Failed to load assignments:', err);
@@ -245,10 +248,10 @@ export default function AssignmentsPage() {
     }
   };
 
-  const filteredAssignments = assignments.filter(a => 
-    a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.course.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAssignments = Array.isArray(assignments) ? assignments.filter(a => 
+    a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.course?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) : [];
 
   const getStatusBadge = (assignment: Assignment) => {
     if (assignment.isPublished) {

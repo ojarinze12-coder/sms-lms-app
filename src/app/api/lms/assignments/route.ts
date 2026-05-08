@@ -52,6 +52,10 @@ export async function GET(request: NextRequest) {
       });
       const enrolledClassIds = enrollments.map(e => e.classId);
       
+      if (enrolledClassIds.length === 0) {
+        return NextResponse.json([]);
+      }
+      
       where.AND = [
         { isPublished: true },
         { classId: { in: enrolledClassIds } },
