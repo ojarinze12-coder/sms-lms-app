@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
 
     const subjects = await prisma.subject.findMany({
       where,
+      distinct: ['name', 'academicClassId'],
       include: {
         academicClass: { select: { id: true, name: true, level: true } },
         teacher: { select: { id: true, firstName: true, lastName: true } },
