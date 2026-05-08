@@ -130,7 +130,8 @@ export default function AssignmentsPage() {
       const res = await authFetch('/api/sms/subjects');
       if (res.ok) {
         const data = await res.json();
-        setSubjects(data.subjects || data || []);
+        const subjectsData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
+        setSubjects(subjectsData);
       }
     } catch (err) {
       console.error('Failed to load subjects:', err);
@@ -488,9 +489,7 @@ export default function AssignmentsPage() {
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                   <SelectContent className="dark:bg-gray-800">
-                    {subjects
-                      .filter(s => !formData.classId || true)
-                      .map((subject) => (
+                    {(Array.isArray(subjects) ? subjects : []).map((subject) => (
                       <SelectItem key={subject.id} value={subject.id} className="dark:text-white">
                         {subject.name}
                       </SelectItem>
