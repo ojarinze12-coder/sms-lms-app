@@ -124,7 +124,7 @@ const loadYears = async () => {
 
   const loadSubjects = async (classId: string) => {
     try {
-      const res = await authFetch(`/api/sms/subjects?academicYearId=${classId}`);
+      const res = await authFetch(`/api/sms/subjects?academicClassId=${classId}`);
       if (!res.ok) {
         console.error('Failed to load subjects:', res.status);
         return;
