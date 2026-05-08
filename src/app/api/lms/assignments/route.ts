@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
     console.log('[Assignments GET] Role:', authUser.role, 'mySubmissions:', mySubmissions);
 
     const where: any = {
-      tenantId: authUser.tenantId,
+      academicClass: {
+        tenantId: authUser.tenantId,
+      },
     };
 
     if (published === 'true') {
