@@ -127,7 +127,7 @@ export default function AssignmentsPage() {
 
   const loadSubjects = async () => {
     try {
-      const res = await authFetch('/api/lms/subjects');
+      const res = await authFetch('/api/sms/subjects');
       if (res.ok) {
         const data = await res.json();
         setSubjects(data.subjects || data || []);
