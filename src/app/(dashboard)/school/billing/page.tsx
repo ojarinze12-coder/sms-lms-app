@@ -10,6 +10,11 @@ import {
   Search,
   Receipt,
   FileText,
+  CreditCard,
+  Building,
+  CheckCircle,
+  Clock,
+  AlertCircle,
 } from 'lucide-react';
 import {
   Dialog,
@@ -27,6 +32,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { BackButton } from '@/components/BackButton';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 
 interface Invoice {
   id: string;
