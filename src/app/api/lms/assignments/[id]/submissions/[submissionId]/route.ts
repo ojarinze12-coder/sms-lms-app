@@ -39,17 +39,41 @@ export async function PUT(
     const body = await request.json();
     const validatedData = gradeSchema.parse(body);
 
+    let gradeToApply = validatedData.grade;
+    let penaltyApplied = 0;
+
+    if (validatedData.grade !== undefined && submission.assignment.dueDate && submission.submittedAt) {
+      const dueDate = new Date(submission.assignment.dueDate);
+      const submittedAt = new Date(submission.submittedAt);
+      
+      if (submittedAt > dueDate && submission.assignment.allowLate && submission.assignment.latePenalty) {
+        const daysLate = Math.ceil((submittedAt.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysLate > 0) {
+          const maxScore = submission.assignment.points || 100;
+          const penaltyPercent = submission.assignment.latePenalty;
+          penaltyApplied = (daysLate * penaltyPercent / 100) * maxScore;
+          penaltyApplied = Math.min(penaltyApplied, maxScore);
+          const rawGrade = validatedData.grade;
+          gradeToApply = Math.max(0, rawGrade - penaltyApplied);
+        }
+      }
+    }
+
     const updated = await prisma.assignmentSubmission.update({
       where: { id: params.submissionId },
       data: {
-        ...(validatedData.grade !== undefined && { grade: validatedData.grade }),
+        ...(gradeToApply !== undefined && { grade: gradeToApply }),
+        ...(penaltyApplied > 0 && { penaltyApplied }),
         ...(validatedData.feedback !== undefined && { feedback: validatedData.feedback }),
         ...(validatedData.status && { status: validatedData.status }),
         ...(validatedData.status === 'GRADED' && { gradedAt: new Date() }),
       },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json({
+      ...updated,
+      penaltyApplied: penaltyApplied > 0 ? penaltyApplied : undefined,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });

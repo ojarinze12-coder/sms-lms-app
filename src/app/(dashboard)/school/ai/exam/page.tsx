@@ -89,6 +89,7 @@ export default function SchoolAIExamPage() {
 
   useEffect(() => {
     loadYears();
+    loadSettings();
   }, []);
 
   useEffect(() => {
@@ -105,8 +106,23 @@ export default function SchoolAIExamPage() {
   }, [selectedClassId]);
 
   useEffect(() => {
-    setDuration(DURATION_DEFAULTS[examType] || 60);
+    if (!examType) return;
+    const defaultFromType = DURATION_DEFAULTS[examType] || 60;
+    setDuration(defaultFromType);
   }, [examType]);
+
+  const loadSettings = async () => {
+    try {
+      const res = await authFetch('/api/lms/settings');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.examTimeLimit) {
+        setDuration(data.examTimeLimit);
+      }
+    } catch (err) {
+      console.error('Error loading settings:', err);
+    }
+  };
 
   const loadYears = async () => {
     try {

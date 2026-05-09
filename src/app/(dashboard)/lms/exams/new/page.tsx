@@ -21,16 +21,17 @@ export default function NewExamPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [defaultDuration, setDefaultDuration] = useState(60);
   const [terms, setTerms] = useState<any[]>([]);
   const [years, setYears] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
-  const [exam, setExam] = useState<ExamFormData>(getInitialExamForm());
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [exam, setExam] = useState<ExamFormData>(getInitialExamForm(60));
 
   useEffect(() => {
     loadTerms();
     loadYears();
+    loadSettings();
   }, []);
 
   useEffect(() => {
@@ -56,6 +57,12 @@ export default function NewExamPage() {
     }
   }, [exam.academicYearId, exam.classId]);
 
+  useEffect(() => {
+    if (exam.examType) {
+      setExam(prev => ({ ...prev, duration: prev.duration || defaultDuration }));
+    }
+  }, [defaultDuration]);
+
   const loadTerms = async () => {
     try {
       const res = await authFetch('/api/sms/terms');
@@ -67,6 +74,36 @@ export default function NewExamPage() {
       console.error('Error loading terms:', error);
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  const loadYears = async () => {
+    try {
+      const res = await authFetch('/api/sms/academic-years');
+      if (!res.ok) return;
+      const data = await res.json();
+      const yearList = data?.years || [];
+      setYears(Array.isArray(yearList) ? yearList : []);
+      if (yearList.length > 0) {
+        const activeYear = yearList.find((y: any) => y.isActive);
+        setExam(prev => ({ ...prev, academicYearId: activeYear?.id || yearList[0].id }));
+      }
+    } catch (err) {
+      console.error('Error loading years:', err);
+    }
+  };
+
+  const loadSettings = async () => {
+    try {
+      const res = await authFetch('/api/lms/settings');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.examTimeLimit) {
+        setDefaultDuration(data.examTimeLimit);
+        setExam(prev => ({ ...prev, duration: data.examTimeLimit }));
+      }
+    } catch (err) {
+      console.error('Error loading settings:', err);
     }
   };
 

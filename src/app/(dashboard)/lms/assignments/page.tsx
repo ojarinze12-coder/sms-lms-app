@@ -99,6 +99,7 @@ export default function AssignmentsPage() {
     points: '100',
     dueDate: '',
     allowLate: true,
+    latePenalty: 10,
     allowFileUpload: true,
     classId: '',
     subjectId: '',
@@ -106,6 +107,7 @@ export default function AssignmentsPage() {
 
   useEffect(() => {
     loadYears();
+    loadSettings();
   }, []);
 
   useEffect(() => {
@@ -127,6 +129,23 @@ export default function AssignmentsPage() {
       setSubjects([]);
     }
   }, [formData.classId]);
+
+  const loadSettings = async () => {
+    try {
+      const res = await authFetch('/api/lms/settings');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          allowLate: data.allowLateSubmission ?? true,
+          latePenalty: data.latePenaltyPercent ?? 10,
+        }));
+      }
+    } catch (err) {
+      console.error('Error loading settings:', err);
+    }
+  };
 
   const loadYears = async () => {
     try {
@@ -225,6 +244,7 @@ export default function AssignmentsPage() {
           ...formData,
           points: parseInt(formData.points),
           dueDate: formData.dueDate || null,
+          latePenalty: formData.latePenalty,
         }),
       });
 
@@ -239,6 +259,7 @@ export default function AssignmentsPage() {
           points: '100',
           dueDate: '',
           allowLate: true,
+          latePenalty: formData.latePenalty,
           allowFileUpload: true,
           classId: '',
           subjectId: '',
@@ -618,6 +639,19 @@ export default function AssignmentsPage() {
                 Allow File Upload
               </label>
             </div>
+            {formData.allowLate && (
+              <div className="flex items-center gap-4">
+                <Label className="dark:text-gray-200 whitespace-nowrap">Late Penalty (% per day)</Label>
+                <Input
+                  type="number"
+                  value={formData.latePenalty}
+                  onChange={(e) => setFormData({ ...formData, latePenalty: parseInt(e.target.value) || 0 })}
+                  className="w-24 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                  min={0}
+                  max={100}
+                />
+              </div>
+            )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="dark:bg-gray-800 dark:text-white">

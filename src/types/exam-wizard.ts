@@ -39,11 +39,11 @@ export const examTypes = [
   { value: 'MOCK', label: 'Mock Exam' },
 ];
 
-export const getInitialExamForm = (): ExamFormData => ({
+export const getInitialExamForm = (duration: number = 30): ExamFormData => ({
   title: '',
   description: '',
   examType: 'QUIZ',
-  duration: 30,
+  duration,
   academicYearId: '',
   classId: '',
   termId: '',

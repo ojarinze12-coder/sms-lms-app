@@ -742,7 +742,13 @@ model TenantSettings {
   examNotifySms            Boolean    @default(false)
   examNotifyWhatsapp        Boolean    @default(false)
   examResultsRequirePublish Boolean @default(true)
-  
+
+  // Exam & Assignment Default Settings
+  examTimeLimit         Int     @default(60) // Default duration in minutes
+  passingScore         Int     @default(50)  // Passing score percentage
+  allowLateSubmission  Boolean @default(true)
+  latePenaltyPercent   Int     @default(10)  // Percentage deducted per day late
+
   themeMode                   String     @default("SYSTEM") // LIGHT, DARK, SYSTEM
   enableClassSections         Boolean    @default(false)
   defaultSectionNaming        String     @default("A,B,C")
@@ -895,6 +901,7 @@ model AssignmentSubmission {
   fileUrl      String?
   status       String     @default("SUBMITTED")
   grade        Float?
+  penaltyApplied Float?
   feedback     String?
   gradedAt     DateTime?  @db.Timestamptz(6)
   submittedAt  DateTime?  @db.Timestamptz(6)

@@ -99,6 +99,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
       const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
 
+      const passingScore = await getPassingScore(exam.tenantId);
+      const passed = percentage >= passingScore;
+
       await prisma.result.update({
         where: { id: result.id },
         data: {
@@ -115,6 +118,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         score: earnedPoints,
         totalPoints,
         percentage: percentage.toFixed(2),
+        passed,
+        passingScore,
       });
     }
 
@@ -135,4 +140,13 @@ async function checkExamTenantAccess(subjectId: string, tenantId: string): Promi
     include: { academicClass: { include: { academicYear: true } } }
   });
   return subject?.academicClass?.academicYear?.tenantId === tenantId;
+}
+
+async function getPassingScore(tenantId: string | null): Promise<number> {
+  if (!tenantId) return 50;
+  const settings = await prisma.tenantSettings.findUnique({
+    where: { tenantId },
+    select: { passingScore: true },
+  });
+  return settings?.passingScore ?? 50;
 }
