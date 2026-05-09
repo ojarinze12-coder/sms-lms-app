@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch real data from database - count classes within active academic year
     const activeYear = await prisma.academicYear.findFirst({
-      where: { tenantId: authUser.tenantId, status: 'ACTIVE' },
+      where: { tenantId: authUser.tenantId, isActive: true },
       orderBy: { startDate: 'desc' },
     });
     
