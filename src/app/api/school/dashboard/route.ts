@@ -68,21 +68,20 @@ export async function GET(req: NextRequest) {
       prisma.academicClass.count({ where: { academicYear: { tenantId: authUser.tenantId } } }),
     ]);
     console.log('[School Dashboard] counts:', { studentCount, teacherCount, classCount });
-
-    const stats = {
-      students: studentCount,
-      teachers: teacherCount,
-      classes: classCount,
-      revenue: 0,
-      feesCollected: 0,
-      attendance: 0,
-    };
-    
-    return NextResponse.json({
-      stats,
+    const result = {
+      stats: {
+        students: studentCount,
+        teachers: teacherCount,
+        classes: classCount,
+        revenue: 0,
+        feesCollected: 0,
+        attendance: 0,
+      },
       recentActivity: [],
       branchId,
-    });
+    };
+    console.log('[School Dashboard] response:', JSON.stringify(result));
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Dashboard error:', error);
     return NextResponse.json({ error: 'Failed to fetch dashboard data', details: String(error) }, { status: 500 });

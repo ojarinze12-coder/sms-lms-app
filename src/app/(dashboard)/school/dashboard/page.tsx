@@ -59,6 +59,7 @@ export default function SchoolDashboardPage() {
           return;
         }
         const data = await res.json();
+        console.log('[School Dashboard Page] API response:', JSON.stringify(data));
         setStats(data.stats || stats);
         setRecentActivity(data.recentActivity || []);
       } catch (err) {
