@@ -107,22 +107,6 @@ export default function NewExamPage() {
     }
   };
 
-  const loadYears = async () => {
-    try {
-      const res = await authFetch('/api/sms/academic-years');
-      if (!res.ok) return;
-      const data = await res.json();
-      const yearList = data?.years || [];
-      setYears(Array.isArray(yearList) ? yearList : []);
-      if (yearList.length > 0) {
-        const activeYear = yearList.find((y: any) => y.isActive);
-        setExam(prev => ({ ...prev, academicYearId: activeYear?.id || yearList[0].id }));
-      }
-    } catch (err) {
-      console.error('Error loading years:', err);
-    }
-  };
-
   const loadClasses = async (yearId: string) => {
     try {
       const params = new URLSearchParams();
