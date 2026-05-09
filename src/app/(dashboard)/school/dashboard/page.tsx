@@ -155,7 +155,7 @@ export default function SchoolDashboardPage() {
             </a>
             <a href="/school/exams" className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <span className="text-xl">📝</span>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Exam Settings</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Grading Scales</span>
             </a>
             <a href="/school/reports" className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <span className="text-xl">📊</span>
