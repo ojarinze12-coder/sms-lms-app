@@ -380,7 +380,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           
-          <Link href="/school/classes">
+          <Link href="/sms/classes">
             <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-purple-500">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Classes</CardTitle>
