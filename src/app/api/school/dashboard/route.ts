@@ -35,21 +35,17 @@ async function getAuthUser(req: NextRequest): Promise<JWTPayload | null> {
 }
 
 export async function GET(req: NextRequest) {
-  console.log('[School Dashboard API] Request received');
   try {
     const { searchParams } = new URL(req.url);
     const branchId = searchParams.get('branchId');
     
     const authUser = await getAuthUser(req);
-    console.log('[School Dashboard API] Auth user:', authUser);
     
     if (!authUser) {
-      console.log('[School Dashboard API] Auth failed');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (!authUser.tenantId) {
-      console.log('[School Dashboard API] No tenantId');
       return NextResponse.json({ error: 'Tenant not found' }, { status: 400 });
     }
 
@@ -65,27 +61,26 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch real data from database
-    console.log('[School Dashboard] tenantId:', authUser.tenantId);
     const [studentCount, teacherCount, classCount] = await Promise.all([
       prisma.student.count({ where: studentWhere }),
       prisma.teacher.count({ where: teacherWhere }),
       prisma.academicClass.count({ where: { academicYear: { tenantId: authUser.tenantId } } }),
     ]);
-    console.log('[School Dashboard] counts:', { studentCount, teacherCount, classCount });
-    const result = {
-      stats: {
-        students: studentCount,
-        teachers: teacherCount,
-        classes: classCount,
-        revenue: 0,
-        feesCollected: 0,
-        attendance: 0,
-      },
+
+    const stats = {
+      students: studentCount,
+      teachers: teacherCount,
+      classes: classCount,
+      revenue: 0,
+      feesCollected: 0,
+      attendance: 0,
+    };
+    
+    return NextResponse.json({
+      stats,
       recentActivity: [],
       branchId,
-    };
-    console.log('[School Dashboard] response:', JSON.stringify(result));
-    return NextResponse.json(result);
+    });
   } catch (error) {
     console.error('Dashboard error:', error);
     return NextResponse.json({ error: 'Failed to fetch dashboard data', details: String(error) }, { status: 500 });

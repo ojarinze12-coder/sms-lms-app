@@ -4,10 +4,8 @@ import { getAuthUser } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
   const authUser = await getAuthUser();
-  console.log('[SMS Analytics] authUser:', authUser?.userId, 'tenant:', authUser?.tenantId, 'role:', authUser?.role);
   
   if (!authUser) {
-    console.log('[SMS Analytics] No auth user - returning 401');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -16,11 +14,9 @@ export async function GET(request: NextRequest) {
     const period = searchParams.get('period') || 'term';
     const academicYearId = searchParams.get('academicYearId');
     const branchId = searchParams.get('branchId');
-    console.log('[SMS Analytics] params - period:', period, 'branchId:', branchId, 'academicYearId:', academicYearId);
 
     // SuperAdmin: Show global analytics
     if (authUser.role === 'SUPER_ADMIN') {
-      console.log('[SMS Analytics] SuperAdmin - calling getSuperAdminAnalytics');
       return getSuperAdminAnalytics();
     }
 
@@ -29,14 +25,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 400 });
     }
     return getSchoolAnalytics(authUser.tenantId, period, academicYearId || undefined, branchId);
+
   } catch (error) {
-    console.error('[SMS Analytics] error:', error);
+    console.error('Analytics error:', error);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }
 }
 
 async function getSuperAdminAnalytics() {
-  console.log('[getSuperAdminAnalytics] called');
   const [schoolCount, studentCount, teacherCount, courseCount, examCount] = await Promise.all([
     prisma.tenant.count(),
     prisma.student.count(),
@@ -75,28 +71,19 @@ async function getSuperAdminAnalytics() {
 }
 
 async function getSchoolAnalytics(tenantId: string, period: string, academicYearId?: string, branchId?: string | null) {
-  console.log('[getSchoolAnalytics] tenantId:', tenantId);
-  const whereClause: any = { tenantId };
   const branchFilter = branchId ? { branchId } : {};
 
-    // Count classes via academicYear.tenantId (ignore branchFilter since classes are keyed by academic year not branch)
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { tenantId, isActive: true },
-      orderBy: { startDate: 'desc' },
-    });
+  const [studentCount, teacherCount, courseCount, examCount, enrollmentCount] = await Promise.all([
+    prisma.student.count({ where: { tenantId, ...branchFilter } }),
+    prisma.teacher.count({ where: { tenantId, ...branchFilter } }),
+    prisma.course.count({ where: { tenantId } }),
+    prisma.exam.count({ where: { tenantId } }),
+    prisma.enrollment.count({ where: { tenantId, ...branchFilter } }),
+  ]);
 
-    const [studentCount, teacherCount, courseCount, examCount, enrollmentCount] = await Promise.all([
-      prisma.student.count({ where: { tenantId, ...branchFilter } }),
-      prisma.teacher.count({ where: { tenantId, ...branchFilter } }),
-      prisma.course.count({ where: { tenantId } }),
-      prisma.exam.count({ where: { tenantId } }),
-      prisma.enrollment.count({ where: { tenantId, ...branchFilter } }),
-    ]);
-
-    // Count classes via academicYear.tenantId (ignore branchFilter since classes are keyed by academic year not branch)
-    const classCount = await prisma.academicClass.count({
-      where: { academicYear: { tenantId } },
-    });
+  const classCount = await prisma.academicClass.count({
+    where: { academicYear: { tenantId } },
+  });
 
   // Fee analytics
   const feeStats = await getFeeAnalytics(tenantId, branchFilter);
@@ -135,7 +122,6 @@ async function getSchoolAnalytics(tenantId: string, period: string, academicYear
     where: { tenantId, ...branchFilter },
   });
 
-  console.log('[getSchoolAnalytics] returning:', { studentCount, teacherCount, courseCount, examCount, enrollmentCount, classCount });
   return NextResponse.json({
     overview: {
       students: studentCount,
