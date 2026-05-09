@@ -29,6 +29,7 @@ interface DashboardStats {
   students: number;
   teachers: number;
   courses: number;
+  classes: number;
   exams: number;
   enrollments: number;
 }
@@ -93,8 +94,7 @@ export default function DashboardPage() {
         setStats({
           students: 12,
           teachers: 5,
-          courses: 0,
-          exams: 1,
+          classes: 0,
           enrollments: 12,
         });
         setLoading(false);
@@ -108,6 +108,7 @@ export default function DashboardPage() {
           teachers: 5,
           courses: 0,
           exams: 1,
+          classes: 0,
           enrollments: 12,
         });
         setLoading(false);
@@ -130,6 +131,7 @@ export default function DashboardPage() {
         teachers: 5,
         courses: 0,
         exams: 1,
+        classes: 0,
         enrollments: 12,
       });
     } finally {
@@ -378,16 +380,16 @@ export default function DashboardPage() {
             </Card>
           </Link>
           
-          <Link href="/lms/courses">
+          <Link href="/school/classes">
             <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-purple-500">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Courses</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Classes</CardTitle>
                 <BookOpen className="h-5 w-5 text-purple-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{stats?.courses || 0}</div>
+                <div className="text-3xl font-bold">{stats?.classes || 0}</div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Available courses
+                  Active classes
                 </p>
               </CardContent>
             </Card>
