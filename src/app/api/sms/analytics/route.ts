@@ -78,18 +78,25 @@ async function getSchoolAnalytics(tenantId: string, period: string, academicYear
   console.log('[getSchoolAnalytics] tenantId:', tenantId);
   const whereClause: any = { tenantId };
   const branchFilter = branchId ? { branchId } : {};
-  console.log('[getSchoolAnalytics] classWhere:', JSON.stringify({ academicYear: { tenantId }, ...branchFilter }));
 
-  // Core metrics - filtered by branch if provided
-const classWhere = { academicYear: { tenantId }, ...branchFilter };
-    const [studentCount, teacherCount, courseCount, examCount, enrollmentCount, classCount] = await Promise.all([
+    // Count classes via academicYear.tenantId (ignore branchFilter since classes are keyed by academic year not branch)
+    const activeYear = await prisma.academicYear.findFirst({
+      where: { tenantId, isActive: true },
+      orderBy: { startDate: 'desc' },
+    });
+
+    const [studentCount, teacherCount, courseCount, examCount, enrollmentCount] = await Promise.all([
       prisma.student.count({ where: { tenantId, ...branchFilter } }),
       prisma.teacher.count({ where: { tenantId, ...branchFilter } }),
       prisma.course.count({ where: { tenantId } }),
       prisma.exam.count({ where: { tenantId } }),
       prisma.enrollment.count({ where: { tenantId, ...branchFilter } }),
-      prisma.academicClass.count({ where: classWhere }),
     ]);
+
+    // Count classes via academicYear.tenantId (ignore branchFilter since classes are keyed by academic year not branch)
+    const classCount = await prisma.academicClass.count({
+      where: { academicYear: { tenantId } },
+    });
 
   // Fee analytics
   const feeStats = await getFeeAnalytics(tenantId, branchFilter);
