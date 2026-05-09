@@ -44,16 +44,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = settingsSchema.parse(body);
 
-    const settings = await prisma.tenantSettings.upsert({
+    const settings = await prisma.tenantSettings.update({
       where: { tenantId: authUser.tenantId },
-      update: {
-        examTimeLimit: validated.examTimeLimit,
-        passingScore: validated.passingScore,
-        allowLateSubmission: validated.allowLateSubmission,
-        latePenaltyPercent: validated.latePenaltyPercent,
-      },
-      create: {
-        tenantId: authUser.tenantId,
+      data: {
         examTimeLimit: validated.examTimeLimit,
         passingScore: validated.passingScore,
         allowLateSubmission: validated.allowLateSubmission,
