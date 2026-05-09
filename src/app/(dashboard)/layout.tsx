@@ -92,6 +92,7 @@ const lmsNavItems = [
   { label: 'Badges', href: '/lms/badges', icon: '🏅' },
   { label: 'Certificates', href: '/lms/certificates', icon: '🎓' },
   { label: 'Forums', href: '/lms/forums', icon: '💬' },
+  { label: 'Settings', href: '/lms/settings', icon: '⚙️' },
 ];
 
 const teacherNavItems = [
@@ -99,6 +100,7 @@ const teacherNavItems = [
   { label: 'Assignments', href: '/lms/assignments' },
   { label: 'Exams', href: '/lms/exams' },
   { label: 'Results', href: '/lms/results' },
+  { label: 'Settings', href: '/lms/settings' },
 ];
 
 const studentNavItems = [
