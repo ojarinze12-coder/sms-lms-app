@@ -79,7 +79,7 @@ async function getSchoolAnalytics(tenantId: string, period: string, academicYear
     prisma.student.count({ where: { tenantId, ...branchFilter } }),
     prisma.teacher.count({ where: { tenantId, ...branchFilter } }),
     prisma.course.count({ where: { tenantId } }),
-    prisma.exam.count({ where: { subject: { academicClass: { academicYear: { tenantId }, ...branchFilter } } } }),
+    prisma.exam.count({ where: { tenantId } }),
     prisma.enrollment.count({ where: { tenantId, ...branchFilter } }),
     prisma.academicClass.count({ where: { academicYear: { tenantId }, ...branchFilter } }),
   ]);
