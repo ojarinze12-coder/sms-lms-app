@@ -79,7 +79,9 @@ const activeYear = await prisma.academicYear.findFirst({
       where: { tenantId, isActive: true },
       orderBy: { startDate: 'desc' },
     });
-    const classWhere = activeYear ? { academicYearId: activeYear.id, ...branchFilter } : { ...branchFilter };
+    const classWhere = activeYear 
+      ? { academicYearId: activeYear.id, ...branchFilter } 
+      : { tenantId, ...branchFilter };
     const [studentCount, teacherCount, courseCount, examCount, enrollmentCount, classCount] = await Promise.all([
       prisma.student.count({ where: { tenantId, ...branchFilter } }),
       prisma.teacher.count({ where: { tenantId, ...branchFilter } }),
