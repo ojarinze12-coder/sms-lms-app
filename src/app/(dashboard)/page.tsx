@@ -58,7 +58,7 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading || showContent) {
+    if (showContent) {
       loadDashboardData();
     }
   }, [authLoading, showContent, selectedBranch]);
@@ -107,8 +107,8 @@ export default function DashboardPage() {
           students: 12,
           teachers: 5,
           courses: 0,
-          exams: 1,
           classes: 0,
+          exams: 1,
           enrollments: 12,
         });
         setLoading(false);

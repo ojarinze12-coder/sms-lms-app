@@ -4,6 +4,7 @@ import { getAuthUser } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
   const authUser = await getAuthUser();
+  console.log('[SMS Analytics] authUser:', authUser?.userId, 'tenant:', authUser?.tenantId, 'role:', authUser?.role);
   
   if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -71,8 +72,10 @@ async function getSuperAdminAnalytics() {
 }
 
 async function getSchoolAnalytics(tenantId: string, period: string, academicYearId?: string, branchId?: string | null) {
+  console.log('[getSchoolAnalytics] tenantId:', tenantId);
   const whereClause: any = { tenantId };
   const branchFilter = branchId ? { branchId } : {};
+  console.log('[getSchoolAnalytics] classWhere:', JSON.stringify({ academicYear: { tenantId }, ...branchFilter }));
 
   // Core metrics - filtered by branch if provided
 const classWhere = { academicYear: { tenantId }, ...branchFilter };
