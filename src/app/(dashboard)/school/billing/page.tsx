@@ -7,6 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
+  Search,
+  Receipt,
+  FileText,
+} from 'lucide-react';
+import {
   Select, 
   SelectContent, 
   SelectItem, 
