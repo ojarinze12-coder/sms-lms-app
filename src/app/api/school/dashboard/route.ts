@@ -60,18 +60,11 @@ export async function GET(req: NextRequest) {
       classWhere.branchId = branchId;
     }
 
-    // Fetch real data from database - count classes within active academic year (or all tenant classes if no active year)
-    const activeYear = await prisma.academicYear.findFirst({
-      where: { tenantId: authUser.tenantId, isActive: true },
-      orderBy: { startDate: 'desc' },
-    });
-    
+    // Fetch real data from database
     const [studentCount, teacherCount, classCount] = await Promise.all([
       prisma.student.count({ where: studentWhere }),
       prisma.teacher.count({ where: teacherWhere }),
-      activeYear
-        ? prisma.academicClass.count({ where: { ...classWhere, academicYearId: activeYear.id } })
-        : prisma.academicClass.count({ where: { tenantId: authUser.tenantId } }),
+      prisma.academicClass.count({ where: { academicYear: { tenantId: authUser.tenantId } } }),
     ]);
 
     const stats = {

@@ -75,13 +75,7 @@ async function getSchoolAnalytics(tenantId: string, period: string, academicYear
   const branchFilter = branchId ? { branchId } : {};
 
   // Core metrics - filtered by branch if provided
-const activeYear = await prisma.academicYear.findFirst({
-      where: { tenantId, isActive: true },
-      orderBy: { startDate: 'desc' },
-    });
-    const classWhere = activeYear 
-      ? { academicYearId: activeYear.id, ...branchFilter } 
-      : { tenantId, ...branchFilter };
+const classWhere = { academicYear: { tenantId }, ...branchFilter };
     const [studentCount, teacherCount, courseCount, examCount, enrollmentCount, classCount] = await Promise.all([
       prisma.student.count({ where: { tenantId, ...branchFilter } }),
       prisma.teacher.count({ where: { tenantId, ...branchFilter } }),
