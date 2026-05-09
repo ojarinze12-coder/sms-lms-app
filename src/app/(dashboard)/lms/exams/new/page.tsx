@@ -26,6 +26,7 @@ export default function NewExamPage() {
   const [years, setYears] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [exam, setExam] = useState<ExamFormData>(getInitialExamForm(60));
 
   useEffect(() => {
