@@ -16,6 +16,16 @@ interface AcademicClass {
   name: string;
 }
 
+interface AcademicYear {
+  id: string;
+  name: string;
+}
+
+interface Term {
+  id: string;
+  name: string;
+}
+
 interface GeneratedQuestion {
   content: string;
   type: string;
@@ -40,15 +50,33 @@ const EXAM_TYPES = [
   { value: 'PRACTICE', label: 'Practice Exam' },
 ];
 
+const DURATION_DEFAULTS: Record<string, number> = {
+  QUIZ: 30,
+  ASSIGNMENT: 30,
+  MID_TERM: 60,
+  END_TERM: 90,
+  MOCK: 120,
+  WAEC: 180,
+  NECO: 180,
+  JAMB_UTME: 120,
+  BECE: 120,
+  PRACTICE: 60,
+};
+
 export default function SchoolAIExamPage() {
   const { selectedBranch } = useBranch();
-  const [years, setYears] = useState<any[]>([]);
+  const [years, setYears] = useState<AcademicYear[]>([]);
   const [selectedYearId, setSelectedYearId] = useState<string>('');
   const [classes, setClasses] = useState<AcademicClass[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
+  const [terms, setTerms] = useState<Term[]>([]);
+  const [selectedTermId, setSelectedTermId] = useState<string>('');
   const [examType, setExamType] = useState('MID_TERM');
+  const [duration, setDuration] = useState(60);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [topic, setTopic] = useState('');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [questionType, setQuestionType] = useState<'MULTIPLE_CHOICE' | 'TRUE_FALSE'>('MULTIPLE_CHOICE');
@@ -66,6 +94,7 @@ export default function SchoolAIExamPage() {
   useEffect(() => {
     if (selectedYearId) {
       loadClasses(selectedYearId);
+      loadTerms(selectedYearId);
     }
   }, [selectedYearId, selectedBranch]);
 
@@ -74,6 +103,10 @@ export default function SchoolAIExamPage() {
       loadSubjects(selectedClassId);
     }
   }, [selectedClassId]);
+
+  useEffect(() => {
+    setDuration(DURATION_DEFAULTS[examType] || 60);
+  }, [examType]);
 
   const loadYears = async () => {
     try {
@@ -112,6 +145,18 @@ export default function SchoolAIExamPage() {
       setClasses(data.data || []);
     } catch (err) {
       console.error('Failed to load classes:', err);
+    }
+  };
+
+  const loadTerms = async (yearId: string) => {
+    try {
+      const res = await authFetch('/api/sms/terms');
+      if (!res.ok) return;
+      const data = await res.json();
+      const termsData = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : (Array.isArray(data.terms) ? data.terms : []));
+      setTerms(termsData);
+    } catch (err) {
+      console.error('Error loading terms:', err);
     }
   };
 
@@ -181,6 +226,10 @@ export default function SchoolAIExamPage() {
       alert('Please enter an exam title');
       return;
     }
+    if (!selectedTermId) {
+      alert('Please select a term');
+      return;
+    }
     if (questions.length === 0) {
       alert('No questions to save');
       return;
@@ -188,25 +237,18 @@ export default function SchoolAIExamPage() {
 
     setSaving(true);
     try {
-      const res = await authFetch('/api/ai/exam/save', {
+      const res = await authFetch('/api/lms/exams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: examTitle,
           description: topic,
           examType,
+          duration,
+          termId: selectedTermId,
           subjectId: selectedSubjectId,
-          academicClassId: selectedClassId,
-          questions: questions.map((q, i) => ({
-            content: q.content,
-            type: q.type,
-            points: q.points,
-            options: q.options.map((opt, j) => ({
-              content: opt.content,
-              isCorrect: opt.isCorrect,
-              order: j + 1,
-            })),
-          })),
+          startTime: startTime || null,
+          endTime: endTime || null,
         }),
       });
 
@@ -216,9 +258,28 @@ export default function SchoolAIExamPage() {
         return;
       }
 
-      const data = await res.json();
-      setSavedExamId(data.id);
-      alert(`Exam saved successfully! (ID: ${data.id})`);
+      const createdExam = await res.json();
+
+      for (const q of questions) {
+        await authFetch(`/api/lms/exams/${createdExam.id}/questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: q.content,
+            type: q.type,
+            points: q.points,
+            order: questions.indexOf(q) + 1,
+            options: q.options.map((opt, j) => ({
+              content: opt.content,
+              isCorrect: opt.isCorrect,
+              order: j + 1,
+            })),
+          }),
+        });
+      }
+
+      setSavedExamId(createdExam.id);
+      alert(`Exam saved successfully! You can now publish it from the Exams management page.`);
     } catch (err) {
       console.error('Failed to save exam:', err);
       alert('Error saving exam');
@@ -314,6 +375,64 @@ export default function SchoolAIExamPage() {
                     <option key={type.value} value={type.value}>{type.label}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
+                    min={1}
+                    max={300}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Term *
+                  </label>
+                  <select
+                    value={selectedTermId}
+                    onChange={(e) => setSelectedTermId(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    disabled={terms.length === 0}
+                  >
+                    <option value="">Select term...</option>
+                    {terms.map((term) => (
+                      <option key={term.id} value={term.id}>{term.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Start Time (optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    End Time (optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
               </div>
 
               <div>
