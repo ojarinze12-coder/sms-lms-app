@@ -61,11 +61,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch real data from database
+    console.log('[School Dashboard] tenantId:', authUser.tenantId);
     const [studentCount, teacherCount, classCount] = await Promise.all([
       prisma.student.count({ where: studentWhere }),
       prisma.teacher.count({ where: teacherWhere }),
       prisma.academicClass.count({ where: { academicYear: { tenantId: authUser.tenantId } } }),
     ]);
+    console.log('[School Dashboard] counts:', { studentCount, teacherCount, classCount });
 
     const stats = {
       students: studentCount,
