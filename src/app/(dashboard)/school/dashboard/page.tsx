@@ -48,11 +48,13 @@ export default function SchoolDashboardPage() {
         }
         
         const url = `/api/school/dashboard${params.toString() ? '?' + params.toString() : ''}`;
+        console.log('[School Dashboard Page] Fetching:', url, 'headers:', headers);
         
         const res = await fetch(url, {
           credentials: 'include',
           headers: Object.keys(headers).length > 0 ? headers : undefined,
         });
+        console.log('[School Dashboard Page] Status:', res.status);
         if (!res.ok) {
           const errorData = await res.json();
           setError(errorData.error || 'Failed to fetch dashboard data');

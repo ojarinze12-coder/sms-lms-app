@@ -35,17 +35,21 @@ async function getAuthUser(req: NextRequest): Promise<JWTPayload | null> {
 }
 
 export async function GET(req: NextRequest) {
+  console.log('[School Dashboard API] Request received');
   try {
     const { searchParams } = new URL(req.url);
     const branchId = searchParams.get('branchId');
     
     const authUser = await getAuthUser(req);
+    console.log('[School Dashboard API] Auth user:', authUser);
     
     if (!authUser) {
+      console.log('[School Dashboard API] Auth failed');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (!authUser.tenantId) {
+      console.log('[School Dashboard API] No tenantId');
       return NextResponse.json({ error: 'Tenant not found' }, { status: 400 });
     }
 
