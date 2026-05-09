@@ -556,7 +556,21 @@ export default function DashboardPage() {
           <p className="text-orange-100 mt-2 text-lg">{getWelcomeMessage()}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link href="/lms/results">
+            <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-purple-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">My Subjects</CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold">{stats?.courses || 0}</div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enrolled</p>
+                </div>
+                <BookOpen className="h-10 w-10 text-purple-500" />
+              </CardContent>
+            </Card>
+          </Link>
           <Link href="/lms/exams">
             <Card className="hover:shadow-lg transition-all cursor-pointer hover:-translate-y-1 border-l-4 border-l-orange-500">
               <CardHeader className="pb-2">
