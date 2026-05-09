@@ -87,6 +87,7 @@ export default function DashboardPage() {
         credentials: 'include',
         headers: Object.keys(headers).length > 0 ? headers : undefined,
       });
+      console.log('[Dashboard] Analytics fetch status:', res.status, 'url:', url);
       
       // If unauthorized, use fallback data
       if (res.status === 401) {
@@ -116,16 +117,20 @@ export default function DashboardPage() {
       }
       
       const data = await res.json();
+      console.log('[Dashboard] API response:', JSON.stringify(data));
       
       if (!isSuperAdmin && data.user?.tenant) {
         setTenant(data.user.tenant);
       }
       
       if (data.overview) {
+        console.log('[Dashboard] Setting stats from overview:', data.overview);
         setStats(data.overview);
+      } else {
+        console.log('[Dashboard] No overview in response, keeping fallback');
       }
     } catch (err) {
-      console.error('Dashboard data not available:', err);
+      console.error('[Dashboard] Unexpected error:', err);
       setStats({
         students: 12,
         teachers: 5,

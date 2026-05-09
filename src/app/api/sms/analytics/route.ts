@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   console.log('[SMS Analytics] authUser:', authUser?.userId, 'tenant:', authUser?.tenantId, 'role:', authUser?.role);
   
   if (!authUser) {
+    console.log('[SMS Analytics] No auth user - returning 401');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -15,9 +16,11 @@ export async function GET(request: NextRequest) {
     const period = searchParams.get('period') || 'term';
     const academicYearId = searchParams.get('academicYearId');
     const branchId = searchParams.get('branchId');
+    console.log('[SMS Analytics] params - period:', period, 'branchId:', branchId, 'academicYearId:', academicYearId);
 
     // SuperAdmin: Show global analytics
     if (authUser.role === 'SUPER_ADMIN') {
+      console.log('[SMS Analytics] SuperAdmin - calling getSuperAdminAnalytics');
       return getSuperAdminAnalytics();
     }
 
@@ -26,14 +29,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 400 });
     }
     return getSchoolAnalytics(authUser.tenantId, period, academicYearId || undefined, branchId);
-
   } catch (error) {
-    console.error('Analytics error:', error);
+    console.error('[SMS Analytics] error:', error);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }
 }
 
 async function getSuperAdminAnalytics() {
+  console.log('[getSuperAdminAnalytics] called');
   const [schoolCount, studentCount, teacherCount, courseCount, examCount] = await Promise.all([
     prisma.tenant.count(),
     prisma.student.count(),
@@ -125,6 +128,7 @@ const classWhere = { academicYear: { tenantId }, ...branchFilter };
     where: { tenantId, ...branchFilter },
   });
 
+  console.log('[getSchoolAnalytics] returning:', { studentCount, teacherCount, courseCount, examCount, enrollmentCount, classCount });
   return NextResponse.json({
     overview: {
       students: studentCount,
