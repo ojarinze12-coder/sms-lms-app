@@ -63,6 +63,8 @@ async function handleSuccessfulPayment(data: any) {
 
   if (reference.startsWith('SUB_')) {
     await handleSubscriptionPayment(data, metadata);
+  } else if (reference.startsWith('BILL_')) {
+    await handleBillPayment(data, metadata);
   } else if (reference.startsWith('FEE_')) {
     await handleFeePayment(data, metadata);
   } else {
@@ -214,6 +216,153 @@ async function handleFeePayment(data: any, metadata: any) {
   });
 
   console.log(`Fee payment ${reference} completed successfully`);
+}
+
+async function handleBillPayment(data: any, metadata: any) {
+  const reference = data.reference;
+  const billId = metadata.billId;
+  const amount = data.amount / 100;
+
+  console.log(`Processing bill payment: ${reference}, amount: ${amount}, billId: ${billId}`);
+
+  const payment = await prisma.feePayment.findFirst({
+    where: { referenceNo: reference },
+  });
+
+  if (!payment) {
+    console.error('Fee payment not found for reference:', reference);
+    return;
+  }
+
+  if (!billId) {
+    console.error('No billId in metadata for bill payment:', reference);
+    return;
+  }
+
+  const bill = await prisma.studentFeeBill.findUnique({
+    where: { id: billId },
+    include: { items: true },
+  });
+
+  if (!bill) {
+    console.error('Student bill not found:', billId);
+    return;
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: bill.tenantId },
+  });
+
+  const student = await prisma.student.findUnique({
+    where: { id: bill.studentId },
+    select: { firstName: true, lastName: true, studentId: true },
+  });
+
+  const academicYear = await prisma.academicYear.findUnique({
+    where: { id: bill.academicYearId },
+  });
+
+  const term = await prisma.term.findUnique({
+    where: { id: bill.termId },
+  });
+
+  const receiptNo = `RCP-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+  const result = await prisma.$transaction(async (tx) => {
+    const receipt = await tx.feeReceipt.create({
+      data: {
+        receiptNo,
+        billId: bill.id,
+        studentId: bill.studentId,
+        academicYearId: bill.academicYearId,
+        termId: bill.termId,
+        totalPaid: amount,
+        paymentBreakdown: [],
+        tenantId: bill.tenantId,
+        generatedAt: new Date(),
+      },
+    });
+
+    const paymentBreakdown: any[] = [];
+    let remainingAmount = amount;
+
+    for (const item of bill.items) {
+      if (remainingAmount <= 0) break;
+
+      const maxApplicable = item.outstanding;
+      if (maxApplicable <= 0) continue;
+
+      const amountToApply = Math.min(remainingAmount, maxApplicable);
+      if (amountToApply <= 0) continue;
+
+      const newAmountPaid = item.amountPaid + amountToApply;
+      const newOutstanding = Math.max(0, item.amountDue - newAmountPaid);
+
+      await tx.feeBillItem.update({
+        where: { id: item.id },
+        data: {
+          amountPaid: newAmountPaid,
+          outstanding: newOutstanding,
+          status: newOutstanding <= 0 ? 'PAID' : newAmountPaid > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
+        },
+      });
+
+      paymentBreakdown.push({
+        itemId: item.id,
+        componentName: item.componentName,
+        amountPaid: amountToApply,
+        outstanding: newOutstanding,
+      });
+
+      remainingAmount -= amountToApply;
+    }
+
+    await tx.feeReceipt.update({
+      where: { id: receipt.id },
+      data: { paymentBreakdown },
+    });
+
+    const updatedItems = await tx.feeBillItem.findMany({ where: { billId: bill.id } });
+    const totalAmountPaid = updatedItems.reduce((sum, i) => sum + i.amountPaid, 0);
+    const totalOutstanding = updatedItems.reduce((sum, i) => sum + i.outstanding, 0);
+    const allPaid = updatedItems.every(i => i.outstanding <= 0);
+
+    await tx.studentFeeBill.update({
+      where: { id: bill.id },
+      data: {
+        amountPaid: totalAmountPaid,
+        balance: totalOutstanding,
+        status: allPaid ? 'FULLY_PAID' : totalAmountPaid > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
+      },
+    });
+
+    await tx.feePayment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'COMPLETED',
+        transactionId: data.id?.toString(),
+        gatewayResponse: data,
+        paidAt: new Date(),
+        studentFeeBillId: bill.id,
+        feeReceiptId: receipt.id,
+        partialAmounts: bill.items.reduce((acc: any, item) => {
+          const paymentItem = paymentBreakdown.find(p => p.itemId === item.id);
+          if (paymentItem) {
+            acc[item.id] = paymentItem.amountPaid;
+          }
+          return acc;
+        }, {}),
+      },
+    });
+
+    return { receipt, paymentBreakdown };
+  });
+
+  console.log(`Bill payment ${reference} completed successfully. Receipt: ${receiptNo}`);
+
+  if (student && tenant) {
+    console.log(`Payment for ${student.firstName} ${student.lastName} (${student.studentId}) - Amount: ${amount}, Bill: ${bill.id}`);
+  }
 }
 
 export async function GET() {

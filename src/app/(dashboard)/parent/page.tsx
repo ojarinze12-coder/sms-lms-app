@@ -81,6 +81,34 @@ export default function ParentPortalPage() {
     }
   };
 
+  const handlePayNow = async (billId: string, studentId: string) => {
+    if (!billId || !studentId) return;
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(API_BASE + '/fees/payments', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'initialize',
+          studentId,
+          billId,
+        }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.paymentLink) {
+        window.location.href = data.paymentLink;
+      } else {
+        setError(data.error || 'Failed to initiate payment');
+      }
+    } catch (err) {
+      setError('Failed to initiate payment');
+    }
+  };
+
   const handleLinkStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     setLinking(true);
@@ -203,7 +231,12 @@ export default function ParentPortalPage() {
   }
 
   const attendanceStats = calculateAttendanceStats(data.attendances);
-  const feeStats = calculateFeeStats(data.fees);
+  const feeData = data.feeData || [];
+  const feeStats = {
+    total: feeData.reduce((sum: number, f: any) => sum + f.totalBilled, 0),
+    paid: feeData.reduce((sum: number, f: any) => sum + f.totalPaid, 0),
+    pending: feeData.reduce((sum: number, f: any) => sum + f.outstanding, 0),
+  };
   
   const approvedChildren = data.children.filter(c => c.approvalStatus === 'APPROVED');
   const pendingChildren = data.children.filter(c => c.approvalStatus === 'PENDING');
@@ -375,7 +408,7 @@ export default function ParentPortalPage() {
       )}
 
       {viewMode === 'fees' && (
-        <FeesTab fees={data.fees} feeStats={feeStats} />
+        <FeesTab feeData={feeData} onPayNow={handlePayNow} />
       )}
 
       {viewMode === 'attendance' && (

@@ -971,3 +971,157 @@ The system was using "Course" which is a tertiary concept. K-12 schools use:
 
 ## Date Updated
 May 7, 2026
+
+---
+
+## 33. Create Assignment/Exam Subject Dropdown Fix ✅ COMPLETED (May 2026)
+
+### Problems
+1. Subjects dropdown in "Create New Assignment" showed duplicates
+2. Only a few subjects repeated multiple times, many key subjects missing (Mathematics, Physics, etc.)
+3. Subjects listed the same regardless of selected class (Nursery showing Accountancy, etc.)
+4. Classes dropdown showed all classes from all academic years
+
+### Root Causes
+1. `distinct: ['name', 'academicClassId']` in subjects API — combined with missing class filter, caused name-based deduplication that hid variants
+2. `|| academicYearId` fallback on line 12 of subjects API — treated year IDs as class IDs, bypassing class filtering
+3. Assignments page called `/api/lms/classes` with no academic year filter — returned all classes
+4. Form class selection never triggered `loadSubjects(formData.classId)` — subjects stayed stale
+5. Exam creation page (`lms/exams/new`) had no class/year/subject cascade at all
+
+### Files Fixed
+
+| File | Change |
+|------|--------|
+| `src/app/api/sms/subjects/route.ts` | Fixed `distinct: ['name', 'academicClassId']` (restore effective deduplication), removed broken `academicYearId` fallback on line 12 |
+| `src/app/(dashboard)/lms/assignments/page.tsx` | Added `selectedYearId` state, year dropdown in filter bar, 3 separate useEffect cascade, switched to `/api/sms/academic-classes?academicYearId=`, loadSubjects called when form class changes |
+| `src/app/(dashboard)/lms/exams/new/page.tsx` | Added 3 useEffect cascade (years → classes → subjects), proper `loadClasses(yearId)` and `loadSubjects(classId)`, pass years/classes to ExamDetailsStep |
+| `src/components/exam-wizard/ExamDetailsStep.tsx` | Added class and academic year dropdowns (Radix UI), subject disabled until class selected, class change resets subject |
+| `src/types/exam-wizard.ts` | Added `academicYearId` and `classId` to `ExamFormData` |
+
+### Also Fixed (3 files with wrong API param name)
+| File | Change |
+|------|--------|
+| `src/app/(dashboard)/school/ai/exam/page.tsx` | Changed `?academicYearId=${classId}` → `?academicClassId=${classId}` |
+| `src/app/(dashboard)/school/ai/timetable/page.tsx` | Changed `?academicYearId=${classId}` → `?academicClassId=${classId}` |
+| `src/app/(dashboard)/sms/subjects/page.tsx` | Changed `?academicYearId=${classId}` → `?academicClassId=${classId}` |
+
+### Status
+✅ Completed - Deployed and tested
+
+---
+
+## 34. AI Exam Generator Alignment with Manual Exam Creation ✅ COMPLETED (May 2026)
+
+### Problem
+AI Exam Generator was a standalone prototype missing critical exam features that Manual Exam creation had.
+
+### Features Added
+
+| Feature | Description |
+|---------|-------------|
+| Duration | Auto-sets based on exam type (Quiz=30, MidTerm=60, EndTerm=90, etc.) — editable field |
+| Term | Required dropdown, cascades when academic year changes |
+| Start Time | Optional datetime picker for exam scheduling |
+| End Time | Optional datetime picker for exam scheduling |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/(dashboard)/school/ai/exam/page.tsx` | Added term, duration, start/end time state; UI fields; `loadSettings()` to fetch default duration; loadTerms on mount; switched save from `/api/ai/exam/save` to `/api/lms/exams` |
+| `src/types/exam-wizard.ts` | `getInitialExamForm()` now accepts optional `duration` parameter |
+
+### Architecture Change
+- AI Exam Generator now submits to standard `/api/lms/exams` endpoint (same as Manual Exam creation)
+- Questions added via `/api/lms/exams/[id]/questions` after exam creation
+- AI-generated exams appear in standard exam listing and management workflow
+- Success message updated: *"Exam saved successfully! You can now publish it from the Exams management page."*
+
+### Status
+✅ Completed - Deployed
+
+---
+
+## 35. Exam & Assignment Settings Feature ✅ COMPLETED (May 2026)
+
+### Overview
+Full implementation of configurable exam and assignment defaults wired into the actual flows.
+
+### Database Schema Changes (`prisma/schema.prisma`)
+
+**TenantSettings model additions:**
+```prisma
+examTimeLimit         Int     @default(60)  // Default duration in minutes
+passingScore          Int     @default(50) // Passing score percentage
+allowLateSubmission  Boolean @default(true)
+latePenaltyPercent   Int     @default(10) // Percentage deducted per day late
+```
+
+**AssignmentSubmission model addition:**
+```prisma
+penaltyApplied Float?  // Tracks late penalty deducted during grading
+```
+
+### API Routes
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/lms/settings` | GET | Fetch exam/assignment defaults from TenantSettings |
+| `/api/lms/settings` | POST | Save exam/assignment defaults to TenantSettings |
+
+### Features Wired
+
+| Setting | Where Applied |
+|---------|--------------|
+| `examTimeLimit` | Pre-fills duration in `lms/exams/new` and `school/ai/exam` on mount |
+| `passingScore` | Compared against score percentage in `/api/lms/exams/[id]/grade`; returns `passed`/`passingScore` per graded result |
+| `allowLateSubmission` | Pre-fills toggle in assignment creation form |
+| `latePenaltyPercent` | Pre-fills penalty field; auto-calculated during assignment grading (days late × rate) |
+
+### Files Created/Modified (10 files)
+
+| File | Change |
+|------|--------|
+| `prisma/schema.prisma` | Added 4 fields to TenantSettings + penaltyApplied to AssignmentSubmission |
+| `src/app/api/lms/settings/route.ts` | NEW — GET/POST for exam/assignment defaults |
+| `src/lib/lms-settings.ts` | NEW — Client helper for loading LMS settings |
+| `src/app/(dashboard)/lms/settings/page.tsx` | Simplified page (removed dead Course/Gamification/Communication cards); fetches/saves via new API |
+| `src/app/(dashboard)/lms/exams/new/page.tsx` | Loads `examTimeLimit` on mount, uses as default duration |
+| `src/app/(dashboard)/school/ai/exam/page.tsx` | Loads `examTimeLimit` on mount |
+| `src/app/(dashboard)/lms/assignments/page.tsx` | Loads `allowLateSubmission`/`latePenaltyPercent`; added `latePenalty` field to creation form |
+| `src/app/api/lms/exams/[id]/grade/route.ts` | Compares score % against `passingScore`; returns `passed`/`passingScore` per result |
+| `src/app/api/lms/assignments/[id]/submissions/[submissionId]/route.ts` | Auto-calculates late penalty (days late × rate), applies to grade, returns `penaltyApplied` |
+| `src/types/exam-wizard.ts` | `getInitialExamForm()` accepts optional `duration` param |
+
+### Navigation
+- Added "Settings" link (⚙️ icon) to LMS sidebar in `layout.tsx`
+- Accessible at `/lms/settings` for Admin and Teacher roles
+
+### Database Migration Required
+```bash
+npx prisma db push
+```
+
+### Status
+✅ Completed - Deployed (requires `prisma db push` to sync schema)
+
+---
+
+## 36. Dashboard & UI Bug Fixes ✅ COMPLETED (May 2026)
+
+### Fixes Applied
+
+| Issue | File | Change |
+|-------|------|--------|
+| "Exam Settings" label mismatch | `school/dashboard/page.tsx` | Renamed to "Grading Scales" (links to `/school/exams`) |
+| Missing `questions` state | `lms/exams/new/page.tsx` | Added `const [questions, setQuestions] = useState<Question[]>([])` |
+| Duplicate `loadYears` definition | `lms/exams/new/page.tsx` | Removed duplicate function (lines 80 and 110) |
+| Missing Dialog imports | `school/billing/page.tsx` | Added Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter |
+| Exam count showing 0 on Admin Analytics | `api/admin/analytics/route.ts` | Fixed `prisma.exam.count()` split across two try-catches on same line |
+| Missing `Search` and `Receipt` icons | `school/billing/page.tsx` | Added `import { Search, Receipt } from 'lucide-react'` |
+| Missing `academicYearId`/`classId` in ExamFormData | `types/exam-wizard.ts` | Added both fields |
+| Settings POST using upsert when update sufficient | `api/lms/settings/route.ts` | Changed to `update` (TenantSettings created at tenant onboarding) |
+
+### Status
+✅ Completed - Deployed

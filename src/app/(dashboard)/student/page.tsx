@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download, ClipboardList, PlayCircle, Menu, X } from 'lucide-react';
+import { GraduationCap, Calendar, Bell, FileText, BookOpen, Clock, TrendingUp, AlertCircle, Table, Award, Download, ClipboardList, PlayCircle, Menu, X, DollarSign } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 
 interface GradingScaleGrade {
@@ -207,20 +207,21 @@ export default function StudentPortalPage() {
               </button>
             </div>
             <div className="p-4 space-y-2">
-              {[
+{[
                 { id: 'overview', label: 'Overview', icon: TrendingUp },
                 { id: 'results', label: 'Results', icon: Award },
-{ id: 'courses', label: 'Class/Subjects', icon: BookOpen },
+                { id: 'courses', label: 'Class/Subjects', icon: BookOpen },
                 { id: 'assignments', label: 'Tasks', icon: FileText },
                 { id: 'attendance', label: 'Attendance', icon: Calendar },
                 { id: 'announcements', label: 'Notices', icon: Bell },
                 { id: 'exams', label: 'Exams', icon: ClipboardList },
+                { id: 'fees', label: 'Fees', icon: DollarSign },
               ].map(item => {
                 const Icon = item.icon;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => { setViewMode(item.id as any); setMobileMenuOpen(false); }}
+                    onClick={() => { if (item.id === 'fees') { setMobileMenuOpen(false); window.location.href = '/student/fees'; } else { setViewMode(item.id as any); setMobileMenuOpen(false); } }}
                     className={`w-full flex items-center gap-3 p-4 rounded-lg text-left transition-colors ${
                       viewMode === item.id 
                         ? 'bg-blue-600 text-white' 
@@ -248,8 +249,9 @@ export default function StudentPortalPage() {
             { id: 'attendance', label: 'Attendance', icon: Calendar },
             { id: 'announcements', label: 'Notices', icon: Bell },
             { id: 'exams', label: 'Exams', icon: ClipboardList },
+            { id: 'fees', label: 'Fees', icon: DollarSign },
           ].map(item => (
-            <button key={item.id} onClick={() => setViewMode(item.id as any)} 
+            <button key={item.id} onClick={() => item.id === 'fees' ? window.location.href = '/student/fees' : setViewMode(item.id as any)} 
               className={`px-4 py-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 viewMode === item.id 
                   ? 'bg-blue-600 text-white' 

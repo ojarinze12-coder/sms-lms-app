@@ -6,6 +6,105 @@ import { flutterwave } from '@/lib/flutterwave';
 import { sendFeeReminder } from '@/lib/notifications';
 import { decrypt } from '@/lib/security';
 
+async function processBillPayment(payment: any, amount: number, gatewayData: any) {
+  const billId = payment.studentFeeBillId;
+  if (!billId) return;
+
+  const bill = await prisma.studentFeeBill.findUnique({
+    where: { id: billId },
+    include: { items: true },
+  });
+
+  if (!bill) return;
+
+  const receiptNo = `RCP-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+  await prisma.$transaction(async (tx) => {
+    const receipt = await tx.feeReceipt.create({
+      data: {
+        receiptNo,
+        billId: bill.id,
+        studentId: bill.studentId,
+        academicYearId: bill.academicYearId,
+        termId: bill.termId,
+        totalPaid: amount,
+        paymentBreakdown: [],
+        tenantId: bill.tenantId,
+        generatedAt: new Date(),
+      },
+    });
+
+    const paymentBreakdown: any[] = [];
+    let remainingAmount = amount;
+
+    for (const item of bill.items) {
+      if (remainingAmount <= 0) break;
+
+      const maxApplicable = item.outstanding;
+      if (maxApplicable <= 0) continue;
+
+      const amountToApply = Math.min(remainingAmount, maxApplicable);
+      if (amountToApply <= 0) continue;
+
+      const newAmountPaid = item.amountPaid + amountToApply;
+      const newOutstanding = Math.max(0, item.amountDue - newAmountPaid);
+
+      await tx.feeBillItem.update({
+        where: { id: item.id },
+        data: {
+          amountPaid: newAmountPaid,
+          outstanding: newOutstanding,
+          status: newOutstanding <= 0 ? 'PAID' : newAmountPaid > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
+        },
+      });
+
+      paymentBreakdown.push({
+        itemId: item.id,
+        componentName: item.componentName,
+        amountPaid: amountToApply,
+        outstanding: newOutstanding,
+      });
+
+      remainingAmount -= amountToApply;
+    }
+
+    await tx.feeReceipt.update({
+      where: { id: receipt.id },
+      data: { paymentBreakdown },
+    });
+
+    const updatedItems = await tx.feeBillItem.findMany({ where: { billId: bill.id } });
+    const totalAmountPaid = updatedItems.reduce((sum, i) => sum + i.amountPaid, 0);
+    const totalOutstanding = updatedItems.reduce((sum, i) => sum + i.outstanding, 0);
+    const allPaid = updatedItems.every(i => i.outstanding <= 0);
+
+    await tx.studentFeeBill.update({
+      where: { id: bill.id },
+      data: {
+        amountPaid: totalAmountPaid,
+        balance: totalOutstanding,
+        status: allPaid ? 'FULLY_PAID' : totalAmountPaid > 0 ? 'PARTIALLY_PAID' : 'UNPAID',
+      },
+    });
+
+    await tx.feePayment.update({
+      where: { id: payment.id },
+      data: {
+        feeReceiptId: receipt.id,
+        partialAmounts: bill.items.reduce((acc: any, item) => {
+          const paymentItem = paymentBreakdown.find(p => p.itemId === item.id);
+          if (paymentItem) {
+            acc[item.id] = paymentItem.amountPaid;
+          }
+          return acc;
+        }, {}),
+      },
+    });
+  });
+
+  console.log(`Bill payment processed for bill ${billId}, amount: ${amount}, receipt: ${receiptNo}`);
+}
+
 async function getTenantPaymentConfig(tenantId: string) {
   const settings = await prisma.tenantSettings.findUnique({
     where: { tenantId },
@@ -69,19 +168,22 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await request.json();
-    const { action, studentId, feeId, amount, method, gateway } = body;
+    const { action, studentId, feeId, billId, amount, method, gateway } = body;
 
     if (action === 'initialize') {
-      return initializePayment(user, studentId, feeId, amount, gateway);
+      const user = await requireAuth(request);
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      return initializePayment(user, studentId, feeId, billId, amount, gateway);
     }
 
     if (action === 'record') {
+      const user = await requireAuth(request);
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
       return recordPayment(user, body);
     }
 
@@ -95,8 +197,9 @@ export async function POST(request: NextRequest) {
 async function initializePayment(
   user: any,
   studentId: string,
-  feeId: string,
-  amount: number,
+  feeId: string | undefined,
+  billId: string | undefined,
+  amount: number | undefined,
   gateway: 'PAYSTACK' | 'FLUTTERWAVE' = 'PAYSTACK'
 ) {
   const student = await prisma.student.findFirst({
@@ -110,17 +213,45 @@ async function initializePayment(
     return NextResponse.json({ error: 'Student not found' }, { status: 404 });
   }
 
-  const feeStructure = await prisma.feeStructure.findFirst({
-    where: { id: feeId, tenantId: user.tenantId },
-  });
+  let paymentAmount = amount;
+  let feeName = '';
+  let studentFeeBillId: string | null = null;
 
-  if (!feeStructure) {
-    return NextResponse.json({ error: 'Fee structure not found' }, { status: 404 });
+  if (billId) {
+    const bill = await prisma.studentFeeBill.findFirst({
+      where: { id: billId, studentId, tenantId: user.tenantId },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!bill) {
+      return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
+    }
+
+    studentFeeBillId = bill.id;
+    paymentAmount = bill.balance;
+    feeName = `School Fees - ${bill.term?.name || 'Current Term'}`;
+  } else if (feeId) {
+    const feeStructure = await prisma.feeStructure.findFirst({
+      where: { id: feeId, tenantId: user.tenantId },
+    });
+
+    if (!feeStructure) {
+      return NextResponse.json({ error: 'Fee structure not found' }, { status: 404 });
+    }
+
+    feeName = feeStructure.name;
+  } else {
+    return NextResponse.json({ error: 'Either feeId or billId must be provided' }, { status: 400 });
+  }
+
+  if (!paymentAmount || paymentAmount <= 0) {
+    return NextResponse.json({ error: 'No outstanding balance to pay' }, { status: 400 });
   }
 
   const parent = student.parents[0];
   const email = parent?.email || student.email || user.email;
-  const phone = parent?.phone || student.phone;
 
   if (!email) {
     return NextResponse.json({ error: 'No email found for payment' }, { status: 400 });
@@ -145,15 +276,21 @@ async function initializePayment(
     }
   }
 
-  const referenceNo = `FEE_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-  const metadata = {
+  const referenceNo = billId ? `BILL_${Date.now()}_${Math.random().toString(36).substring(7)}` : `FEE_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const metadata: any = {
     tenantId: user.tenantId,
     studentId,
-    feeId,
     referenceNo,
     studentName: `${student.firstName} ${student.lastName}`,
-    feeName: feeStructure.name,
+    feeName,
   };
+
+  if (billId) {
+    metadata.billId = billId;
+  }
+  if (feeId) {
+    metadata.feeId = feeId;
+  }
 
   let paymentLink;
   let paymentGateway: string = effectiveGateway;
@@ -163,7 +300,7 @@ async function initializePayment(
   
   if (isDemoMode) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${amount}&gateway=${effectiveGateway}`;
+    paymentLink = `${baseUrl}/pay/demo?ref=${referenceNo}&amount=${paymentAmount}&gateway=${effectiveGateway}`;
     paymentGateway = 'DEMO';
   } else if (effectiveGateway === 'PAYSTACK') {
     if (!decryptedSecretKey) {
@@ -173,7 +310,7 @@ async function initializePayment(
     process.env.PAYSTACK_SECRET_KEY = decryptedSecretKey;
     const response = await paystack.initializePayment({
       email,
-      amount: formatAmountToKobo(amount),
+      amount: formatAmountToKobo(paymentAmount),
       currency: 'NGN',
       reference: referenceNo,
       metadata,
@@ -193,7 +330,7 @@ async function initializePayment(
     const response = await flutterwave.initializePayment({
       email,
       name: `${student.firstName} ${student.lastName}`,
-      amount,
+      amount: paymentAmount,
       currency: 'NGN',
       txRef: referenceNo,
       meta: metadata,
@@ -208,13 +345,14 @@ async function initializePayment(
 
   const pendingPayment = await prisma.feePayment.create({
     data: {
-      amount,
+      amount: paymentAmount,
       method: 'ONLINE',
       status: 'PENDING',
       referenceNo,
       paymentGateway,
       studentId,
-      feeId,
+      feeId: feeId || '',
+      studentFeeBillId,
       tenantId: user.tenantId,
       branchId: student.branchId,
     },
@@ -224,6 +362,7 @@ async function initializePayment(
     paymentLink,
     reference: referenceNo,
     paymentId: pendingPayment.id,
+    amount: paymentAmount,
   });
 }
 
@@ -299,6 +438,12 @@ export async function PUT(request: NextRequest) {
       } else if (referenceNo) {
         payment = await prisma.feePayment.findFirst({
           where: { referenceNo },
+          include: {
+            student: {
+              include: { parents: true },
+            },
+            feeStructure: true,
+          },
         });
       }
 
@@ -324,14 +469,23 @@ export async function PUT(request: NextRequest) {
       }
 
       if (verified) {
+        const amount = gatewayData?.amount ? gatewayData.amount / 100 : parseFloat(gatewayData?.amount || '0');
+        
+        const paymentData: any = {
+          status: 'COMPLETED',
+          transactionId: gatewayData?.id?.toString() || transactionId || 'DEMO-' + Date.now(),
+          gatewayResponse: gatewayData,
+          paidAt: new Date(),
+        };
+
+        if (payment.studentFeeBillId) {
+          await processBillPayment(payment, amount, gatewayData);
+          paymentData.studentFeeBillId = payment.studentFeeBillId;
+        }
+
         await prisma.feePayment.update({
           where: { id: payment.id },
-          data: {
-            status: 'COMPLETED',
-            transactionId: gatewayData?.id?.toString() || transactionId || 'DEMO-' + Date.now(),
-            gatewayResponse: gatewayData,
-            paidAt: new Date(),
-          },
+          data: paymentData,
         });
 
         return NextResponse.json({ success: true, message: 'Payment verified successfully' });

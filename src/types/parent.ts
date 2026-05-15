@@ -27,6 +27,53 @@ export interface FeePayment {
   };
 }
 
+export interface FeeBillItem {
+  componentName: string;
+  componentType: string;
+  amountDue: number;
+  amountPaid: number;
+  outstanding: number;
+  status: string;
+}
+
+export interface StudentBill {
+  id: string;
+  academicYear: string;
+  term: string;
+  totalAmount: number;
+  amountPaid: number;
+  balance: number;
+  status: string;
+  items: FeeBillItem[];
+}
+
+export interface StudentFeeData {
+  studentId: string;
+  studentName: string;
+  totalBilled: number;
+  totalPaid: number;
+  outstanding: number;
+  bills: StudentBill[];
+  payments: {
+    id: string;
+    amount: number;
+    method: string;
+    status: string;
+    paidAt: string | null;
+    transactionId: string | null;
+    receiptNo: string | null;
+  }[];
+  receipts: {
+    id: string;
+    receiptNo: string;
+    totalPaid: number;
+    generatedAt: string;
+    academicYear: string;
+    term: string;
+  }[];
+  billItems: FeeBillItem[];
+}
+
 export interface Attendance {
   id: string;
   date: string;
@@ -73,6 +120,7 @@ export interface ParentData {
   results: Result[];
   reportCards: ReportCard[];
   fees: FeePayment[];
+  feeData: StudentFeeData[];
   attendances: Attendance[];
   announcements: Announcement[];
 }
