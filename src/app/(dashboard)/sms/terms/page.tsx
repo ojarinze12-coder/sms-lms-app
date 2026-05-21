@@ -172,7 +172,7 @@ export default function TermsPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton href="/sms/academics" label="Back to Academics" />
+      <BackButton href="/school/academics" label="Back to Academics" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Terms</h1>

@@ -16,10 +16,7 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = { tenantId };
     if (branchId) {
-      whereClause.OR = [
-        { branchId },
-        { branchId: null },
-      ];
+      whereClause.branchId = branchId;
     }
 
     const academicYears = await prisma.academicYear.findMany({

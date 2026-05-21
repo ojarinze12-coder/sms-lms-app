@@ -30,8 +30,10 @@ export async function GET(request: NextRequest) {
         where.branchId = userBranchId;
       }
       
-      if (branchId) {
-        where.branchId = branchId;
+      const effectiveBranchId = branchId || userBranchId || null;
+      
+      if (effectiveBranchId) {
+        where.branchId = effectiveBranchId;
       }
       
       if (academicYearId) {

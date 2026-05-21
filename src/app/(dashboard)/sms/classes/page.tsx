@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getSubjectsByCurriculum } from '@/lib/nigeria';
+import Link from 'next/link';
 import { Loader2, Plus, Pencil, Trash2, BookOpen, ChevronDown } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { CURRICULUM_INFO } from '@/types';
@@ -437,7 +438,7 @@ export default function ClassesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton href="/sms/academics" label="Back to Academics" />
+      <BackButton href="/school/academics" label="Back to Academics" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Classes</h1>
