@@ -14,36 +14,31 @@ export async function GET(request: NextRequest) {
   const academicYearId = request.nextUrl.searchParams.get('academicYearId');
   const search = request.nextUrl.searchParams.get('search') || '';
   const tierId = request.nextUrl.searchParams.get('tierId');
-    const branchId = request.nextUrl.searchParams.get('branchId');
-    const userBranchId = authUser.branchId;
+  const branchId = request.nextUrl.searchParams.get('branchId');
 
-    try {
-      console.log('[CLASSES] Fetching for tenant:', authUser.tenantId, 'tierId:', tierId, 'branchId:', branchId);
-      
-      const where: any = {};
-      
-      if (authUser.tenantId) {
-        where.tenantId = authUser.tenantId;
-      }
-      
-      if (userBranchId) {
-        where.branchId = userBranchId;
-      }
-      
-      const effectiveBranchId = branchId || userBranchId || null;
-      
-      if (userBranchId || branchId) {
-      const effectiveBranchId = branchId || userBranchId;
-      where.branchId = { in: [effectiveBranchId, null] };
+  try {
+    console.log('[CLASSES] Fetching for tenant:', authUser.tenantId, 'tierId:', tierId, 'branchId:', branchId);
+    
+    let where: any = {};
+    
+    if (authUser.tenantId) {
+      where.tenantId = authUser.tenantId;
     }
-      
-      if (academicYearId) {
-        where.academicYearId = academicYearId;
-      }
-      
-      if (tierId) {
-        where.tierId = tierId;
-      }
+    
+    if (academicYearId) {
+      where.academicYearId = academicYearId;
+    }
+    
+    if (tierId) {
+      where.tierId = tierId;
+    }
+
+    if (branchId) {
+      where.OR = [
+        { branchId },
+        { branchId: null },
+      ];
+    }
 
     const classes = await prisma.academicClass.findMany({
       where,
@@ -90,7 +85,6 @@ export async function POST(request: NextRequest) {
 
     console.log('[CLASSES POST] Creating class:', name, 'level:', level, 'stream:', stream, 'department:', departmentId, 'year:', academicYearId, 'tenant:', authUser.tenantId, 'addSubjects:', addNerdcSubjects, 'tierId:', tierId, 'formMasterId:', formMasterId, 'caregiverId:', caregiverId, 'branchId:', branchId);
 
-    // Ensure addNerdcSubjects is a proper boolean
     const shouldAddSubjects = addNerdcSubjects === true || addNerdcSubjects === 'true' || addNerdcSubjects === true;
     console.log('[CLASSES POST] shouldAddSubjects:', shouldAddSubjects, 'type:', typeof addNerdcSubjects);
 
@@ -131,7 +125,6 @@ export async function POST(request: NextRequest) {
 
     console.log('[CLASSES POST] ===== CLASS CREATED, ID:', academicClass.id, '=====');
     
-    // Get department code if departmentId is provided
     let departmentCode: string | undefined;
     if (departmentId) {
       const dept = await prisma.department.findUnique({
@@ -144,7 +137,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Get curriculum from tier or global settings
     let curriculum: Curriculum = 'NERDC';
     let globalCurriculum = 'NERDC';
     
@@ -216,7 +208,6 @@ export async function POST(request: NextRequest) {
             console.log('[CLASSES POST] tenantId being used:', authUser.tenantId);
             console.log('[CLASSES POST] academicClassId:', academicClass.id);
             
-            // Create each subject individually for better error handling
             let createdCount = 0;
             for (const record of subjectRecords) {
               try {
@@ -232,7 +223,6 @@ export async function POST(request: NextRequest) {
             }
             console.log('[CLASSES POST] Subjects created, count:', createdCount);
             
-            // Return the count of subjects created
             (academicClass as any).subjectsCreated = createdCount;
           } catch (subjectError: any) {
             console.error('[CLASSES POST] Subject batch creation error:', subjectError.message);

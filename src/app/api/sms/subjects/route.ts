@@ -10,10 +10,9 @@ export async function GET(request: NextRequest) {
   }
 
   const academicClassId = request.nextUrl.searchParams.get('academicClassId');
-  const branchId = request.nextUrl.searchParams.get('branchId') || authUser.branchId;
   const search = request.nextUrl.searchParams.get('search') || '';
 
-  console.log('[SUBJECTS GET] academicClassId:', academicClassId, 'tenantId:', authUser.tenantId, 'branchId:', branchId);
+  console.log('[SUBJECTS GET] academicClassId:', academicClassId, 'tenantId:', authUser.tenantId);
 
   try {
     const where: any = {};
@@ -24,27 +23,6 @@ export async function GET(request: NextRequest) {
     
     if (academicClassId) {
       where.academicClassId = academicClassId;
-    }
-    
-    const userBranchId = authUser.branchId;
-    if (userBranchId || branchId) {
-      const effectiveBranchId = branchId || userBranchId;
-      if (academicClassId) {
-        where.academicClass = { 
-          ...where.academicClass,
-          OR: [
-            { branchId: effectiveBranchId },
-            { branchId: null },
-          ],
-        };
-      } else {
-        where.academicClass = { 
-          OR: [
-            { branchId: effectiveBranchId },
-            { branchId: null },
-          ],
-        };
-      }
     }
     
     if (search) {
