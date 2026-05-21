@@ -3,6 +3,26 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/rbac';
 import { CreateFeeComponentSchema, UpdateFeeComponentSchema, BulkCreateFeeComponentsSchema } from '@/lib/schemas/fee';
 
+async function validateFeeType(type: string, tenantId: string, branchId?: string | null): Promise<boolean> {
+  const feeType = await prisma.feeType.findFirst({
+    where: {
+      tenantId,
+      code: type,
+      isActive: true,
+      OR: [{ branchId: branchId || null }, { branchId: null }],
+    },
+  });
+  return !!feeType;
+}
+
+async function getActiveFeeTypeCodes(tenantId: string): Promise<Set<string>> {
+  const types = await prisma.feeType.findMany({
+    where: { tenantId, isActive: true },
+    select: { code: true },
+  });
+  return new Set(types.map(t => t.code));
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth(request);
@@ -18,8 +38,9 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const type = searchParams.get('type');
 
+    const userBranchId = user?.branchId;
     const where: any = { tenantId: user.tenantId };
-
+    if (userBranchId) where.branchId = userBranchId;
     if (academicYearId) where.academicYearId = academicYearId;
     if (termId) where.termId = termId;
     if (tierId) where.tierId = tierId;
@@ -70,6 +91,14 @@ export async function POST(request: NextRequest) {
 
       const { academicYearId, termId, branchId, tierId, components } = parsed.data;
 
+      const validCodes = await getActiveFeeTypeCodes(user.tenantId);
+      const invalidTypes = components.filter(c => !validCodes.has(c.type));
+      if (invalidTypes.length > 0) {
+        return NextResponse.json({
+          error: `Invalid fee type(s): ${invalidTypes.map(c => c.type).join(', ')}`,
+        }, { status: 400 });
+      }
+
       const created = await prisma.$transaction(
         components.map((c) =>
           prisma.feeComponent.create({
@@ -100,6 +129,12 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
+
+    const validType = await validateFeeType(data.type, user.tenantId, data.branchId);
+    if (!validType) {
+      return NextResponse.json({ error: `Invalid fee type: ${data.type}` }, { status: 400 });
+    }
+
     const component = await prisma.feeComponent.create({
       data: {
         name: data.name,

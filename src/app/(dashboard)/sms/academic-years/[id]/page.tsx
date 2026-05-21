@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useBranch } from '@/lib/hooks/use-branch';
+import { BackButton } from '@/components/BackButton';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Term {
   id: string;
@@ -23,7 +24,6 @@ interface AcademicYear {
 
 export default function AcademicYearTermsPage() {
   const params = useParams();
-  const router = useRouter();
   const { selectedBranch } = useBranch();
   const [year, setYear] = useState<AcademicYear | null>(null);
   const [terms, setTerms] = useState<Term[]>([]);
@@ -46,29 +46,22 @@ export default function AcademicYearTermsPage() {
   const loadData = async () => {
     try {
       const yearParams = new URLSearchParams();
-      if (selectedBranch) {
-        yearParams.set('branchId', selectedBranch.id);
-      }
+      if (selectedBranch) yearParams.set('branchId', selectedBranch.id);
       const termsParams = new URLSearchParams();
       termsParams.set('academicYearId', params.id as string);
-      if (selectedBranch) {
-        termsParams.set('branchId', selectedBranch.id);
-      }
-      
+      if (selectedBranch) termsParams.set('branchId', selectedBranch.id);
+
       const [yearRes, termsRes] = await Promise.all([
-        fetch('/api/sms/academic-years' + (yearParams.toString() ? '?' + yearParams.toString() : '')),
-        fetch('/api/sms/terms?' + termsParams.toString()),
+        authFetch('/api/sms/academic-years?' + yearParams.toString()),
+        authFetch('/api/sms/terms?' + termsParams.toString()),
       ]);
-      
+
       const yearsData = await yearRes.json();
       const termsData = await termsRes.json();
-      
-      const currentYear = Array.isArray(yearsData) 
-        ? yearsData.find((y: AcademicYear) => y.id === params.id)
-        : yearsData.data?.find((y: AcademicYear) => y.id === params.id);
-      
+
+      const currentYear = yearsData.years?.find((y: AcademicYear) => y.id === params.id);
       setYear(currentYear || null);
-      setTerms(Array.isArray(termsData) ? termsData : (termsData.data || []));
+      setTerms(termsData.terms || []);
     } catch (err) {
       console.error('Failed to load data:', err);
     } finally {
@@ -79,17 +72,12 @@ export default function AcademicYearTermsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
     try {
-      const res = await fetch('/api/sms/terms', {
+      const res = await authFetch('/api/sms/terms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          academicYearId: params.id,
-        }),
+        body: JSON.stringify({ ...formData, academicYearId: params.id }),
       });
-
       if (res.ok) {
         setShowModal(false);
         setFormData({ name: '', startDate: '', endDate: '', isCurrent: false });
@@ -103,11 +91,7 @@ export default function AcademicYearTermsPage() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   if (loading) {
@@ -120,21 +104,12 @@ export default function AcademicYearTermsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/sms/academic-years"
-          className="p-2 hover:bg-gray-100 rounded-lg"
-        >
-          ← Back
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">{year?.name || 'Academic Year'}</h1>
-          <p className="text-gray-600">Terms for this academic year</p>
-        </div>
-      </div>
-
+      <BackButton href="/sms/academic-years" label="Back to Academic Years" />
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Terms</h2>
+        <div>
+          <h1 className="text-2xl font-bold dark:text-white">{year?.name || 'Academic Year'}</h1>
+          <p className="text-gray-600 dark:text-gray-400">Terms for this academic year</p>
+        </div>
         <button
           onClick={() => setShowModal(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -143,42 +118,37 @@ export default function AcademicYearTermsPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Term Name</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Start Date</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">End Date</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Term</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Start Date</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-200">End Date</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Status</th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 dark:text-gray-200">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
-            {terms.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                  No terms yet. Add your first term.
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {terms.map((term) => (
+              <tr key={term.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td className="px-4 py-3 text-sm dark:text-white">{term.name}</td>
+                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{formatDate(term.startDate)}</td>
+                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{formatDate(term.endDate)}</td>
+                <td className="px-4 py-3 text-sm">
+                  {term.isCurrent ? (
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded text-xs">Current</span>
+                  ) : (
+                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded text-xs">Inactive</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <button onClick={() => { setFormData({ name: term.name, startDate: term.startDate.split('T')[0], endDate: term.endDate.split('T')[0], isCurrent: term.isCurrent }); setShowModal(true); }} className="text-blue-600 hover:underline text-sm">Edit</button>
                 </td>
               </tr>
-            ) : (
-              terms.map((term) => (
-                <tr key={term.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-medium">{term.name}</td>
-                  <td className="px-6 py-4 text-sm">{formatDate(term.startDate)}</td>
-                  <td className="px-6 py-4 text-sm">{formatDate(term.endDate)}</td>
-                  <td className="px-6 py-4 text-sm">
-                    {term.isCurrent ? (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                        Current
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                        Inactive
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))
+            ))}
+            {terms.length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">No terms found. Add a term to get started.</td></tr>
             )}
           </tbody>
         </table>
@@ -186,17 +156,15 @@ export default function AcademicYearTermsPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Term</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Add Term</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Term Name
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Term Name</label>
                 <select
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   required
                 >
                   <option value="">Select term...</option>
@@ -205,34 +173,28 @@ export default function AcademicYearTermsPage() {
                   <option value="Third Term">Third Term</option>
                 </select>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     required
                   />
                 </div>
               </div>
-
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -241,23 +203,20 @@ export default function AcademicYearTermsPage() {
                   onChange={(e) => setFormData({ ...formData, isCurrent: e.target.checked })}
                   className="w-4 h-4"
                 />
-                <label htmlFor="isCurrent" className="text-sm text-gray-700">
-                  Set as current term
-                </label>
+                <label htmlFor="isCurrent" className="text-sm text-gray-700 dark:text-gray-300">Set as current term</label>
               </div>
-
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-4 pt-2">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {submitting ? 'Creating...' : 'Create'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+                  onClick={() => { setShowModal(false); setFormData({ name: '', startDate: '', endDate: '', isCurrent: false }); }}
+                  className="px-6 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>

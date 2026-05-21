@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       },
     }));
 
-    return NextResponse.json({ data: tiersWithCounts });
+    return NextResponse.json({ data: tiersWithCounts, tiers: tiersWithCounts });
   } catch (error: any) {
     console.error('[TIERS GET] Error:', error.message || error);
     console.error('[TIERS GET] Stack:', error.stack);

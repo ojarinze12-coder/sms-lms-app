@@ -1,39 +1,24 @@
 import { z } from 'zod';
 
-export const FeeComponentTypeSchema = z.enum([
-  'TUITION',
-  'REGISTRATION',
-  'EXAM',
-  'TRANSPORT',
-  'HOSTEL',
-  'LIBRARY',
-  'UNIFORM',
-  'EXTRA_CURRICULAR',
-  'LEVY',
-  'BOOK',
-  'PTA',
-  'OTHER',
-]);
-
 export const FeeComponentCategorySchema = z.enum(['MANDATORY', 'OPTIONAL']);
 
 export const CreateFeeComponentSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
-  type: FeeComponentTypeSchema,
+  type: z.string().min(1, 'Type is required'),
   category: FeeComponentCategorySchema.default('MANDATORY'),
   amount: z.number().positive('Amount must be positive'),
   description: z.string().max(255).optional(),
   isRecurring: z.boolean().default(false),
   dueDate: z.string().datetime().optional().nullable(),
   academicYearId: z.string().uuid('Invalid academic year ID'),
-  termId: z.string().uuid('Invalid term ID').optional().nullable(),
-  branchId: z.string().uuid('Invalid branch ID').optional().nullable(),
-  tierId: z.string().uuid('Invalid tier ID').optional().nullable(),
+  termId: z.string().min(1).uuid('Invalid term ID').optional().nullable(),
+  branchId: z.string().min(1).uuid('Invalid branch ID').optional().nullable(),
+  tierId: z.string().min(1).uuid('Invalid tier ID').optional().nullable(),
 });
 
 export const UpdateFeeComponentSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  type: FeeComponentTypeSchema.optional(),
+  type: z.string().min(1).optional(),
   category: FeeComponentCategorySchema.optional(),
   amount: z.number().positive().optional(),
   description: z.string().max(255).nullable().optional(),
@@ -43,12 +28,12 @@ export const UpdateFeeComponentSchema = z.object({
 
 export const BulkCreateFeeComponentsSchema = z.object({
   academicYearId: z.string().uuid('Invalid academic year ID'),
-  termId: z.string().uuid('Invalid term ID').optional().nullable(),
-  branchId: z.string().uuid('Invalid branch ID').optional().nullable(),
-  tierId: z.string().uuid('Invalid tier ID').optional().nullable(),
+  termId: z.string().min(1).uuid('Invalid term ID').optional().nullable(),
+  branchId: z.string().min(1).uuid('Invalid branch ID').optional().nullable(),
+  tierId: z.string().min(1).uuid('Invalid tier ID').optional().nullable(),
   components: z.array(z.object({
     name: z.string().min(1, 'Name is required').max(100),
-    type: FeeComponentTypeSchema,
+    type: z.string().min(1, 'Type is required'),
     category: FeeComponentCategorySchema.default('MANDATORY'),
     amount: z.number().positive('Amount must be positive'),
     description: z.string().max(255).optional(),

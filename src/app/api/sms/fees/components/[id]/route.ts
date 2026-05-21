@@ -57,6 +57,21 @@ export async function PUT(
     }
 
     const data = parsed.data;
+
+    if (data.type && data.type !== existing.type) {
+      const feeType = await prisma.feeType.findFirst({
+        where: {
+          tenantId: user.tenantId,
+          code: data.type,
+          isActive: true,
+          OR: [{ branchId: existing.branchId }, { branchId: null }],
+        },
+      });
+      if (!feeType) {
+        return NextResponse.json({ error: `Invalid fee type: ${data.type}` }, { status: 400 });
+      }
+    }
+
     const updated = await prisma.feeComponent.update({
       where: { id: params.id },
       data: {

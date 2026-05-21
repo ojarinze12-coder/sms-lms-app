@@ -420,9 +420,12 @@ export default function FeesTab({ feeData, onPayNow }: FeesTabProps) {
               <p className="font-medium dark:text-white">Make a payment</p>
               <p className="text-sm text-gray-600 dark:text-gray-300">Click to pay {formatCurrency(selectedChild?.outstanding || totalOutstanding)} online</p>
             </div>
-            <Button 
-              onClick={() => onPayNow?.(selectedChild?.bill?.id, selectedChild?.studentId)} 
-              disabled={paying || !onPayNow}
+            <Button
+              onClick={() => {
+                const unpaidBill = selectedChild?.bills?.find((b: any) => b.balance > 0);
+                onPayNow?.(unpaidBill?.id, selectedChild?.studentId);
+              }}
+              disabled={paying || !onPayNow || !selectedChild?.bills?.some((b: any) => b.balance > 0)}
             >
               {paying ? 'Processing...' : 'Pay Now'}
             </Button>

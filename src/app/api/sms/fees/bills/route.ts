@@ -14,11 +14,13 @@ export async function GET(request: NextRequest) {
     const academicYearId = searchParams.get('academicYearId');
     const termId = searchParams.get('termId');
 
+    const userBranchId = user?.branchId;
     if (!studentId) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
     const where: any = { studentId, tenantId: user.tenantId };
+    if (userBranchId) where.branchId = userBranchId;
     if (academicYearId) where.academicYearId = academicYearId;
     if (termId) where.termId = termId;
 

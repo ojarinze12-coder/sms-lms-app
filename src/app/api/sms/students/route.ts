@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Tenant not found. Please login again.' }, { status: 400 });
     }
 
+    const userBranchId = user.branchId;
+    
     if (action === 'generate-id') {
       const nextId = await generateStudentId(tenantId);
       return NextResponse.json({ studentId: nextId });
@@ -36,6 +38,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit');
 
     const where: any = { tenantId };
+    if (userBranchId) where.branchId = userBranchId;
     if (classId) {
       where.enrollments = {
         some: { classId }

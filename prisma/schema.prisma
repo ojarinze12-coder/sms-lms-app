@@ -33,6 +33,7 @@ model Tenant {
   subscriptions      Subscription[]
   announcements      Announcement[]
   branches           Branch[]
+  feeTypes           FeeType[]
 
   @@index([ownerId], map: "idx_tenants_owner")
   @@map("tenants")
@@ -68,6 +69,7 @@ model Branch {
   AcademicYear     AcademicYear[]
   allowanceConfigs AllowanceConfig[]
   deductionConfigs DeductionConfig[]
+  feeTypes         FeeType[]
 
   @@unique([tenantId, code], map: "branches_tenantId_code_unique")
   @@index([tenantId], map: "idx_branches_tenant")
@@ -1349,7 +1351,7 @@ model FeeStructure {
   name           String
   description    String?
   amount         Float
-  type           FeeType
+  type           String
   category       FeeCategory  @default(MANDATORY)
   isRecurring    Boolean      @default(false)
   installments   Int?         @default(1)
@@ -2384,19 +2386,23 @@ enum AttendanceStatus {
   HALF_DAY
 }
 
-enum FeeType {
-  TUITION
-  REGISTRATION
-  EXAM
-  TRANSPORT
-  HOSTEL
-  LIBRARY
-  UNIFORM
-  EXTRA_CURRICULAR
-  LEVY
-  BOOK
-  PTA
-  OTHER
+model FeeType {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String
+  name      String
+  isActive  Boolean  @default(true)
+  tenantId  String   @db.Uuid
+  branchId  String?  @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch  Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, code], map: "fee_types_tenantId_code_unique")
+  @@index([tenantId], map: "idx_fee_types_tenant")
+  @@index([branchId], map: "idx_fee_types_branch")
+  @@map("fee_types")
 }
 
 enum FeeCategory {
@@ -2940,10 +2946,10 @@ model PlatformSettings {
 }
 
 model FeeComponent {
-  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name           String
-  type           FeeType
-  category       FeeCategory   @default(MANDATORY)
+  type           String
+  category       FeeCategory @default(MANDATORY)
   amount         Float
   description    String?
   isRecurring    Boolean       @default(false)
@@ -3026,7 +3032,7 @@ model FeeBillItem {
   billId          String         @db.Uuid
   componentId     String         @db.Uuid
   componentName   String
-  componentType   FeeType
+  componentType   String
   originalAmount  Float
   amountDue       Float
   amountPaid      Float          @default(0)
@@ -3133,18 +3139,20 @@ enum BillItemStatus {
 }
 
 model DiscountType {
-  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenantId              String   @db.Uuid
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId              String            @db.Uuid
   name                  String
   code                  String
-  discountPercentage    Float    @default(0)
+  discountPercentage    Float             @default(0)
   description           String?
-  maxDiscountPerStudent Float?   @default(50)
-  isActive              Boolean  @default(true)
-  requiresApproval      Boolean  @default(false)
-  appliesTo             String   @default("ALL")
-  createdAt             DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt             DateTime @default(now()) @db.Timestamptz(6)
+  maxDiscountPerStudent Float?            @default(50)
+  isActive              Boolean           @default(true)
+  requiresApproval      Boolean           @default(false)
+  appliesTo             String            @default("ALL")
+  createdAt             DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+
+  studentDiscounts StudentDiscount[]
 
   @@unique([tenantId, code], map: "discount_types_tenant_code_unique")
   @@index([tenantId], map: "idx_discount_types_tenant")
@@ -3161,6 +3169,7 @@ model StudentDiscount {
   id                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   studentId          String         @db.Uuid
   discountTypeId     String         @db.Uuid
+  discountType       DiscountType   @relation(fields: [discountTypeId], references: [id])
   discountPercentage Float
   reason             String?
   status             DiscountStatus @default(PENDING_APPROVAL)

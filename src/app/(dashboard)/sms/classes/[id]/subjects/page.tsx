@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import { NERDC_SUBJECTS } from '@/lib/nigeria';
 import { authFetch } from '@/lib/auth-fetch';
+import { BackButton } from '@/components/BackButton';
 
 interface Subject {
   id: string;
@@ -188,17 +188,10 @@ export default function ClassSubjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/sms/classes"
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg dark:text-gray-300"
-        >
-          ← Back
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold dark:text-white">{cls?.name || 'Class'} - Subjects</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage subjects for this class</p>
-        </div>
+      <BackButton href="/sms/classes" label="Back to Classes" />
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold dark:text-white">{cls?.name || 'Class'} - Subjects</h1>
+        <p className="text-gray-600 dark:text-gray-400">Manage subjects for this class</p>
       </div>
 
       <div className="flex justify-between items-center">

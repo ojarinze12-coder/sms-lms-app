@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth-server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireAdmin();
     if (!user || !user.tenantId) {
@@ -10,12 +10,21 @@ export async function GET() {
     }
 
     const tenantId = user.tenantId;
+    const userBranchId = user.branchId;
 
-    // AcademicClass links to AcademicYear which has tenantId
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get('branchId');
+    const academicYearId = searchParams.get('academicYearId');
+    const tierId = searchParams.get('tierId');
+
+    const where: any = { academicYear: { tenantId } };
+    if (userBranchId) where.branchId = userBranchId;
+    if (branchId) where.branchId = branchId;
+    if (academicYearId) where.academicYearId = academicYearId;
+    if (tierId) where.tierId = tierId;
+
     const classes = await prisma.academicClass.findMany({
-      where: {
-        academicYear: { tenantId }
-      },
+      where,
       orderBy: { name: 'asc' },
       select: { id: true, name: true, level: true },
     });

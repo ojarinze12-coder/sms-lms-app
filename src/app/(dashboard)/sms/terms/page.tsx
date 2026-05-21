@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
-import Link from 'next/link';
+import { BackButton } from '@/components/BackButton';
 
 interface Term {
   id: string;
@@ -54,10 +54,11 @@ export default function TermsPage() {
         return;
       }
       const data = await res.json();
-      setYears(data.years || []);
-      if (data.length > 0) {
-        const activeYear = data.find((y: AcademicYear) => y.isActive);
-        setSelectedYearId(activeYear?.id || data[0].id);
+      const yearList = data?.years || data || [];
+      setYears(Array.isArray(yearList) ? yearList : []);
+      if (Array.isArray(yearList) && yearList.length > 0) {
+        const activeYear = yearList.find((y: AcademicYear) => y.isActive);
+        setSelectedYearId(activeYear?.id || yearList[0].id);
       }
     } catch (err) {
       console.error('Failed to load years:', err);
@@ -74,7 +75,7 @@ export default function TermsPage() {
         return;
       }
       const data = await res.json();
-      setTerms(data);
+      setTerms(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load terms:', err);
     }
@@ -171,6 +172,7 @@ export default function TermsPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/sms/academics" label="Back to Academics" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Terms</h1>

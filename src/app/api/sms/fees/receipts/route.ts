@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
     const termId = searchParams.get('termId');
     const studentId = searchParams.get('studentId');
 
+    const userBranchId = user?.branchId;
     const where: any = { tenantId: user.tenantId };
+    if (userBranchId) where.branchId = userBranchId;
     if (academicYearId) where.academicYearId = academicYearId;
     if (termId) where.termId = termId;
     if (studentId) where.studentId = studentId;

@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
     const academicYearId = searchParams.get('academicYearId');
     const status = searchParams.get('status');
 
+    const userBranchId = user?.branchId;
     const where: any = { tenantId: user.tenantId };
+    if (userBranchId) where.branchId = userBranchId;
     if (studentId) where.studentId = studentId;
     if (academicYearId) where.academicYearId = academicYearId;
     if (status) where.status = status;
@@ -131,14 +133,16 @@ async function approveRejectDiscount(user: any, body: any) {
 
   const { studentDiscountId, approvalAction } = parsed.data;
 
-  const studentDiscount = await prisma.studentDiscount.findFirst({
-    where: { id: studentDiscountId, tenantId: user.tenantId },
-  });
-  if (!studentDiscount) return NextResponse.json({ error: 'Student discount not found' }, { status: 404 });
+    const userBranchId = user?.branchId;
 
-  if (studentDiscount.status !== 'PENDING_APPROVAL') {
-    return NextResponse.json({ error: 'This discount is not pending approval' }, { status: 400 });
-  }
+    const studentDiscount = await prisma.studentDiscount.findFirst({
+      where: { id: studentDiscountId, tenantId: user.tenantId, ...(userBranchId ? { branchId: userBranchId } : {}) },
+    });
+    if (!studentDiscount) return NextResponse.json({ error: 'Student discount not found' }, { status: 404 });
+
+    if (studentDiscount.status !== 'PENDING_APPROVAL') {
+      return NextResponse.json({ error: 'This discount is not pending approval' }, { status: 400 });
+    }
 
   const updated = await prisma.studentDiscount.update({
     where: { id: studentDiscountId },
@@ -215,8 +219,12 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
+    const userBranchId = user?.branchId;
+    const whereClause: any = { id, tenantId: user.tenantId };
+    if (userBranchId) whereClause.branchId = userBranchId;
+
     await prisma.studentDiscount.deleteMany({
-      where: { id, tenantId: user.tenantId },
+      where: whereClause,
     });
 
     return NextResponse.json({ message: 'Student discount removed' });

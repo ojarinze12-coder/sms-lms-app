@@ -12,11 +12,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const tenantId = searchParams.get('tenantId') || user.tenantId;
-    const branchId = searchParams.get('branchId');
+    const branchId = searchParams.get('branchId') || user.branchId;
 
     const whereClause: any = { tenantId };
     if (branchId) {
-      // Include years for this branch OR global years (no branch assigned)
       whereClause.OR = [
         { branchId },
         { branchId: null },

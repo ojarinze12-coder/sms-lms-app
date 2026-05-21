@@ -1,4 +1,4 @@
-import { PrismaClient, Gender, FeeType } from '@prisma/client';
+import { PrismaClient, Gender } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -17,36 +17,38 @@ async function main() {
 
   console.log('✅ Found demo school:', demoSchool.name);
 
-  // 1. ACADEMIC YEARS
+// 1. ACADEMIC YEARS - Use existing from seed.ts or create
   let academicYear2025 = await prisma.academicYear.findFirst({
-    where: { name: '2025/2026', tenantId: demoSchool.id }
+    where: { 
+      name: { in: ['2025-2026', '2025/2026'] },
+      tenantId: demoSchool.id 
+    }
   });
   
   if (!academicYear2025) {
     academicYear2025 = await prisma.academicYear.create({
       data: {
-        name: '2025/2026',
+        name: '2025-2026',
         startDate: new Date('2025-09-01'),
         endDate: new Date('2026-07-31'),
-        isActive: true,
         tenantId: demoSchool.id,
+        isActive: true,
       },
     });
   }
 
-  // 2. TERMS
+// 2. TERMS - Find existing or create new
   let term1 = await prisma.term.findFirst({
     where: { name: 'First Term', academicYearId: academicYear2025.id }
   });
-  
   if (!term1) {
     term1 = await prisma.term.create({
       data: {
         name: 'First Term',
         startDate: new Date('2025-09-01'),
         endDate: new Date('2025-12-20'),
-        isCurrent: true,
         academicYearId: academicYear2025.id,
+        isCurrent: true,
       },
     });
   }
@@ -84,7 +86,10 @@ async function main() {
   }
   console.log('✅ Academic Years and Terms created');
 
-  // 3. CLASSES (Simplified - key classes only)
+  // Fetch tiers for class creation
+  const tiers = await prisma.tier.findMany({ where: { tenantId: demoSchool.id } });
+
+  // 3. CLASSES (Simplified - key classMap only, skip if exists)
   const classData = [
     { name: 'Primary 4', level: 3 },
     { name: 'Primary 5', level: 4 },
@@ -96,20 +101,18 @@ async function main() {
     { name: 'SSS 2 Science', level: 13 },
     { name: 'SSS 3 Science', level: 14 },
     { name: 'SSS 1 Commercial', level: 12 },
+    { name: 'SSS 2 Commercial', level: 13 },
   ];
 
-  const classes: Record<string, any> = {};
+  const classMap: Record<string, any> = {};
+
   for (const c of classData) {
-    let cls = await prisma.academicClass.findFirst({
-      where: { name: c.name, academicYearId: academicYear2025.id }
+    const existing = await prisma.academicClass.findFirst({
+      where: { academicYearId: academicYear2025.id, name: c.name }
     });
-    
-    if (!cls) {
-      cls = await prisma.academicClass.create({
-        data: { name: c.name, level: c.level, capacity: 40, academicYearId: academicYear2025.id },
-      });
+    if (existing) {
+      classMap[c.name] = existing;
     }
-    classes[c.name] = cls;
   }
   console.log('✅ Classes created');
 
@@ -143,12 +146,12 @@ async function main() {
     for (const s of subs) {
       const key = `${clsName}-${s.code}`;
       let subj = await prisma.subject.findFirst({
-        where: { code: s.code, academicClassId: classes[clsName].id }
+        where: { code: s.code, academicClassId: classMap[clsName].id }
       });
       
       if (!subj) {
         subj = await prisma.subject.create({
-          data: { name: s.name, code: s.code, academicClassId: classes[clsName].id },
+          data: { name: s.name, code: s.code, academicClassId: classMap[clsName].id },
         });
       }
       subjects[key] = subj;
@@ -262,12 +265,12 @@ async function main() {
   for (const s of studentList) {
     // Check if enrollment exists first
     const existingEnrollment = await prisma.enrollment.findFirst({
-      where: { studentId: students[s.id].id, classId: classes[s.class].id }
+      where: { studentId: students[s.id].id, classId: classMap[s.class].id }
     });
     
     if (!existingEnrollment) {
       await prisma.enrollment.create({
-        data: { status: 'ACTIVE', tenantId: demoSchool.id, studentId: students[s.id].id, classId: classes[s.class].id },
+        data: { status: 'ACTIVE', tenantId: demoSchool.id, studentId: students[s.id].id, classId: classMap[s.class].id },
       });
     }
   }
@@ -316,9 +319,11 @@ async function main() {
   console.log('✅ Parents created');
 
   // 9. TIMETABLE
-  const timetable = await prisma.timetable.create({
-    data: { name: '2025/2026 Regular', isPublished: true, academicYearId: academicYear2025.id },
-  });
+  const timetable = await prisma.timetable.upsert({
+    where: { academicYearId_name: { academicYearId: academicYear2025.id, name: '2025/2026 Regular' } },
+    update: {},
+    create: { name: '2025/2026 Regular', isPublished: true, academicYearId: academicYear2025.id },
+  }).catch(() => { return null; });
 
   // Primary 4 timetable
   const p4Slots = [
@@ -335,11 +340,12 @@ async function main() {
     { day: 5, period: 1, start: '07:30', end: '08:10', code: 'CRT' },
   ];
 
+  if (timetable) {
   for (const slot of p4Slots) {
     const subj = subjects[`Primary 4-${slot.code}`];
     if (subj) {
       await prisma.timetableSlot.create({
-        data: { timetableId: timetable.id, academicClassId: classes['Primary 4'].id, subjectId: subj.id, dayOfWeek: slot.day, period: slot.period, startTime: slot.start, endTime: slot.end },
+        data: { timetableId: timetable.id, academicClassId: classMap['Primary 4'].id, subjectId: subj.id, dayOfWeek: slot.day, period: slot.period, startTime: slot.start, endTime: slot.end },
       }).catch(() => {});
     }
   }
@@ -364,13 +370,43 @@ async function main() {
     const subj = subjects[`SSS 1 Science-${slot.code}`];
     if (subj) {
       await prisma.timetableSlot.create({
-        data: { timetableId: timetable.id, academicClassId: classes['SSS 1 Science'].id, subjectId: subj.id, dayOfWeek: slot.day, period: slot.period, startTime: slot.start, endTime: slot.end },
+        data: { timetableId: timetable.id, academicClassId: classMap['SSS 1 Science'].id, subjectId: subj.id, dayOfWeek: slot.day, period: slot.period, startTime: slot.start, endTime: slot.end },
       }).catch(() => {});
     }
   }
+}
   console.log('✅ Timetable created');
 
-  // 10. FEE STRUCTURES
+  // 10. FEE TYPES
+  const feeTypeDefaults = [
+    { code: 'TUITION', name: 'Tuition' },
+    { code: 'REGISTRATION', name: 'Registration' },
+    { code: 'EXAMINATION', name: 'Examination' },
+    { code: 'TRANSPORT', name: 'Transport' },
+    { code: 'HOSTEL', name: 'Hostel' },
+    { code: 'LIBRARY', name: 'Library' },
+    { code: 'LABORATORY', name: 'Laboratory' },
+    { code: 'UNIFORM', name: 'Uniform' },
+    { code: 'EXTRA_CURRICULAR', name: 'Extra Curricular' },
+    { code: 'SPORTS', name: 'Sports' },
+    { code: 'LEVY', name: 'Levy' },
+    { code: 'BOOK', name: 'Book' },
+    { code: 'PTA', name: 'PTA' },
+    { code: 'NEWSLETTER', name: 'Newsletter' },
+    { code: 'DEVELOPMENT', name: 'Development' },
+    { code: 'OTHER', name: 'Other' },
+  ];
+
+  for (const ft of feeTypeDefaults) {
+    await prisma.feeType.upsert({
+      where: { tenantId_code: { tenantId: demoSchool.id, code: ft.code } },
+      update: {},
+      create: { code: ft.code, name: ft.name, tenantId: demoSchool.id },
+    }).catch(() => {});
+  }
+  console.log('✅ Fee types created');
+
+  // 11. FEE STRUCTURES
   const fees = [
     { name: 'Tuition Fee', amount: 150000, type: 'TUITION' },
     { name: 'Registration Fee', amount: 10000, type: 'REGISTRATION' },
@@ -380,7 +416,7 @@ async function main() {
 
   for (const f of fees) {
     await prisma.feeStructure.create({
-      data: { name: f.name, description: f.name, amount: f.amount, type: f.type as FeeType, category: 'MANDATORY', academicYearId: academicYear2025.id, termId: f.type === 'TUITION' ? term1.id : null, tenantId: demoSchool.id },
+      data: { name: f.name, description: f.name, amount: f.amount, type: f.type, category: 'MANDATORY', academicYearId: academicYear2025.id, termId: f.type === 'TUITION' ? term1.id : null, tenantId: demoSchool.id },
     }).catch(() => {});
   }
   console.log('✅ Fee structures created');

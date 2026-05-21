@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'academicYearId is required' }, { status: 400 });
     }
 
+    const userBranchId = user?.branchId;
     const where: any = { academicYearId, tenantId: user.tenantId };
+    if (userBranchId) where.branchId = userBranchId;
     if (termId) where.termId = termId;
     if (tierId) where.tierId = tierId;
     if (branchId) where.branchId = branchId;

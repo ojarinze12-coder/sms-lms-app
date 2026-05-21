@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authFetch } from '@/lib/auth-fetch';
 import { useBranch } from '@/lib/hooks/use-branch';
+import { BackButton } from '@/components/BackButton';
 
 interface AcademicYear {
   id: string;
@@ -158,6 +159,7 @@ export default function AcademicYearsPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/sms/academics" label="Back to Academics" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Academic Years</h1>

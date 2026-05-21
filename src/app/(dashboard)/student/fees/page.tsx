@@ -51,8 +51,9 @@ export default function StudentFeesPage() {
 
   const [receipts, setReceipts] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [feeTypeLabels, setFeeTypeLabels] = useState<Record<string, string>>({});
 
-  useEffect(() => { fetchAcademicYears(); }, []);
+  useEffect(() => { fetchAcademicYears(); fetchFeeTypes(); }, []);
 
   async function fetchAcademicYears() {
     try {
@@ -79,6 +80,19 @@ export default function StudentFeesPage() {
         setTerms(Array.isArray(termList) ? termList : []);
         const current = termList.find((t: any) => t.isCurrent);
         if (current) setSelectedTerm(current.id);
+      }
+    } catch {}
+  }
+
+  async function fetchFeeTypes() {
+    try {
+      const res = await authFetch('/api/sms/fees/types?isActive=true');
+      if (res.ok) {
+        const data = await res.json();
+        const types = data.feeTypes || [];
+        const labels: Record<string, string> = {};
+        types.forEach((t: any) => { labels[t.code] = t.name; });
+        setFeeTypeLabels(labels);
       }
     } catch {}
   }
@@ -402,7 +416,7 @@ export default function StudentFeesPage() {
                       <div key={c.id} className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                         <div>
                           <p className="font-medium dark:text-white">{c.name}</p>
-                          <p className="text-xs text-gray-500">{c.type}</p>
+                          <p className="text-xs text-gray-500">{feeTypeLabels[c.type] || c.type}</p>
                         </div>
                         <p className="font-bold dark:text-white">{formatCurrency(c.amount)}</p>
                       </div>

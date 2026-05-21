@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const academicYearId = searchParams.get('academicYearId');
     const branchId = searchParams.get('branchId');
 
+    const userBranchId = user?.branchId;
     const where: any = {};
 
     if (academicYearId) {
@@ -23,11 +24,12 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    if (branchId) {
+    if (userBranchId || branchId) {
+      const effectiveBranchId = branchId || userBranchId;
       where.academicYear = {
         ...where.academicYear,
         OR: [
-          { branchId },
+          { branchId: effectiveBranchId },
           { branchId: null },
         ],
       };

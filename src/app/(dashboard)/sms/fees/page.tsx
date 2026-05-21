@@ -20,16 +20,9 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Plus, Settings, BookOpen, FileText, DollarSign, Receipt, TrendingUp, Percent,
-  CheckCircle, Clock, Users, Loader2, Search, Pencil, Trash2, Download
+  CheckCircle, Clock, Users, Loader2, Search, Pencil, Trash2, Download, List
 } from 'lucide-react';
 import { exportToExcel, exportToPDF, formatCurrency as formatCurrencyUtil, formatDate, formatStatus, formatFeeComponentExport, formatFeeBillExport, formatFeePaymentExport, formatFeeReceiptExport } from '@/lib/export-utils';
-
-const feeTypeLabels: Record<string, string> = {
-  TUITION: 'Tuition', TRANSPORT: 'Transport', REGISTRATION: 'Registration',
-  EXAMINATION: 'Examination', LIBRARY: 'Library', LABORATORY: 'Laboratory',
-  SPORTS: 'Sports', UNIFORM: 'Uniform', NEWSLETTER: 'Newsletter',
-  DEVELOPMENT: 'Development', OTHER: 'Other',
-};
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400',
@@ -52,6 +45,9 @@ export default function FeesPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('components');
+
+  const [feeTypes, setFeeTypes] = useState<any[]>([]);
+  const [feeTypeLabels, setFeeTypeLabels] = useState<Record<string, string>>({});
 
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [terms, setTerms] = useState<any[]>([]);
@@ -176,7 +172,7 @@ export default function FeesPage() {
       const params = new URLSearchParams();
       if (tierId) params.set('tierId', tierId);
       if (selectedYear) params.set('academicYearId', selectedYear);
-      const res = await authFetch('/api/sms/classes?' + params.toString());
+      const res = await authFetch('/api/school/classes?' + params.toString());
       if (res.ok) {
         const data = await res.json();
         setClasses(data.classes || []);
@@ -230,9 +226,24 @@ export default function FeesPage() {
     } catch { toast({ variant: 'destructive', description: 'Failed to register student' }); } finally { setLoading(false); }
   }
 
+  async function fetchFeeTypes() {
+    try {
+      const res = await authFetch('/api/sms/fees/types?isActive=true');
+      if (res.ok) {
+        const data = await res.json();
+        const types = data.feeTypes || [];
+        setFeeTypes(types);
+        const labels: Record<string, string> = {};
+        types.forEach((t: any) => { labels[t.code] = t.name; });
+        setFeeTypeLabels(labels);
+      }
+    } catch {}
+  }
+
   useEffect(() => { 
     fetchAcademicYears(); 
     fetchTiers(); 
+    fetchFeeTypes();
     if (selectedYear) fetchClasses(selectedTier || undefined);
   }, []);
 
@@ -244,43 +255,97 @@ export default function FeesPage() {
       if (selectedTerm) params.set('termId', selectedTerm);
       if (selectedTier) params.set('tierId', selectedTier);
       const res = await authFetch('/api/sms/fees/components?' + params.toString());
-      if (res.ok) {
-        const data = await res.json();
-        const comps = Array.isArray(data) ? data : (data.components || []);
-        const tierIds = Array.from(new Set(comps.map((c: any) => c.tierId).filter(Boolean)));
-        if (tierIds.length > 0) {
-          const res2 = await authFetch('/api/sms/tiers');
-          if (res2.ok) {
-            const tData = await res2.json();
-            const tList = Array.isArray(tData) ? tData : (tData.tiers || []);
-            const tMap = new Map(tList.map((t: any) => [t.id, t]));
-            setComponents(comps.map((c: any) => ({ ...c, tier: c.tierId ? tMap.get(c.tierId) : null })));
-            return;
-          }
-        }
-        setComponents(comps.map((c: any) => ({ ...c, tier: null })));
+      if (!res.ok) {
+        console.error('Failed to load components:', res.status);
+        setComponents([]);
+        return;
       }
-    } catch {} finally { setLoading(false); }
+      const data = await res.json();
+      const comps = Array.isArray(data) ? data : (data.components || []);
+      if (comps.length > 0) {
+        const res2 = await authFetch('/api/sms/tiers');
+        if (res2.ok) {
+          const tData = await res2.json();
+          const tList = Array.isArray(tData) ? tData : (tData.tiers || tData.data || []);
+          const tMap = new Map(tList.map((t: any) => [t.id, t]));
+          setComponents(comps.map((c: any) => ({ ...c, tier: c.tierId ? tMap.get(c.tierId) : null })));
+          return;
+        }
+      }
+      setComponents(comps.map((c: any) => ({ ...c, tier: null })));
+    } catch (e) {
+      console.error('Error fetching components:', e);
+      setComponents([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function createComponent() {
     setLoading(true);
     try {
+      const isBulk = bulkComponent && newComponent.name.includes('\n');
+      if (isBulk) {
+        const lines = newComponent.name.split('\n').filter(l => l.trim());
+        const components = lines.map(line => {
+          const [name, type, cat, amt] = line.split('|');
+          return {
+            name: (name || '').trim(),
+            type: (type || 'TUITION').trim().toUpperCase(),
+            category: (cat || 'MANDATORY').trim().toUpperCase(),
+            amount: parseFloat((amt || '0').trim()) || 0,
+          };
+        }).filter(c => c.name);
+        const payload = {
+          bulk: true,
+          academicYearId: selectedYear,
+          termId: selectedTerm || null,
+          components,
+        };
+        const res = await authFetch('/api/sms/fees/components', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.components) {
+          toast({ description: `${data.count || components.length} components created` });
+          setShowComponentDialog(false);
+          setBulkComponent(false);
+          setNewComponent({ name: '', type: 'TUITION', category: 'MANDATORY', amount: '', description: '', tierId: '', termId: '' });
+          await fetchComponents();
+        } else {
+          const errMsg = typeof data.error === 'string' ? data.error : (data.error?.fieldErrors ? Object.values(data.error.fieldErrors).flat().join(', ') : 'Failed');
+          toast({ variant: 'destructive', description: errMsg });
+        }
+        setLoading(false);
+        return;
+      }
+
+      const tierId = newComponent.tierId && newComponent.tierId !== 'all' ? newComponent.tierId : null;
+      const termId = newComponent.termId && newComponent.termId !== 'all' ? newComponent.termId : null;
       const payload = {
-        ...newComponent,
+        name: newComponent.name,
+        type: newComponent.type,
+        category: newComponent.category,
         amount: newComponent.amount ? parseFloat(newComponent.amount) : 0,
+        description: newComponent.description,
         academicYearId: selectedYear,
-        termId: selectedTerm || null,
+        termId,
+        tierId,
       };
       const res = await authFetch('/api/sms/fees/components', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (data.component || data.components) { toast({ description: 'Component created' }); setShowComponentDialog(false); fetchComponents(); }
-      else { 
+      if (data.component) {
+        toast({ description: 'Component created' });
+        setShowComponentDialog(false);
+        setNewComponent({ name: '', type: 'TUITION', category: 'MANDATORY', amount: '', description: '', tierId: '', termId: '' });
+        await fetchComponents();
+      } else {
         const errMsg = typeof data.error === 'string' ? data.error : (data.error?.fieldErrors ? Object.values(data.error.fieldErrors).flat().join(', ') : 'Failed');
-        toast({ variant: 'destructive', description: errMsg }); 
+        toast({ variant: 'destructive', description: errMsg });
       }
     } catch { toast({ variant: 'destructive', description: 'Failed' }); } finally { setLoading(false); }
   }
@@ -1025,7 +1090,20 @@ async function fetchFeeComponentsForPayment() {
     } catch { toast({ variant: 'destructive', description: 'Failed' }); } finally { setLoading(false); }
   }
 
-  function loadTabData(tab: string) {
+  function openSiblingDiscountDialog() {
+    setSiblingDiscountForm({
+      secondChildDiscount: siblingDiscount?.secondChildDiscount?.toString() || '',
+      thirdChildDiscount: siblingDiscount?.thirdChildDiscount?.toString() || '',
+      fourthChildDiscount: siblingDiscount?.fourthChildDiscount?.toString() || '',
+      fifthChildDiscount: siblingDiscount?.fifthChildDiscount?.toString() || '',
+      maxDiscountPerChild: siblingDiscount?.maxDiscountPerChild?.toString() || '',
+      applyTo: siblingDiscount?.applyTo || 'ALL',
+      isEnabled: siblingDiscount?.isEnabled ?? false,
+    });
+    setShowSiblingDiscountDialog(true);
+  }
+
+function loadTabData(tab: string) {
     if (tab === 'components') fetchComponents();
     else if (tab === 'registration') fetchRegistrations();
     else if (tab === 'bills') fetchBills();
@@ -1034,6 +1112,10 @@ async function fetchFeeComponentsForPayment() {
     else if (tab === 'reports') fetchBalanceReport();
     else if (tab === 'discounts') { fetchDiscountTypes(); fetchStudentDiscounts(); fetchSiblingDiscount(); }
   }
+
+  useEffect(() => {
+    if (activeTab === 'components' && selectedYear) fetchComponents();
+  }, [selectedYear, selectedTerm, selectedTier, activeTab]);
 
   useEffect(() => {
     if (activeTab) loadTabData(activeTab);
@@ -1047,6 +1129,9 @@ async function fetchFeeComponentsForPayment() {
           <h1 className="text-2xl font-bold dark:text-white">Fee Management</h1>
           <p className="text-gray-500 dark:text-gray-400">Manage fees, bills, payments, and receipts</p>
         </div>
+        <Button variant="outline" onClick={() => window.location.href = '/sms/fees/types'}>
+          <List className="w-4 h-4 mr-2" />Manage Fee Types
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -1113,7 +1198,7 @@ async function fetchFeeComponentsForPayment() {
                       <div className="grid grid-cols-2 gap-3">
                         <Select value={newComponent.type} onValueChange={v => setNewComponent(p => ({ ...p, type: v }))}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>{Object.entries(feeTypeLabels).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                          <SelectContent>{feeTypes.map(t => <SelectItem key={t.code} value={t.code}>{t.name}</SelectItem>)}</SelectContent>
                         </Select>
                         <Select value={newComponent.category} onValueChange={v => setNewComponent(p => ({ ...p, category: v }))}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1151,7 +1236,7 @@ async function fetchFeeComponentsForPayment() {
                     <div className="grid grid-cols-2 gap-3">
                       <Select value={editingComponent.type} onValueChange={v => setEditingComponent(p => ({ ...p, type: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>{Object.entries(feeTypeLabels).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
+                        <SelectContent>{feeTypes.map(t => <SelectItem key={t.code} value={t.code}>{t.name}</SelectItem>)}</SelectContent>
                       </Select>
                       <Select value={editingComponent.category} onValueChange={v => setEditingComponent(p => ({ ...p, category: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>

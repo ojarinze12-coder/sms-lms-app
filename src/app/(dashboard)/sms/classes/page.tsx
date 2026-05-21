@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { getSubjectsByCurriculum } from '@/lib/nigeria';
 import { Loader2, Plus, Pencil, Trash2, BookOpen, ChevronDown } from 'lucide-react';
 import { authFetch } from '@/lib/auth-fetch';
 import { CURRICULUM_INFO } from '@/types';
 import { useBranch } from '@/lib/hooks/use-branch';
+import { BackButton } from '@/components/BackButton';
 
 interface AcademicYear {
   id: string;
@@ -437,6 +437,7 @@ export default function ClassesPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/sms/academics" label="Back to Academics" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Classes</h1>

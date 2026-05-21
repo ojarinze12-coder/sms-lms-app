@@ -14,31 +14,33 @@ export async function GET(request: NextRequest) {
   const academicYearId = request.nextUrl.searchParams.get('academicYearId');
   const search = request.nextUrl.searchParams.get('search') || '';
   const tierId = request.nextUrl.searchParams.get('tierId');
-  const branchId = request.nextUrl.searchParams.get('branchId');
+    const branchId = request.nextUrl.searchParams.get('branchId');
+    const userBranchId = authUser.branchId;
 
-  try {
-    console.log('[CLASSES] Fetching for tenant:', authUser.tenantId, 'tierId:', tierId, 'branchId:', branchId);
-    
-    let where: any = {};
-    
-    if (authUser.tenantId) {
-      where.tenantId = authUser.tenantId;
-    }
-    
-    if (academicYearId) {
-      where.academicYearId = academicYearId;
-    }
-    
-    if (tierId) {
-      where.tierId = tierId;
-    }
-
-    if (branchId) {
-      where.OR = [
-        { branchId },
-        { branchId: null },
-      ];
-    }
+    try {
+      console.log('[CLASSES] Fetching for tenant:', authUser.tenantId, 'tierId:', tierId, 'branchId:', branchId);
+      
+      const where: any = {};
+      
+      if (authUser.tenantId) {
+        where.tenantId = authUser.tenantId;
+      }
+      
+      if (userBranchId) {
+        where.branchId = userBranchId;
+      }
+      
+      if (branchId) {
+        where.branchId = branchId;
+      }
+      
+      if (academicYearId) {
+        where.academicYearId = academicYearId;
+      }
+      
+      if (tierId) {
+        where.tierId = tierId;
+      }
 
     const classes = await prisma.academicClass.findMany({
       where,

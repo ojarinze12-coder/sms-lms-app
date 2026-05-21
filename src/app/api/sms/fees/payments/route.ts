@@ -132,8 +132,10 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const branchId = searchParams.get('branchId');
 
+    const userBranchId = user?.branchId;
     const where: any = { tenantId: user.tenantId };
     
+    if (userBranchId) where.branchId = userBranchId;
     if (studentId) where.studentId = studentId;
     if (feeId) where.feeId = feeId;
     if (status) where.status = status;
