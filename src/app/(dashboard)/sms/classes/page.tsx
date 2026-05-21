@@ -407,24 +407,51 @@ export default function ClassesPage() {
     }
   };
 
+  const handleDelete = async (classId: string, className: string) => {
+    if (!confirm(`Are you sure you want to delete "${className}"? This will also delete all enrolled students, subjects, and related records. This action cannot be undone.`)) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await authFetch(`/api/sms/academic-classes/${classId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        loadClasses(selectedYearId);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete class');
+      }
+    } catch {
+      alert('An error occurred while deleting the class');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const getLevelName = (level: number) => {
-    // Handle legacy level values (old system: 5-16) for backward compatibility
-    // Legacy mapping: Primary 1-6 = 5-10, JSS 1-3 = 11-13, SSS 1-3 = 14-16
+    // Handle legacy level values (old system: 5-4, 11-16) for backward compatibility
+    // Legacy mapping: Primary 5-10, JSS 11-13, SSS 14-16
+    // New K1-12 system: Primary 1-6 (levels 1-6), JSS 7-9 (levels 7-9), SSS 10-12 (levels 10-12)
     const legacyMap: Record<number, string> = {
       5: 'Primary 1', 6: 'Primary 2', 7: 'Primary 3', 8: 'Primary 4', 9: 'Primary 5', 10: 'Primary 6',
       11: 'JSS 1', 12: 'JSS 2', 13: 'JSS 3',
       14: 'SSS 1', 15: 'SSS 2', 16: 'SSS 3',
     };
     
-    // Check legacy levels first (for existing data)
-    if (legacyMap[level]) return legacyMap[level];
-    
+    // New K1-12 system (levels 1-12) takes priority over legacy
     // Early Childhood (NOT part of K1-12)
     if (level === 0) return 'Early Childhood';
-    // K1-12 Academic Levels: Primary 1 to SSS 3 (new system: 1-12)
+    // K1-12 Academic Levels: Primary 1 to SSS 3
     if (level >= 1 && level <= 6) return `Primary ${level}`;
     if (level >= 7 && level <= 9) return `JSS ${level - 6}`;
     if (level >= 10 && level <= 12) return `SSS ${level - 9}`;
+    
+    // Legacy levels (13-16 only — legacy had no levels 1-4)
+    if (legacyMap[level]) return legacyMap[level];
+    
     return `Level ${level}`;
   };
 
@@ -555,6 +582,12 @@ export default function ClassesPage() {
                     >
                       Edit
                     </button>
+                    <button
+                      onClick={() => handleDelete(cls.id, cls.name)}
+                      className="px-3 py-2 text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-800"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               );
@@ -637,21 +670,6 @@ export default function ClassesPage() {
                       <option value="10">SSS 1</option>
                       <option value="11">SSS 2</option>
                       <option value="12">SSS 3</option>
-                    </optgroup>
-                    {/* Legacy levels for backward compatibility */}
-                    <optgroup label="Legacy Levels">
-                      <option value="5">Primary 1 (Legacy)</option>
-                      <option value="6">Primary 2 (Legacy)</option>
-                      <option value="7">Primary 3 (Legacy)</option>
-                      <option value="8">Primary 4 (Legacy)</option>
-                      <option value="9">Primary 5 (Legacy)</option>
-                      <option value="10">Primary 6 (Legacy)</option>
-                      <option value="11">JSS 1 (Legacy)</option>
-                      <option value="12">JSS 2 (Legacy)</option>
-                      <option value="13">JSS 3 (Legacy)</option>
-                      <option value="14">SSS 1 (Legacy)</option>
-                      <option value="15">SSS 2 (Legacy)</option>
-                      <option value="16">SSS 3 (Legacy)</option>
                     </optgroup>
                   </select>
                 </div>
@@ -918,21 +936,6 @@ export default function ClassesPage() {
                       <option value="10">SSS 1</option>
                       <option value="11">SSS 2</option>
                       <option value="12">SSS 3</option>
-                    </optgroup>
-                    {/* Legacy levels for backward compatibility with existing data */}
-                    <optgroup label="Legacy Levels (Existing Classes)">
-                      <option value="5">Primary 1 (Legacy)</option>
-                      <option value="6">Primary 2 (Legacy)</option>
-                      <option value="7">Primary 3 (Legacy)</option>
-                      <option value="8">Primary 4 (Legacy)</option>
-                      <option value="9">Primary 5 (Legacy)</option>
-                      <option value="10">Primary 6 (Legacy)</option>
-                      <option value="11">JSS 1 (Legacy)</option>
-                      <option value="12">JSS 2 (Legacy)</option>
-                      <option value="13">JSS 3 (Legacy)</option>
-                      <option value="14">SSS 1 (Legacy)</option>
-                      <option value="15">SSS 2 (Legacy)</option>
-                      <option value="16">SSS 3 (Legacy)</option>
                     </optgroup>
                   </select>
                 </div>
