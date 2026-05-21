@@ -146,7 +146,7 @@ export default function ClassesPage() {
     }
   }, [selectedYearId, selectedBranch]);
 
-  // Tier detection for Create Modal
+  // Tier detection for Create Modal — NERDC K1-12: Primary 1-6, JSS 7-9, SSS 10-12
   useEffect(() => {
     let tierCode = '';
     if (formData.tierId) {
@@ -154,11 +154,10 @@ export default function ClassesPage() {
       tierCode = tier?.code || '';
     } else if (formData.level) {
       const levelNum = parseInt(formData.level);
-      if (levelNum <= 1) tierCode = 'PRE_NUR';
-      else if (levelNum <= 4) tierCode = 'NUR';
-      else if (levelNum <= 10) tierCode = 'PRI';
-      else if (levelNum <= 13) tierCode = 'JSS';
-      else if (levelNum <= 16) tierCode = 'SSS';
+      if (levelNum === 0) tierCode = 'PRE_NUR';
+      else if (levelNum >= 1 && levelNum <= 6) tierCode = 'PRI';
+      else if (levelNum >= 7 && levelNum <= 9) tierCode = 'JSS';
+      else if (levelNum >= 10) tierCode = 'SSS';
     }
     setSelectedTierCode(tierCode);
   }, [formData.tierId, formData.level, tiers]);
@@ -336,18 +335,17 @@ export default function ClassesPage() {
     const isCustom = cls.stream && !editStreamOptions.includes(cls.stream);
     setEditIsCustomStream(isCustom);
     
-    // Detect tier code for the editing class
+    // Detect tier code for the editing class — NERDC K1-12
     let tierCode = '';
     if (cls.tierId) {
       const tier = tiers.find(t => t.id === cls.tierId);
       tierCode = tier?.code || '';
     } else {
       const levelNum = cls.level;
-      if (levelNum <= 1) tierCode = 'PRE_NUR';
-      else if (levelNum <= 4) tierCode = 'NUR';
-      else if (levelNum <= 10) tierCode = 'PRI';
-      else if (levelNum <= 13) tierCode = 'JSS';
-      else if (levelNum <= 16) tierCode = 'SSS';
+      if (levelNum === 0) tierCode = 'PRE_NUR';
+      else if (levelNum >= 1 && levelNum <= 6) tierCode = 'PRI';
+      else if (levelNum >= 7 && levelNum <= 9) tierCode = 'JSS';
+      else if (levelNum >= 10) tierCode = 'SSS';
     }
     setSelectedTierCode(tierCode);
     
@@ -432,26 +430,13 @@ export default function ClassesPage() {
   };
 
   const getLevelName = (level: number) => {
-    // Handle legacy level values (old system: 5-4, 11-16) for backward compatibility
-    // Legacy mapping: Primary 5-10, JSS 11-13, SSS 14-16
-    // New K1-12 system: Primary 1-6 (levels 1-6), JSS 7-9 (levels 7-9), SSS 10-12 (levels 10-12)
-    const legacyMap: Record<number, string> = {
-      5: 'Primary 1', 6: 'Primary 2', 7: 'Primary 3', 8: 'Primary 4', 9: 'Primary 5', 10: 'Primary 6',
-      11: 'JSS 1', 12: 'JSS 2', 13: 'JSS 3',
-      14: 'SSS 1', 15: 'SSS 2', 16: 'SSS 3',
-    };
-    
-    // New K1-12 system (levels 1-12) takes priority over legacy
-    // Early Childhood (NOT part of K1-12)
-    if (level === 0) return 'Early Childhood';
-    // K1-12 Academic Levels: Primary 1 to SSS 3
+    // NERDC K1-12 system: Primary 1 (Level 1) to SSS 3 (Level 12)
+    if (level === 0) return 'Pre-Nursery';
     if (level >= 1 && level <= 6) return `Primary ${level}`;
     if (level >= 7 && level <= 9) return `JSS ${level - 6}`;
     if (level >= 10 && level <= 12) return `SSS ${level - 9}`;
-    
-    // Legacy levels (13-16 only — legacy had no levels 1-4)
-    if (legacyMap[level]) return legacyMap[level];
-    
+    // Legacy system (levels 13-16 only)
+    if (level >= 13) return `Level ${level} (Legacy)`;
     return `Level ${level}`;
   };
 
@@ -650,8 +635,8 @@ export default function ClassesPage() {
                     required
                   >
                     <option value="">Select...</option>
-                    <optgroup label="Early Childhood (NOT K1-12)">
-                      <option value="0">Early Childhood</option>
+                    <optgroup label="Pre-Nursery">
+                      <option value="0">Pre-Nursery (Level 0)</option>
                     </optgroup>
                     <optgroup label="K1-12 Primary (Levels 1-6)">
                       <option value="1">Primary 1</option>
@@ -916,8 +901,8 @@ export default function ClassesPage() {
                     required
                   >
                     <option value="">Select...</option>
-                    <optgroup label="Early Childhood (NOT K1-12)">
-                      <option value="0">Early Childhood</option>
+                    <optgroup label="Pre-Nursery">
+                      <option value="0">Pre-Nursery (Level 0)</option>
                     </optgroup>
                     <optgroup label="K1-12 Primary (Levels 1-6)">
                       <option value="1">Primary 1</option>
