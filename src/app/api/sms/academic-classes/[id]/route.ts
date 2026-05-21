@@ -30,31 +30,34 @@ export async function PUT(
     );
   }
 
-  const existingClass = await prisma.academicClass.findUnique({
-    where: { id },
-  });
+const existingClass = await prisma.academicClass.findUnique({
+      where: { id },
+    });
 
-  if (!existingClass) {
-    return NextResponse.json({ error: 'Class not found' }, { status: 404 });
-  }
+    if (!existingClass) {
+      return NextResponse.json({ error: 'Class not found' }, { status: 404 });
+    }
 
-  // Check for duplicate - considering stream
-  const duplicateClass = await prisma.academicClass.findFirst({
-    where: {
-      academicYearId: existingClass.academicYearId,
-      name: name,
-      stream: stream || null,
-      id: { not: id },
-    },
-  });
-  if (duplicateClass) {
-    return NextResponse.json(
-      { error: 'A class with this name and stream already exists in the selected academic year' },
-      { status: 400 }
-    );
-  }
-
-  const levelNum = typeof level === 'string' ? parseInt(level) : level;
+    const levelNum = typeof level === 'string' ? parseInt(level) : level;
+    const streamValue = stream || null;
+    
+    // Only check for duplicate if name or stream is actually changing
+    if (name !== existingClass.name || streamValue !== (existingClass.stream || null)) {
+      const duplicateClass = await prisma.academicClass.findFirst({
+        where: {
+          academicYearId: existingClass.academicYearId,
+          name: name,
+          stream: streamValue,
+          id: { not: id },
+        },
+      });
+      if (duplicateClass) {
+        return NextResponse.json(
+          { error: 'A class with this name and stream already exists in the selected academic year' },
+          { status: 400 }
+        );
+      }
+    }
   
   // Update class with tier if provided
   const updateData: any = {

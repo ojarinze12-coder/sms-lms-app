@@ -381,7 +381,7 @@ export default function ClassesPage() {
           addNerdcSubjects: editFormData.addNerdcSubjects,
           tierId: editFormData.tierId || null,
           departmentId: editFormData.departmentId || null,
-          stream: editFormData.stream || null,
+          stream: editFormData.stream || undefined,
           classTeacherId: editFormData.classTeacherId || null,
           formMasterId: editFormData.formMasterId || null,
           caregiverId: editFormData.caregiverId || null,
@@ -635,8 +635,8 @@ export default function ClassesPage() {
                     required
                   >
                     <option value="">Select...</option>
-                    <optgroup label="Pre-Nursery">
-                      <option value="0">Pre-Nursery (Level 0)</option>
+                    <optgroup label="Pre-Nursery / Nursery (Level 0)">
+                      <option value="0">Nursery / Pre-Nursery (Level 0)</option>
                     </optgroup>
                     <optgroup label="K1-12 Primary (Levels 1-6)">
                       <option value="1">Primary 1</option>
@@ -901,8 +901,8 @@ export default function ClassesPage() {
                     required
                   >
                     <option value="">Select...</option>
-                    <optgroup label="Pre-Nursery">
-                      <option value="0">Pre-Nursery (Level 0)</option>
+                    <optgroup label="Pre-Nursery / Nursery (Level 0)">
+                      <option value="0">Nursery / Pre-Nursery (Level 0)</option>
                     </optgroup>
                     <optgroup label="K1-12 Primary (Levels 1-6)">
                       <option value="1">Primary 1</option>
