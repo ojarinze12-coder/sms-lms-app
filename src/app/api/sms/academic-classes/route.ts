@@ -32,9 +32,10 @@ export async function GET(request: NextRequest) {
       
       const effectiveBranchId = branchId || userBranchId || null;
       
-      if (effectiveBranchId) {
-        where.branchId = effectiveBranchId;
-      }
+      if (userBranchId || branchId) {
+      const effectiveBranchId = branchId || userBranchId;
+      where.branchId = { in: [effectiveBranchId, null] };
+    }
       
       if (academicYearId) {
         where.academicYearId = academicYearId;

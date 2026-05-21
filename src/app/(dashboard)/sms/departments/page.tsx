@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { DEFAULT_SSS_DEPARTMENTS } from '@/lib/constants/departments';
 import { useBranch } from '@/lib/hooks/use-branch';
+import { BackButton } from '@/components/BackButton';
 
 interface Tier {
   id: string;
@@ -273,6 +274,7 @@ if (res.ok) {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/academics" label="Back to Academics" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">Departments</h1>

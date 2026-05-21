@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import { TIER_TEMPLATE_OPTIONS } from '@/lib/constants/tiers';
 import { useBranch } from '@/lib/hooks/use-branch';
+import { BackButton } from '@/components/BackButton';
 
 interface AcademicYear {
   id: string;
@@ -227,6 +228,7 @@ export default function TiersPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/school/academics" label="Back to Academics" />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold dark:text-white">School Tiers</h1>
