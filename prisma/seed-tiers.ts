@@ -43,7 +43,15 @@ async function main() {
         });
         console.log(`  Created tier ${tier.name} (${tier.code}) for tenant ${tenant.slug}`);
       } else {
-        console.log(`  Tier ${tier.name} (${tier.code}) already exists for tenant ${tenant.slug}`);
+        if (existing.order !== tier.order || existing.name !== tier.name) {
+          await prisma.tier.update({
+            where: { id: existing.id },
+            data: { name: tier.name, order: tier.order },
+          });
+          console.log(`  Updated tier ${tier.name} (${tier.code}) order to ${tier.order} for tenant ${tenant.slug}`);
+        } else {
+          console.log(`  Tier ${tier.name} (${tier.code}) order=${existing.order} is correct`);
+        }
       }
     }
   }

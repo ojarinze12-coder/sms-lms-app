@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       orderBy: [
         { tier: { order: 'asc' } },
         { level: 'asc' },
+        { name: 'asc' },
       ],
       take: 50,
       include: {
@@ -57,8 +58,6 @@ export async function GET(request: NextRequest) {
         enrollments: { select: { id: true } },
       }
     });
-    
-    console.log('[CLASSES] Found:', classes.length, 'with subjects');
 
     return NextResponse.json({ data: classes, pagination: { page: 1, limit: 10, total: classes.length } });
   } catch (error: any) {
