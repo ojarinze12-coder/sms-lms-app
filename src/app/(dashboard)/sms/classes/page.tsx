@@ -28,6 +28,13 @@ interface Department {
   tierId?: string;
 }
 
+interface Tier {
+  id: string;
+  name: string;
+  code: string;
+  order: number;
+}
+
 interface AcademicClass {
   id: string;
   name: string;
@@ -36,6 +43,7 @@ interface AcademicClass {
   stream?: string | null;
   academicYearId: string;
   tierId?: string | null;
+  tier?: Tier | null;
   department?: { id: string; name: string; code: string } | null;
   subjects?: { id: string }[];
   enrollments?: { id: string }[];
@@ -533,6 +541,11 @@ export default function ClassesPage() {
                 <div key={cls.id} className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start">
                     <div>
+                      {cls.tier && (
+                        <span className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1 block">
+                          {cls.tier.name}
+                        </span>
+                      )}
                       <h3 className="font-semibold text-lg dark:text-white">{fullClassName}</h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {getLevelName(cls.level)}

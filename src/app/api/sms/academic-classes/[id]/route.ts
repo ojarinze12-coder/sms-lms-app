@@ -39,10 +39,14 @@ const existingClass = await prisma.academicClass.findUnique({
     }
 
     const levelNum = typeof level === 'string' ? parseInt(level) : level;
-    const streamValue = stream || null;
+    const streamValue = stream === '' || stream === undefined || stream === null ? null : stream;
+    const existingStream = existingClass.stream || null;
+    
+    console.log('[CLASSES PUT] name:', name, 'existingName:', existingClass.name, 'nameMatch:', name === existingClass.name);
+    console.log('[CLASSES PUT] stream:', streamValue, 'existingStream:', existingStream, 'streamMatch:', streamValue === existingStream);
     
     // Only check for duplicate if name or stream is actually changing
-    if (name !== existingClass.name || streamValue !== (existingClass.stream || null)) {
+    if (name !== existingClass.name || streamValue !== existingStream) {
       const duplicateClass = await prisma.academicClass.findFirst({
         where: {
           academicYearId: existingClass.academicYearId,
@@ -52,6 +56,7 @@ const existingClass = await prisma.academicClass.findUnique({
         },
       });
       if (duplicateClass) {
+        console.log('[CLASSES PUT] Duplicate found:', duplicateClass.id, duplicateClass.name, duplicateClass.stream);
         return NextResponse.json(
           { error: 'A class with this name and stream already exists in the selected academic year' },
           { status: 400 }

@@ -42,9 +42,13 @@ export async function GET(request: NextRequest) {
 
     const classes = await prisma.academicClass.findMany({
       where,
-      orderBy: { level: 'asc' },
+      orderBy: [
+        { tier: { order: 'asc' } },
+        { level: 'asc' },
+      ],
       take: 50,
       include: {
+        tier: { select: { id: true, name: true, code: true, order: true } },
         department: { select: { id: true, name: true, code: true } },
         classTeacher: { select: { id: true, firstName: true, lastName: true, employeeId: true, position: true } },
         formMaster: { select: { id: true, firstName: true, lastName: true, employeeId: true, position: true } },
