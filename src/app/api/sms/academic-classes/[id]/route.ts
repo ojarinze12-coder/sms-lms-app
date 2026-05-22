@@ -39,39 +39,45 @@ const existingClass = await prisma.academicClass.findUnique({
     }
 
     const levelNum = typeof level === 'string' ? parseInt(level) : level;
-    const streamValue = stream === '' || stream === undefined || stream === null ? null : stream;
-    const existingStream = existingClass.stream || null;
+    const nameValue = name.trim();
+    const nameExisting = existingClass.name.trim();
+    const streamValue = stream === '' || stream === undefined || stream === null ? null : stream.trim();
+    const existingStream = existingClass.stream ? existingClass.stream.trim() : null;
     
-    console.log('[CLASSES PUT] name:', name, 'existingName:', existingClass.name, 'nameMatch:', name === existingClass.name);
-    console.log('[CLASSES PUT] stream:', streamValue, 'existingStream:', existingStream, 'streamMatch:', streamValue === existingStream);
+    console.log('[CLASSES PUT] nameValue:', JSON.stringify(nameValue), 'nameExisting:', JSON.stringify(nameExisting), 'match:', nameValue === nameExisting);
+    console.log('[CLASSES PUT] streamValue:', streamValue, 'existingStream:', existingStream, 'match:', streamValue === existingStream);
+    console.log('[CLASSES PUT] id:', id, 'academicYearId:', existingClass.academicYearId);
     
     // Only check for duplicate if name or stream is actually changing
-    if (name !== existingClass.name || streamValue !== existingStream) {
+    if (nameValue !== nameExisting || streamValue !== existingStream) {
       const duplicateClass = await prisma.academicClass.findFirst({
         where: {
           academicYearId: existingClass.academicYearId,
-          name: name,
+          name: nameValue,
           stream: streamValue,
           id: { not: id },
         },
       });
       if (duplicateClass) {
-        console.log('[CLASSES PUT] Duplicate found:', duplicateClass.id, duplicateClass.name, duplicateClass.stream);
+        console.log('[CLASSES PUT] Duplicate found:', duplicateClass.id, JSON.stringify(duplicateClass.name), duplicateClass.stream);
         return NextResponse.json(
           { error: 'A class with this name and stream already exists in the selected academic year' },
           { status: 400 }
         );
       }
-    }
-  
-  // Update class with tier if provided
-  const updateData: any = {
-    name,
-    level: levelNum,
-    capacity: parseInt(capacity),
-    stream: stream || null,
-    departmentId: departmentId || null,
-  };
+}
+    
+    // stream: '' = clear, undefined = don't touch, value = set value
+    const streamUpdate = stream === '' ? null : (stream || undefined);
+    
+    // Update class with tier if provided
+    const updateData: any = {
+      name: nameValue,
+      level: levelNum,
+      capacity: parseInt(capacity),
+      stream: streamUpdate,
+      departmentId: departmentId || null,
+    };
   
   if (body.tierId !== undefined) {
     updateData.tierId = body.tierId || null;
