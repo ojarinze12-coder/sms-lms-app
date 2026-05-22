@@ -65,7 +65,7 @@ const existingClass = await prisma.academicClass.findUnique({
           { status: 400 }
         );
       }
-}
+    }
     
     // stream: '' = clear, undefined = don't touch, value = set value
     const streamUpdate = stream === '' ? null : (stream || undefined);
