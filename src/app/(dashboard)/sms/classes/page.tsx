@@ -431,7 +431,7 @@ export default function ClassesPage() {
 
   const getLevelName = (level: number) => {
     // NERDC K1-12 system: Primary 1 (Level 1) to SSS 3 (Level 12)
-    if (level === 0) return 'Pre-Nursery';
+    if (level === 0) return 'Nursery / Pre-Nursery';
     if (level >= 1 && level <= 6) return `Primary ${level}`;
     if (level >= 7 && level <= 9) return `JSS ${level - 6}`;
     if (level >= 10 && level <= 12) return `SSS ${level - 9}`;
@@ -635,7 +635,7 @@ export default function ClassesPage() {
                     required
                   >
                     <option value="">Select...</option>
-                    <optgroup label="Pre-Nursery / Nursery (Level 0)">
+                    <optgroup label="Early Childhood (Level 0)">
                       <option value="0">Nursery / Pre-Nursery (Level 0)</option>
                     </optgroup>
                     <optgroup label="K1-12 Primary (Levels 1-6)">
@@ -901,7 +901,7 @@ export default function ClassesPage() {
                     required
                   >
                     <option value="">Select...</option>
-                    <optgroup label="Pre-Nursery / Nursery (Level 0)">
+                    <optgroup label="Early Childhood (Level 0)">
                       <option value="0">Nursery / Pre-Nursery (Level 0)</option>
                     </optgroup>
                     <optgroup label="K1-12 Primary (Levels 1-6)">
